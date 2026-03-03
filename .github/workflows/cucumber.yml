@@ -1,15 +1,35 @@
 name: Run Cucumber tests
 on: [push]
 jobs:
-  run-rspec-tests:
+  run-cucumber-tests:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: project
+          POSTGRES_PASSWORD: csci3100
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install -y libpq-dev
+
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          # runs 'bundle install' and caches installed gems automatically
           bundler-cache: true
+          
+      - name: Set up database
+        env:
+          RAILS_ENV: test
+        run: bin/rails db:prepare
       - name: Run tests
-        run: |
-          bundle exec cucumber
+        env:
+          RAILS_ENV: test
+        run: bundle exec cucumber
