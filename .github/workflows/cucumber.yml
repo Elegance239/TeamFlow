@@ -1,4 +1,4 @@
-name: Run RSpec tests
+name: Run Cucumber tests
 on: [push]
 jobs:
   run-rspec-tests:
@@ -12,4 +12,4 @@ jobs:
           bundler-cache: true
       - name: Run tests
         run: |
-          bundle exec rspec
+          bundle exec cucumber
