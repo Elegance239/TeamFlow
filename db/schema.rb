@@ -10,9 +10,41 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_07_143955) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_08_000003) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "task_histories", force: :cascade do |t|
+    t.date "start_date", null: false
+    t.bigint "task_id", null: false
+    t.bigint "user_id", null: false
+    t.index ["user_id", "task_id"], name: "index_task_histories_on_user_id_and_task_id"
+  end
+
+  create_table "task_steps", primary_key: ["task_id", "step_num"], force: :cascade do |t|
+    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.text "description"
+    t.date "due_date"
+    t.string "name", null: false
+    t.integer "step_num", null: false
+    t.bigint "task_id", null: false
+    t.index ["task_id"], name: "index_task_steps_on_task_id"
+  end
+
+  create_table "tasks", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "created_by", null: false
+    t.text "description"
+    t.date "due_date", null: false
+    t.integer "points", null: false
+    t.bigint "team_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id"
+    t.index ["created_by"], name: "index_tasks_on_created_by"
+    t.index ["team_id"], name: "index_tasks_on_team_id"
+    t.index ["user_id"], name: "index_tasks_on_user_id"
+    t.check_constraint "points > 0", name: "check_tasks_points_positive"
+  end
 
   create_table "teams", force: :cascade do |t|
     t.datetime "created_at", null: false
@@ -31,5 +63,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_07_143955) do
     t.index ["team_id"], name: "index_users_on_team_id"
   end
 
+  add_foreign_key "task_histories", "tasks"
+  add_foreign_key "task_histories", "users"
+  add_foreign_key "task_steps", "tasks"
+  add_foreign_key "tasks", "teams"
+  add_foreign_key "tasks", "users"
+  add_foreign_key "tasks", "users", column: "created_by"
   add_foreign_key "users", "teams"
 end
