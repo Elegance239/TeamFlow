@@ -31,14 +31,15 @@ RSpec.describe User, type: :model do
   end
 
   describe "role enum" do
-    it "can be team_lead" do
-      user = User.create!(name: "Lead", role: :team_lead)
-      expect(user.team_lead?).to be true
+    it "can be team_lead or team_member only" do
+      lead_user = User.create!(name: "Lead", role: :team_lead)
+      expect(lead_user.team_lead?).to be true
+      non_lead_user = User.create!(name: "Member", role: :team_member)
+      expect(non_lead_user.team_member?).to be true
+      expect{
+        non_lead_user = User.create!(name: "Member", role: :non_lead_user)
+      }.to raise_error(ArgumentError)
     end
 
-    it "can be team_member" do
-      user = User.create!(name: "Member", role: :team_member)
-      expect(user.team_member?).to be true
-    end
   end
 end
