@@ -7,6 +7,14 @@ Rails.application.routes.draw do
     resources :members, only: [:create, :index, :destroy], controller: "team_members"
   end
 
+  resources :tasks, only: [:index, :show, :create, :update, :destroy] do
+    member do
+      post   :assign
+      delete :unassign
+    end
+    resources :task_steps, only: [:index, :show]
+  end
+
   get "up" => "rails/health#show", as: :rails_health_check
 
   root "welcome#index"
