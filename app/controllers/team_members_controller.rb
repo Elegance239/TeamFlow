@@ -25,7 +25,7 @@ class TeamMembersController < ApplicationController
     member = team.users.find(params[:id])
 
     if member.id == requester.id
-      return render json: { error: "Team lead cannot remove themselves" }, status: :unprocessable_entity
+      return render json: { error: "Team lead cannot remove themselves" }, status: :unprocessable_content
     end
 
     member.update!(team: nil, role: nil)
@@ -53,7 +53,7 @@ class TeamMembersController < ApplicationController
       if member.save
         render json: member, status: :created
       else
-        render json: { errors: member.errors.full_messages }, status: :unprocessable_entity
+        render json: { errors: member.errors.full_messages }, status: :unprocessable_content
       end
     end
   end

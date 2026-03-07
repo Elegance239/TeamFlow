@@ -57,7 +57,7 @@ RSpec.describe "TeamMembers", type: :request do
     it "returns error when creating new member without a name" do
       post "/teams/#{team.id}/members", params: { user_id: lead.id, name: "" }
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
   end
 
@@ -74,7 +74,7 @@ RSpec.describe "TeamMembers", type: :request do
     it "forbids team lead from removing themselves" do
       delete "/teams/#{team.id}/members/#{lead.id}", params: { user_id: lead.id }
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
 
     it "forbids a regular member from removing anyone" do

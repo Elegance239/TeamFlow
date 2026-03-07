@@ -15,7 +15,7 @@ RSpec.describe "Users", type: :request do
     it "returns an error when name is missing" do
       post "/users", params: {}
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(JSON.parse(response.body)["errors"]).to be_present
     end
   end
@@ -60,7 +60,7 @@ RSpec.describe "Users", type: :request do
 
       patch "/users/#{user.id}", params: { name: "" }
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
   end
 end

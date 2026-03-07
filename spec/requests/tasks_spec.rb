@@ -54,18 +54,18 @@ RSpec.describe "Tasks", type: :request do
     it "forbids a team_lead without a team from creating a task" do
       teamless_lead = User.create!(name: "No Team Lead", role: :team_lead)
       post "/tasks", params: { user_id: teamless_lead.id, due_date: (Date.today + 5).iso8601 }
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
 
     it "rejects a task with a past due_date" do
       post "/tasks", params: { user_id: lead.id, due_date: (Date.today - 1).iso8601 }
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(JSON.parse(response.body)["errors"]).to be_present
     end
 
     it "rejects a task with today-1 as due_date (boundary check)" do
       post "/tasks", params: { user_id: lead.id, due_date: (Date.today - 1).iso8601 }
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
 
     it "accepts a task with today as the due_date (boundary)" do
@@ -82,7 +82,7 @@ RSpec.describe "Tasks", type: :request do
           { step_num: 1, name: "Earlier Step", due_date: (Date.today + 3).iso8601 }
         ]
       }
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
 
     it "rejects a step with a negative step_num" do
@@ -91,7 +91,7 @@ RSpec.describe "Tasks", type: :request do
         due_date: (Date.today + 5).iso8601,
         task_steps_attributes: [{ step_num: -1, name: "Bad Step" }]
       }
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
 
     it "rejects steps with duplicate step_nums" do
@@ -103,7 +103,7 @@ RSpec.describe "Tasks", type: :request do
           { step_num: 0, name: "Step B" }
         ]
       }
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
 
     it "accepts steps where intermediate steps have no due_date" do
@@ -157,7 +157,7 @@ RSpec.describe "Tasks", type: :request do
     it "returns 422 for a user not in any team" do
       guest = User.create!(name: "Guest")
       get "/tasks", params: { user_id: guest.id }
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
   end
 
@@ -221,7 +221,7 @@ RSpec.describe "Tasks", type: :request do
     it "rejects non-integer points" do
       task = create_task
       patch "/tasks/#{task.id}", params: { user_id: lead.id, points: "not_a_number" }
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
   end
 
@@ -285,7 +285,7 @@ RSpec.describe "Tasks", type: :request do
       other_member = User.create!(name: "Member2", team: team, role: :team_member)
 
       post "/tasks/#{task.id}/assign", params: { user_id: other_member.id }
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
 
     it "forbids assigning a task from a different team" do

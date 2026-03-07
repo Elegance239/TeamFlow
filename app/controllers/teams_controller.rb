@@ -24,7 +24,7 @@ class TeamsController < ApplicationController
       requester.update!(team: team, role: :team_lead)
       render json: { team: team, user: requester }, status: :created
     else
-      render json: { errors: team.errors.full_messages }, status: :unprocessable_entity
+      render json: { errors: team.errors.full_messages }, status: :unprocessable_content
     end
   end
 
@@ -41,7 +41,7 @@ class TeamsController < ApplicationController
     if team.update(description: params[:description])
       render json: team
     else
-      render json: { errors: team.errors.full_messages }, status: :unprocessable_entity
+      render json: { errors: team.errors.full_messages }, status: :unprocessable_content
     end
   end
 end

@@ -20,7 +20,7 @@ RSpec.describe "Teams", type: :request do
 
       post "/teams", params: { user_id: user.id, name: "Dev Team" }
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(JSON.parse(response.body)["errors"]).to be_present
     end
   end

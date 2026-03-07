@@ -5,7 +5,7 @@ class TasksController < ApplicationController
     requester = User.find(params[:user_id])
 
     unless requester.team_id.present?
-      return render json: { error: "User is not part of a team" }, status: :unprocessable_entity
+      return render json: { error: "User is not part of a team" }, status: :unprocessable_content
     end
 
     tasks = Task.where(team_id: requester.team_id)
@@ -35,7 +35,7 @@ class TasksController < ApplicationController
     end
 
     unless requester.team_id.present?
-      return render json: { error: "Team lead must belong to a team" }, status: :unprocessable_entity
+      return render json: { error: "Team lead must belong to a team" }, status: :unprocessable_content
     end
 
     task = Task.new(task_create_params)
@@ -45,7 +45,7 @@ class TasksController < ApplicationController
     if task.save
       render json: task.as_json(include: :task_steps), status: :created
     else
-      render json: { errors: task.errors.full_messages }, status: :unprocessable_entity
+      render json: { errors: task.errors.full_messages }, status: :unprocessable_content
     end
   end
 
@@ -62,7 +62,7 @@ class TasksController < ApplicationController
     if task.update(task_update_params)
       render json: task
     else
-      render json: { errors: task.errors.full_messages }, status: :unprocessable_entity
+      render json: { errors: task.errors.full_messages }, status: :unprocessable_content
     end
   end
 
@@ -91,7 +91,7 @@ class TasksController < ApplicationController
     end
 
     if task.user_id.present?
-      return render json: { error: "Task is already assigned" }, status: :unprocessable_entity
+      return render json: { error: "Task is already assigned" }, status: :unprocessable_content
     end
 
     task.update!(user_id: requester.id)
