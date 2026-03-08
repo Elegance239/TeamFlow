@@ -7,8 +7,10 @@ jobs:
       postgres:
         image: postgres:16
         env:
-          POSTGRES_USER: project
-          POSTGRES_PASSWORD: csci3100
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -28,8 +30,10 @@ jobs:
       - name: Set up database
         env:
           RAILS_ENV: test
+          DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/TeamFlow_test
         run: bin/rails db:prepare
       - name: Run tests
         env:
           RAILS_ENV: test
+          DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/TeamFlow_test
         run: bundle exec cucumber
