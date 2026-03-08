@@ -1,3 +1,14 @@
-// Configure your import map in config/importmap.rb. Read more: https://github.com/rails/importmap-rails
-import "@hotwired/turbo-rails"
-import "controllers"
+// Entry point for the build script in your package.json
+import React from "react"
+import { createRoot } from "react-dom/client";
+import App from "./App";
+import "./application.css";
+
+document.addEventListener("DOMContentLoaded", () => {
+  const root = document.getElementById("root");
+  if (root) {
+    createRoot(root).render(
+      <App />
+    );
+  }
+});
