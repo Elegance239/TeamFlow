@@ -1,6 +1,6 @@
 class CreateTaskSteps < ActiveRecord::Migration[8.1]
   def change
-    create_table :task_steps, primary_key: [:task_id, :step_num] do |t|
+    create_table :task_steps, primary_key: [ :task_id, :step_num ] do |t|
       t.date    :due_date                   # optional
       t.string  :name,        null: false
       t.text    :description               # optional

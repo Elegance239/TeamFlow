@@ -1,5 +1,5 @@
 class TaskStep < ApplicationRecord
-  self.primary_key = [:task_id, :step_num]
+  self.primary_key = [ :task_id, :step_num ]
 
   belongs_to :task
 

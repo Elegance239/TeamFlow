@@ -1,18 +1,18 @@
 Rails.application.routes.draw do
   get "welcome/index"
 
-  resources :users, only: [:create, :show, :update]
+  resources :users, only: [ :create, :show, :update ]
 
-  resources :teams, only: [:create, :show, :update] do
-    resources :members, only: [:create, :index, :destroy], controller: "team_members"
+  resources :teams, only: [ :create, :show, :update ] do
+    resources :members, only: [ :create, :index, :destroy ], controller: "team_members"
   end
 
-  resources :tasks, only: [:index, :show, :create, :update, :destroy] do
+  resources :tasks, only: [ :index, :show, :create, :update, :destroy ] do
     member do
       post   :assign
       delete :unassign
     end
-    resources :task_steps, only: [:index, :show]
+    resources :task_steps, only: [ :index, :show ]
   end
 
   get "up" => "rails/health#show", as: :rails_health_check

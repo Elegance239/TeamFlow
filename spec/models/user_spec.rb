@@ -36,10 +36,9 @@ RSpec.describe User, type: :model do
       expect(lead_user.team_lead?).to be true
       non_lead_user = User.create!(name: "Member", role: :team_member)
       expect(non_lead_user.team_member?).to be true
-      expect{
+      expect {
         non_lead_user = User.create!(name: "Member", role: :non_lead_user)
       }.to raise_error(ArgumentError)
     end
-
   end
 end

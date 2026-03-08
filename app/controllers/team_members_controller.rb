@@ -9,7 +9,7 @@ class TeamMembersController < ApplicationController
       return render json: { error: "Only the team lead can view all members" }, status: :forbidden
     end
 
-    render json: team.users.as_json(only: [:id, :name, :role])
+    render json: team.users.as_json(only: [ :id, :name, :role ])
   end
 
   # DELETE /teams/:team_id/members/:id

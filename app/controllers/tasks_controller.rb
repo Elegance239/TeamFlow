@@ -117,7 +117,7 @@ class TasksController < ApplicationController
 
   def task_create_params
     params.permit(:description, :due_date, :points,
-                  task_steps_attributes: [:name, :description, :step_num, :due_date])
+                  task_steps_attributes: [ :name, :description, :step_num, :due_date ])
   end
 
   def task_update_params

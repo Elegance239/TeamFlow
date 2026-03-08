@@ -89,7 +89,7 @@ RSpec.describe "Tasks", type: :request do
       post "/tasks", params: {
         user_id:  lead.id,
         due_date: (Date.today + 5).iso8601,
-        task_steps_attributes: [{ step_num: -1, name: "Bad Step" }]
+        task_steps_attributes: [ { step_num: -1, name: "Bad Step" } ]
       }
       expect(response).to have_http_status(:unprocessable_content)
     end
@@ -353,7 +353,7 @@ RSpec.describe "Tasks", type: :request do
 
       expect(response).to have_http_status(:ok)
       nums = JSON.parse(response.body).map { |s| s["step_num"] }
-      expect(nums).to eq([0, 1])
+      expect(nums).to eq([ 0, 1 ])
     end
   end
 

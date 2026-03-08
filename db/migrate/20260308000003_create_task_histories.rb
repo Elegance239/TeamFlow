@@ -9,6 +9,6 @@ class CreateTaskHistories < ActiveRecord::Migration[8.1]
     add_foreign_key :task_histories, :users
     add_foreign_key :task_histories, :tasks
 
-    add_index :task_histories, [:user_id, :task_id]
+    add_index :task_histories, [ :user_id, :task_id ]
   end
 end

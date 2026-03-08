@@ -10,7 +10,7 @@ class TeamsController < ApplicationController
     end
 
     team_leads = team.users.where(role: :team_lead)
-    render json: team.as_json.merge(team_leads: team_leads.as_json(only: [:id, :name]))
+    render json: team.as_json.merge(team_leads: team_leads.as_json(only: [ :id, :name ]))
   end
 
   # POST /teams
