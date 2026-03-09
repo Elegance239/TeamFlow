@@ -1,13 +1,18 @@
 import React from "react";
 
-export default function Sidebar() {
+export default function Sidebar({ onNavigate }) {
   return (
-    <div>
-        <h2>Sidebar</h2>
-        <h3>Admin Panel</h3>
-        <button>Create</button>
-    </div>
+    <div className="sidebar-container">
+      <h2>Sidebar</h2>
+      <h3>Admin Panel</h3>
+      <button>
+        Create Task
+      </button>
       
-
+      <nav className="sidebar-nav">
+        <button onClick={() => onNavigate('calendar')}>Show Calendar</button>
+        <button onClick={() => onNavigate('settings')}>Show Settings</button>
+      </nav>
+    </div>
   )
 }

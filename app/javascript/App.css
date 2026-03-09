@@ -2,3 +2,23 @@
     display: grid;
     grid-template-columns: 10% 90%;
 }
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 10px; /* Can be adjusted as needed */
+  width: 150px; /* Can be adjusted as needed */
+}
+
+.tag-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.skill-tag {
+  background-color: #f0f0f0;
+  padding: 4px 10px;
+  border-radius: 12px;
+  border: 1px solid #ccc;
+}
