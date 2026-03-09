@@ -12,6 +12,11 @@ RSpec.describe User, type: :model do
       expect(user).not_to be_valid
       expect(user.errors[:name]).to be_present
     end
+
+    it "can store a list of skills" do
+    user = User.new(skills: ["React", "CSS"])
+    expect(user.skills).to include("React")
+  end
   end
 
   describe "guest mode" do
