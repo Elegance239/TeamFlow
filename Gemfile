@@ -69,3 +69,5 @@ group :test do
   gem "cucumber-rails", "~> 4.0", require: false
   gem "database_cleaner"
 end
+
+gem "jsbundling-rails", "~> 1.3", ">= 1.3.1"
