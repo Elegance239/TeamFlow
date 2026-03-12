@@ -12,6 +12,7 @@ export default function Sidebar({ onNavigate }) {
       <nav className="sidebar-nav">
         <button onClick={() => onNavigate('calendar')}>Show Calendar</button>
         <button onClick={() => onNavigate('settings')}>Show Settings</button>
+        <button onClick={() => onNavigate('signin')}>Show SignIn Page</button>
       </nav>
     </div>
   )

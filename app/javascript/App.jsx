@@ -7,10 +7,18 @@ import Calendar from './components/Calendar';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import Settings from './components/Settings';
+import SignIn from './components/SignIn'
 import './App.css';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState('calendar'); // 'Calendar' as default page
+
+  const pages = {
+    calendar: <Calendar />,
+    settings: <Settings />,
+    signin: <SignIn />,
+  };
+
   return (
     <div>
       <header>
@@ -18,7 +26,7 @@ export default function App() {
       </header>
       <div className="content">
           <Sidebar onNavigate={setCurrentPage}/>
-          {currentPage === 'calendar' ? <Calendar /> : <Settings />}
+            {pages[currentPage]}
       </div>
     </div>
   )
