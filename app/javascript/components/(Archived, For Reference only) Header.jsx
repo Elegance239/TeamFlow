@@ -12,7 +12,7 @@ import FormGroup from '@mui/material/FormGroup';
 import MenuItem from '@mui/material/MenuItem';
 import Menu from '@mui/material/Menu';
 
-export default function Header() {
+export default function Header({ onMenuClick }) {
   const [auth, setAuth] = React.useState(true);
   const [anchorEl, setAnchorEl] = React.useState(null);
 
@@ -50,6 +50,7 @@ export default function Header() {
             color="inherit"
             aria-label="menu"
             sx={{ mr: 2, color: 'black'}}
+            onClick={onMenuClick}
           >
             <MenuIcon />
           </IconButton>

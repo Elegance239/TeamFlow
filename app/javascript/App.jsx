@@ -4,13 +4,13 @@ import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
 import interactionPlugin from '@fullcalendar/interaction'
 import Calendar from './components/Calendar';
-import Header from './components/Header';
-import Sidebar from './components/Sidebar';
 import Settings from './components/Settings';
 import SignIn from './components/SignIn'
+import Drawer from './components/Drawer';
 import './App.css';
 
 export default function App() {
+  const [auth, setAuth] = useState(true);
   const [currentPage, setCurrentPage] = useState('calendar'); // 'Calendar' as default page
 
   const pages = {
@@ -21,11 +21,8 @@ export default function App() {
 
   return (
     <div>
-      <header>
-        <Header onNavigate={setCurrentPage}/>
-      </header>
+      <Drawer auth= {auth} setAuth= {setAuth} onNavigate= {setCurrentPage}/>
       <div className="content">
-          <Sidebar onNavigate={setCurrentPage}/>
             {pages[currentPage]}
       </div>
     </div>

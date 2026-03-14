@@ -1,14 +1,13 @@
 .content {
-    display: grid;
-    grid-template-columns: 10% 90%;
+    padding: 10px;
 }
 
-.sidebar-nav {
+/* .sidebar-nav {
   display: flex;
   flex-direction: column;
-  gap: 10px; /* Can be adjusted as needed */
-  width: 150px; /* Can be adjusted as needed */
-}
+  gap: 10px; 
+  width: 150px; 
+} */
 
 .tag-container {
   display: flex;
