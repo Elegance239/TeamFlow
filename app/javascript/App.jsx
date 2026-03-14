@@ -7,7 +7,14 @@ import Calendar from './components/Calendar';
 import Settings from './components/Settings';
 import SignIn from './components/SignIn'
 import Drawer from './components/Drawer';
+import  { ThemeProvider, createTheme } from '@mui/material/styles';
 import './App.css';
+
+const theme = createTheme({
+  colorSchemes: {
+    dark: true,
+  },
+});
 
 export default function App() {
   const [auth, setAuth] = useState(true);
@@ -20,11 +27,13 @@ export default function App() {
   };
 
   return (
-    <div>
-      <Drawer auth= {auth} setAuth= {setAuth} onNavigate= {setCurrentPage}/>
-      <div className="content">
-            {pages[currentPage]}
+    <ThemeProvider theme={theme}>
+      <div>
+        <Drawer auth= {auth} setAuth= {setAuth} onNavigate= {setCurrentPage}>
+          {pages[currentPage]}
+        </Drawer>
       </div>
-    </div>
+    </ThemeProvider>
+    
   )
 }

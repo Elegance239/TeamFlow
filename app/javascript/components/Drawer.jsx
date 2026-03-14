@@ -81,7 +81,7 @@ const DrawerHeader = styled('div')(({ theme }) => ({
   justifyContent: 'flex-end',
 }));
 
-export default function PersistentDrawerLeft( { onNavigate }) {
+export default function PersistentDrawerLeft( { onNavigate, children }) {
   const [auth, setAuth] = React.useState(true);
   const [anchorEl, setAnchorEl] = React.useState(null);
   const theme = useTheme();
@@ -128,7 +128,7 @@ export default function PersistentDrawerLeft( { onNavigate }) {
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" noWrap component="div" onClick={() => { onNavigate('calendar')}} sx={{ flexGrow: 1, color: '#444746' }}>
+          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, color: '#444746' }}>
             TeamFlow
           </Typography>
             {auth && (
@@ -185,7 +185,9 @@ export default function PersistentDrawerLeft( { onNavigate }) {
         </DrawerHeader>
         <Divider />
         <List>
-          {['Inbox', 'Starred', 'Send email', 'Drafts'].map((text, index) => (
+          <div className='admin'>
+            <h4 style={{ paddingLeft: '20px' }}>Admin Panel</h4>
+            {['Inbox', 'Starred', 'Send email', 'Drafts'].map((text, index) => (
             <ListItem key={text} disablePadding>
               <ListItemButton>
                 <ListItemIcon>
@@ -194,7 +196,8 @@ export default function PersistentDrawerLeft( { onNavigate }) {
                 <ListItemText primary={text} />
               </ListItemButton>
             </ListItem>
-          ))}
+            ))}
+          </div>
         </List>
         <Divider />
         <List>
@@ -218,6 +221,9 @@ export default function PersistentDrawerLeft( { onNavigate }) {
       </Drawer>
       <Main open={open}>
         <DrawerHeader />
+        <div className='content'>
+          {children}
+        </div>
       </Main>
     </Box>
   );
