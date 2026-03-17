@@ -60,6 +60,7 @@ const SignInContainer = styled(Stack)(({ theme }) => ({
 }));
 
 export default function SignIn(props) {
+  const onNavigate = props.onNavigate;
   const [emailError, setEmailError] = React.useState(false);
   const [emailErrorMessage, setEmailErrorMessage] = React.useState('');
   const [passwordError, setPasswordError] = React.useState(false);
@@ -198,9 +199,10 @@ export default function SignIn(props) {
             <Typography sx={{ textAlign: 'center' }}>
               Don&apos;t have an account?{' '}
               <Link
-                href="Route for Creating Users"
+                component="button"
                 variant="body2"
                 sx={{ alignSelf: 'center' }}
+                onClick={() => onNavigate('signup')}
               >
                 Sign up
               </Link>

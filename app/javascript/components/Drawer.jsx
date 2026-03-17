@@ -31,7 +31,7 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import Collapse from '@mui/material/Collapse';
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
-
+import Filters from './Filters';
 const drawerWidth = 240;
 
 const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })(
@@ -93,8 +93,6 @@ export default function PersistentDrawerLeft( { onNavigate, children }) {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const theme = useTheme();
   const [open, setOpen] = React.useState(false);
-  const [teamOpen, setTeamOpen] = React.useState(true);
-  const [assigneeOpen, setAssigneeOpen] = React.useState(true);
 
   const handleMenu = (event) => {
     setAnchorEl(event.currentTarget);
@@ -130,14 +128,13 @@ export default function PersistentDrawerLeft( { onNavigate, children }) {
             sx={[
               {
                 mr: 2,
-                color: '#444746',
               },
               open && { display: 'none' },
             ]}
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, color: '#444746' }}>
+          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
             TeamFlow
           </Typography>
             {auth && (
@@ -188,7 +185,7 @@ export default function PersistentDrawerLeft( { onNavigate, children }) {
         open={open}
       >
         <DrawerHeader>
-          <Typography variant="h6" sx={{ flexGrow: 1, color: '#444746' }}>Department</Typography>
+          <Typography variant="h6" sx={{ flexGrow: 1 }}>Department</Typography>
           <IconButton onClick={handleDrawerClose}>
             {theme.direction === 'ltr' ? <ChevronLeftIcon /> : <ChevronRightIcon />}
           </IconButton>
@@ -228,57 +225,9 @@ export default function PersistentDrawerLeft( { onNavigate, children }) {
         </ListItem>
         </List>
         <Divider />
+
+        <Filters />
         
-        {/* Todo: Enclose this with a check for Admin soon */}
-        <List disablePadding>
-          <ListItemButton onClick={() => setTeamOpen(!teamOpen)}>
-            <ListItemText primary="Team Members" />
-            {teamOpen ? <ExpandLess /> : <ExpandMore />}
-          </ListItemButton>
-
-          <Collapse in={teamOpen} timeout="auto">
-            <List component="div" disablePadding>
-              {/* Placeholder only, replace with the actual members in the database */}
-              {['Team Member 1', 'Team Member 2', 'Team Member 3'].map((member, index) => (
-                <ListItem key={index} disablePadding>
-                  <ListItemButton sx={{ paddingLeft: 4, paddingTop: 0, paddingBottom: 0, minHeight:'auto'}}>
-                    <FormControlLabel
-                      control={<Checkbox defaultChecked/>}
-                      label={member}
-                      sx={{ width: '100%' }}
-                    />
-                  </ListItemButton>
-                </ListItem>
-              ))}
-            </List>
-          </Collapse>
-        </List>
-        
-        {/* Todo: Enclose this with a check for User soon */}
-        <List disablePadding>
-          <ListItemButton onClick={() => setAssigneeOpen(!assigneeOpen)}>
-            <ListItemText primary="Admin" />
-            {assigneeOpen ? <ExpandLess /> : <ExpandMore />}
-          </ListItemButton>
-
-          <Collapse in={assigneeOpen} timeout="auto">
-            <List component="div" disablePadding>
-              {/* Placeholder only, replace with the actual members in the database */}
-              {['Admin 1', 'Admin 2', 'Admin 3'].map((admin, index) => (
-                <ListItem key={index} disablePadding>
-                  <ListItemButton sx={{ paddingLeft: 4, paddingTop: 0, paddingBottom: 0, minHeight:'auto'}}>
-                    <FormControlLabel
-                      control={<Checkbox defaultChecked />}
-                      label={admin}
-                      sx={{ width: '100%' }}
-                    />
-                  </ListItemButton>
-                </ListItem>
-              ))}
-            </List>
-          </Collapse>
-        </List>
-
       </Drawer>
       <Main open={open}>
         <DrawerHeader />
