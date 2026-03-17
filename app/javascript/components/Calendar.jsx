@@ -39,6 +39,7 @@ export default function Calendar() {
         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
         initialView="timeGridWeek"
         dateClick={handleDateClick}
+        height="calc(100vh - 128px)"
       />
     </div>
   );

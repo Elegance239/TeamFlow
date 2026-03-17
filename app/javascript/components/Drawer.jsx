@@ -21,9 +21,16 @@ import MailIcon from '@mui/icons-material/Mail';
 import AccountCircle from '@mui/icons-material/AccountCircle';
 import MenuItem from '@mui/material/MenuItem';
 import Menu from '@mui/material/Menu';
+import AssignmentIcon from '@mui/icons-material/Assignment';
+import DeleteIcon from '@mui/icons-material/Delete';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import SettingsIcon from '@mui/icons-material/Settings';
 import LoginIcon from '@mui/icons-material/Login';
+import Checkbox from '@mui/material/Checkbox';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Collapse from '@mui/material/Collapse';
+import ExpandLess from '@mui/icons-material/ExpandLess';
+import ExpandMore from '@mui/icons-material/ExpandMore';
 
 const drawerWidth = 240;
 
@@ -76,9 +83,9 @@ const AppBar = styled(MuiAppBar, {
 const DrawerHeader = styled('div')(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
-  padding: theme.spacing(0, 1),
+  padding: theme.spacing(0, 1, 0, 2.5),
   ...theme.mixins.toolbar,
-  justifyContent: 'flex-end',
+  justifyContent: 'space-between',
 }));
 
 export default function PersistentDrawerLeft( { onNavigate, children }) {
@@ -86,6 +93,8 @@ export default function PersistentDrawerLeft( { onNavigate, children }) {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const theme = useTheme();
   const [open, setOpen] = React.useState(false);
+  const [teamOpen, setTeamOpen] = React.useState(true);
+  const [assigneeOpen, setAssigneeOpen] = React.useState(true);
 
   const handleMenu = (event) => {
     setAnchorEl(event.currentTarget);
@@ -109,7 +118,7 @@ export default function PersistentDrawerLeft( { onNavigate, children }) {
   }
 
   return (
-    <Box sx={{ display: 'flex' }}>
+    <Box sx={{ display: 'flex', height: '100%'}}>
       <CssBaseline />
       <AppBar position="fixed" open={open} color='#fff'>
         <Toolbar>
@@ -121,7 +130,7 @@ export default function PersistentDrawerLeft( { onNavigate, children }) {
             sx={[
               {
                 mr: 2,
-                color: '#444746'
+                color: '#444746',
               },
               open && { display: 'none' },
             ]}
@@ -179,6 +188,7 @@ export default function PersistentDrawerLeft( { onNavigate, children }) {
         open={open}
       >
         <DrawerHeader>
+          <Typography variant="h6" sx={{ flexGrow: 1, color: '#444746' }}>Department</Typography>
           <IconButton onClick={handleDrawerClose}>
             {theme.direction === 'ltr' ? <ChevronLeftIcon /> : <ChevronRightIcon />}
           </IconButton>
@@ -187,11 +197,11 @@ export default function PersistentDrawerLeft( { onNavigate, children }) {
         <List>
           <div className='admin'>
             <h4 style={{ paddingLeft: '20px' }}>Admin Panel</h4>
-            {['Inbox', 'Starred', 'Send email', 'Drafts'].map((text, index) => (
+            {['Create Task', 'Delete Task'].map((text, index) => (
             <ListItem key={text} disablePadding>
               <ListItemButton>
                 <ListItemIcon>
-                  {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
+                  {index % 2 === 0 ? <AssignmentIcon /> : <DeleteIcon />}
                 </ListItemIcon>
                 <ListItemText primary={text} />
               </ListItemButton>
@@ -218,6 +228,57 @@ export default function PersistentDrawerLeft( { onNavigate, children }) {
         </ListItem>
         </List>
         <Divider />
+        
+        {/* Todo: Enclose this with a check for Admin soon */}
+        <List disablePadding>
+          <ListItemButton onClick={() => setTeamOpen(!teamOpen)}>
+            <ListItemText primary="Team Members" />
+            {teamOpen ? <ExpandLess /> : <ExpandMore />}
+          </ListItemButton>
+
+          <Collapse in={teamOpen} timeout="auto">
+            <List component="div" disablePadding>
+              {/* Placeholder only, replace with the actual members in the database */}
+              {['Team Member 1', 'Team Member 2', 'Team Member 3'].map((member, index) => (
+                <ListItem key={index} disablePadding>
+                  <ListItemButton sx={{ paddingLeft: 4, paddingTop: 0, paddingBottom: 0, minHeight:'auto'}}>
+                    <FormControlLabel
+                      control={<Checkbox defaultChecked/>}
+                      label={member}
+                      sx={{ width: '100%' }}
+                    />
+                  </ListItemButton>
+                </ListItem>
+              ))}
+            </List>
+          </Collapse>
+        </List>
+        
+        {/* Todo: Enclose this with a check for User soon */}
+        <List disablePadding>
+          <ListItemButton onClick={() => setAssigneeOpen(!assigneeOpen)}>
+            <ListItemText primary="Admin" />
+            {assigneeOpen ? <ExpandLess /> : <ExpandMore />}
+          </ListItemButton>
+
+          <Collapse in={assigneeOpen} timeout="auto">
+            <List component="div" disablePadding>
+              {/* Placeholder only, replace with the actual members in the database */}
+              {['Admin 1', 'Admin 2', 'Admin 3'].map((admin, index) => (
+                <ListItem key={index} disablePadding>
+                  <ListItemButton sx={{ paddingLeft: 4, paddingTop: 0, paddingBottom: 0, minHeight:'auto'}}>
+                    <FormControlLabel
+                      control={<Checkbox defaultChecked />}
+                      label={admin}
+                      sx={{ width: '100%' }}
+                    />
+                  </ListItemButton>
+                </ListItem>
+              ))}
+            </List>
+          </Collapse>
+        </List>
+
       </Drawer>
       <Main open={open}>
         <DrawerHeader />
