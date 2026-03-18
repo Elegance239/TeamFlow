@@ -32,6 +32,8 @@ import Collapse from '@mui/material/Collapse';
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import Filters from './Filters';
+import CreateTask from './CreateTask';
+
 const drawerWidth = 240;
 
 const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })(
@@ -93,6 +95,7 @@ export default function PersistentDrawerLeft( { onNavigate, children }) {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const theme = useTheme();
   const [open, setOpen] = React.useState(false);
+  const [createTaskOpen, setCreateTaskOpen] = React.useState(false);
 
   const handleMenu = (event) => {
     setAnchorEl(event.currentTarget);
@@ -114,6 +117,27 @@ export default function PersistentDrawerLeft( { onNavigate, children }) {
     onNavigate('settings');
     handleClose();
   }
+
+  const handleCreateTaskOpen = () => {
+    setCreateTaskOpen(true);
+  };
+
+  const handleCreateTaskClose = () => {
+    setCreateTaskOpen(false);
+  };
+
+  const adminItems = [
+    {
+      text: "Create Task",
+      icon: <AssignmentIcon />,
+      onClick: handleCreateTaskOpen,
+    },
+    {
+      text: "Delete Task",
+      icon: <DeleteIcon />,
+      onClick: () => {},
+    },
+  ];
 
   return (
     <Box sx={{ display: 'flex', height: '100%'}}>
@@ -194,17 +218,16 @@ export default function PersistentDrawerLeft( { onNavigate, children }) {
         <List>
           <div className='admin'>
             <h4 style={{ paddingLeft: '20px' }}>Admin Panel</h4>
-            {['Create Task', 'Delete Task'].map((text, index) => (
-            <ListItem key={text} disablePadding>
-              <ListItemButton>
-                <ListItemIcon>
-                  {index % 2 === 0 ? <AssignmentIcon /> : <DeleteIcon />}
-                </ListItemIcon>
-                <ListItemText primary={text} />
-              </ListItemButton>
-            </ListItem>
+            {adminItems.map((item) => (
+              <ListItem key={item.text} disablePadding>
+                <ListItemButton onClick={item.onClick}>
+                  <ListItemIcon>{item.icon}</ListItemIcon>
+                  <ListItemText primary={item.text}/>
+                </ListItemButton>
+              </ListItem>
             ))}
           </div>
+          <CreateTask open={createTaskOpen} onClose={handleCreateTaskClose} />
         </List>
         <Divider />
         <List>

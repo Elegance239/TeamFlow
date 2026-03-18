@@ -22,7 +22,7 @@ const theme = createTheme({
 
 export default function App() {
   const [auth, setAuth] = useState(true);
-  const [currentPage, setCurrentPage] = useState('signup'); // 'Calendar' as default page
+  const [currentPage, setCurrentPage] = useState('calendar'); // 'Calendar' as default page
 
   const pages = {
     calendar: <Calendar />,
@@ -35,14 +35,16 @@ export default function App() {
   return (
     <ThemeProvider theme={theme}>
       {/* For my testing only. To return back to normal comment out the div below and restore the commented part*/}
-      {/* <div>
+      <div>
         <Drawer auth= {auth} setAuth= {setAuth} onNavigate= {setCurrentPage}>
           {pages[currentPage]}
         </Drawer>
-      </div> */}
+      </div>
+      {/*
       <div>
         {pages[currentPage]}
       </div>
+        */}
       
     </ThemeProvider>
     
