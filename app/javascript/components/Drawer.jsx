@@ -25,7 +25,6 @@ import Menu from '@mui/material/Menu';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import DeleteIcon from '@mui/icons-material/Delete';
 import Filters from './Filters';
-import CreateTask from './CreateTask';
 
 const drawerWidth = 240;
 
@@ -83,12 +82,11 @@ const DrawerHeader = styled('div')(({ theme }) => ({
   justifyContent: 'space-between',
 }));
 
-export default function PersistentDrawerLeft( { onNavigate, children }) {
+export default function PersistentDrawerLeft( { onNavigate, onRequestOpenCreateTask, children }) {
   const [auth, setAuth] = React.useState(true);
   const [anchorEl, setAnchorEl] = React.useState(null);
   const theme = useTheme();
   const [open, setOpen] = React.useState(false);
-  const [createTaskOpen, setCreateTaskOpen] = React.useState(false);
 
   const handleMenu = (event) => {
     setAnchorEl(event.currentTarget);
@@ -111,19 +109,13 @@ export default function PersistentDrawerLeft( { onNavigate, children }) {
     handleClose();
   }
 
-  const handleCreateTaskOpen = () => {
-    setCreateTaskOpen(true);
-  };
 
-  const handleCreateTaskClose = () => {
-    setCreateTaskOpen(false);
-  };
 
   const adminItems = [
     {
       text: "Create Task",
       icon: <AssignmentIcon />,
-      onClick: handleCreateTaskOpen,
+      onClick: onRequestOpenCreateTask,
     },
     {
       text: "Delete Task",
@@ -221,7 +213,7 @@ export default function PersistentDrawerLeft( { onNavigate, children }) {
               </ListItem>
             ))}
           </div>
-          <CreateTask open={createTaskOpen} onClose={handleCreateTaskClose} />
+
         </List>
         <Divider />
         <List>

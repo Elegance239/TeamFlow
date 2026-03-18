@@ -11,7 +11,7 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 
-export default function CreateTask({open, onClose}) {
+export default function CreateTask({open, onClose, clickedTime}) {
   // Mock data only, these should come from the database
   const teamMembers = [
     { id: 1, name: "Team Member 1" },
@@ -23,19 +23,46 @@ export default function CreateTask({open, onClose}) {
   const [allDay, setAllDay] = React.useState(false);
   const [title, setTitle] = React.useState('');
   const [description, setDescription] = React.useState('');
-  const [taskDate, setTaskDate] = React.useState(dayjs().format('YYYY-MM-DD'));
-  const [startTime, setStartTime] = React.useState(dayjs().hour(9).minute(0).format('HH:mm'));
-  const [endTime, setEndTime] = React.useState(dayjs().hour(10).minute(0).format('HH:mm'));
   const [point, setPoint] = React.useState(1);
 
-  const handleSubmit = (event) => {
+  const [startDate, setStartDate] = React.useState(dayjs(clickedTime).format('YYYY-MM-DD'));
+  const [endDate, setEndDate] = React.useState(dayjs(clickedTime).format('YYYY-MM-DD'));
+  const [startTime, setStartTime] = React.useState(dayjs(clickedTime).format('HH:mm'));
+  const [endTime, setEndTime] = React.useState(dayjs(clickedTime).add(1, 'hour').format('HH:mm'));
+
+  const [dateError, setDateError] = React.useState(false);
+  const [timeError, setTimeError] = React.useState(false);
+
+  React.useEffect(() => {
+  if (open) {
+    setTitle('');
+    setDescription('');
+    setAssignee(teamMembers[0].id);
+    setStartDate(dayjs(clickedTime).format('YYYY-MM-DD'));
+    setEndDate(dayjs(clickedTime).format('YYYY-MM-DD'));
+    setStartTime(dayjs(clickedTime).format('HH:mm'));
+    setEndTime(dayjs(clickedTime).add(1, 'hour').format('HH:mm'));
+    setAllDay(false);
+    setPoint(1);
+    setDateError(false);
+    setTimeError(false);
+  }
+}, [clickedTime, open]);
+
+
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
-    const startDateTime = dayjs(`${taskDate} ${startTime}`, 'YYYY-MM-DD HH:mm');
-    const endDateTime = dayjs(`${taskDate} ${endTime}`, 'YYYY-MM-DD HH:mm');
+    const startDateTime = dayjs(`${startDate} ${startTime}`, 'YYYY-MM-DD HH:mm');
+    const endDateTime = dayjs(`${endDate} ${endTime}`, 'YYYY-MM-DD HH:mm');
     
+    if (dayjs(startDate).isBefore(dayjs(), 'day') || dayjs(endDate).isBefore(dayjs(startDate))){
+      setDateError(true);
+      return
+    }
+
     if (!allDay && !endDateTime.isAfter(startDateTime)) {
-      alert('Please fill a valid end time');
+      setTimeError(true);
       return;
     }
 
@@ -43,23 +70,13 @@ export default function CreateTask({open, onClose}) {
       title: title.trim(),
       description: description.trim(),
       team_id: assignee,
-      date: taskDate,
-      start_time: allDay ? null : startDateTime.format('YYYY-MM-DDTHH:mm:ss'),
-      end_time: allDay ? null : endDateTime.format('YYYY-MM-DDTHH:mm:ss'),
-    };
-
-    //testing only, should go to the database
-    console.log('Create task:', newTask);
-
-
-    setTitle('');
-    setDescription('');
-    setAssignee(teamMembers[0].id);
-    setTaskDate(dayjs().format('YYYY-MM-DD'));
-    setStartTime(dayjs().hour(9).minute(0).format('HH:mm'));
-    setEndTime(dayjs().hour(10).minute(0).format('HH:mm'));
-    setAllDay(false);
-    setPoint(1);
+      start_time: startDateTime.format('YYYY-MM-DDTHH:mm:ss'),
+      end_time: endDateTime.format('YYYY-MM-DDTHH:mm:ss'),
+      };
+      
+      //testing only, should go to the database
+      console.log('Create task:', newTask);
+    
     onClose();
   };
 
@@ -127,16 +144,18 @@ export default function CreateTask({open, onClose}) {
               </MenuItem>
             ))}
             </TextField>
-            <div style={{ width: '100%', display: 'flex', gap: '24px'}}>
+            <div style={{ width: '100%', display: 'flex', gap: '20px'}}>
             <TextField
               required
+              error={dateError}
+              helperText={dateError ? "Invalid Date" : ""}
               style={{ flex: 1 }}
               margin="dense"
-              label="Date"
+              label="Start Date"
               type="date"
-              name="date"
-              onChange={(e) => setTaskDate(e.target.value)}
-              value={taskDate}
+              name="startDate"
+              onChange={(e) => setStartDate(e.target.value)}
+              value={startDate}
               InputLabelProps={{ shrink: true }}
               variant="standard"
               />
@@ -152,8 +171,26 @@ export default function CreateTask({open, onClose}) {
               InputLabelProps={{ shrink: true }}
               variant="standard"
               />
+            </div>
+            <div style={{ width: '100%', display: 'flex', gap: '20px'}}>
+            <TextField
+              required
+              error={dateError}
+              helperText={dateError ? "Invalid Date" : ""}
+              style={{ flex: 1 }}
+              margin="dense"
+              label="End Date"
+              type="date"
+              name="endDate"
+              onChange={(e) => setEndDate(e.target.value)}
+              value={endDate}
+              InputLabelProps={{ shrink: true }}
+              variant="standard"
+              />
             <TextField
               disabled={allDay}
+              error={timeError}
+              helperText={timeError ? "Invalid End Time" : ""}
               style={{ flex: 1 }}
               margin="dense"
               label="End Time"
@@ -165,6 +202,7 @@ export default function CreateTask({open, onClose}) {
               variant="standard"
               />
             </div>
+
             <FormControlLabel
               control={
                 <Switch checked={allDay} onChange={(e) => setAllDay(e.target.checked)}/>

@@ -23,20 +23,27 @@ const theme = createTheme({
 export default function App() {
   const [auth, setAuth] = useState(true);
   const [currentPage, setCurrentPage] = useState('calendar'); // 'Calendar' as default page
+  const [openCreateTaskSignal, setOpenCreateTaskSignal] = useState(false);
 
   const pages = {
-    calendar: <Calendar />,
+    calendar: <Calendar openCreateTaskSignal={openCreateTaskSignal} setOpenCreateTaskSignal={setOpenCreateTaskSignal} />,
     settings: <Settings />,
     //For my testing only
     signin: <SignIn onNavigate= {setCurrentPage}/>,
     signup: <SignUp onNavigate= {setCurrentPage}/>
   };
 
+  const handleRequestOpenCreateTask = () => {
+    setOpenCreateTaskSignal(true);
+    setCurrentPage("calendar");
+  };
+
   return (
     <ThemeProvider theme={theme}>
       {/* For my testing only. To return back to normal comment out the div below and restore the commented part*/}
       <div>
-        <Drawer auth= {auth} setAuth= {setAuth} onNavigate= {setCurrentPage}>
+        <Drawer auth= {auth} setAuth= {setAuth} onNavigate= {setCurrentPage} 
+        onRequestOpenCreateTask={handleRequestOpenCreateTask}>
           {pages[currentPage]}
         </Drawer>
       </div>
