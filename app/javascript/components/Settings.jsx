@@ -88,10 +88,9 @@ export default function Settings() {
             /* Changing 'disabled' to true will make it read-only (we can discuss abt that later)*/
             disabled={true} 
             sx={{ 
-              bgcolor: '#333',
               borderRadius: '4px',
               '& .MuiInputBase-input.Mui-disabled': {
-                WebkitTextFillColor: '#ffffff',
+                WebkitTextFillColor: 'inherit',
               },
               '& .MuiOutlinedInput-notchedOutline': {
                 borderColor: '#555',
@@ -110,12 +109,12 @@ export default function Settings() {
             variant="outlined"
             value={user.role}
             size="small"
-            disabled={false} 
+            disabled={true} 
             sx={{ 
-              bgcolor: '#333',
+              bgcolor: 'inherit',
               borderRadius: '4px',
               '& .MuiInputBase-input.Mui-disabled': {
-                WebkitTextFillColor: '#ffffff',
+                WebkitTextFillColor: 'inherit',
               },
               '& .MuiOutlinedInput-notchedOutline': {
                 borderColor: '#555',
@@ -133,7 +132,7 @@ export default function Settings() {
         <h2>Account Security</h2>
         {/* 1. Email Row */}
         <Box sx={{ mb: 3 }}>
-          <Typography variant="body1" sx={{ fontWeight: 'bold', mb: 1, color: 'white' }}>
+          <Typography variant="body1" sx={{ fontWeight: 'bold', mb: 1, color: 'inherit' }}>
             Email
           </Typography>
           <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
@@ -147,13 +146,13 @@ export default function Settings() {
                 },
               }}
               sx={{ 
-                bgcolor: '#333',
+                bgcolor: 'inherit',
                 borderRadius: '4px',
                 maxWidth: '400px',
                 '& .MuiInputBase-input.Mui-disabled': {
-                WebkitTextFillColor: '#ffffff',
+                WebkitTextFillColor: 'inherit',
                 },
-                input: { color: 'white' },
+                input: { color: 'inherit' },
                 '& .MuiOutlinedInput-notchedOutline': { borderColor: '#555' }
               }}
             />
@@ -176,7 +175,7 @@ export default function Settings() {
 
         {/* 2. Password Row */}
         <Box sx={{ mb: 3 }}>
-          <Typography variant="body1" sx={{ fontWeight: 'bold', mb: 1, color: 'white' }}>
+          <Typography variant="body1" sx={{ fontWeight: 'bold', mb: 1, color: 'inherit' }}>
             Password
           </Typography>
           <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
@@ -191,13 +190,13 @@ export default function Settings() {
                 },
               }}
               sx={{ 
-                bgcolor: '#333', 
+                bgcolor: 'inherit', 
                 borderRadius: '4px',
                 maxWidth: '400px',
                 '& .MuiInputBase-input.Mui-disabled': {
-                WebkitTextFillColor: '#ffffff',
+                WebkitTextFillColor: '#inherit',
                 },
-                input: { color: 'white' },
+                input: { color: 'inherit' },
                 '& .MuiOutlinedInput-notchedOutline': { borderColor: '#555' }
               }}
             />
@@ -238,11 +237,11 @@ export default function Settings() {
           placeholder="Enter email for new tasks/deadlines"
           fullWidth
           sx={{ 
-                bgcolor: '#333',
+                bgcolor: 'inherit',
                 borderRadius: '4px',
                 maxWidth: '400px',
                 '& .MuiInputBase-input.Mui-disabled': {
-                WebkitTextFillColor: '#ffffff',
+                WebkitTextFillColor: 'inherit',
                 },
                 input: { color: 'white' },
                 '& .MuiOutlinedInput-notchedOutline': { borderColor: '#555' }

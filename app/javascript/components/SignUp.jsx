@@ -357,7 +357,7 @@ export default function SignUp(props) {
 
           <Divider>or</Divider>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Typography sx={{ textAlign: 'center' }}>
+            <Typography sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
               Already have an account?{' '}
               <Link component="button" variant="body2" sx={{ alignSelf: 'center' }} onClick={() => onNavigate('signin')}>
                 Sign in

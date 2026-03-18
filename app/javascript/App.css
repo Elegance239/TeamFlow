@@ -14,7 +14,7 @@
 .skill-tag {
   background-color: '#333';
   
-  color: #ffffff; 
+  color: inherit; 
   
   padding: 5px 12px;
   border-radius: 16px;

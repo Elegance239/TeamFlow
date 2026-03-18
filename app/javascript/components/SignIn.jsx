@@ -196,7 +196,7 @@ export default function SignIn(props) {
           </Box>
           <Divider>or</Divider>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Typography sx={{ textAlign: 'center' }}>
+            <Typography sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
               Don&apos;t have an account?{' '}
               <Link
                 component="button"
