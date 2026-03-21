@@ -107,9 +107,9 @@ export default function Calendar({
         height="calc(100vh - 128px)"
         events={previewEvent ? [...events, previewEvent] : events}
         headerToolbar={{
-          start: "today prev, next",
+          start: "today prev,next",
           center: "title",
-          end: "dayGridMonth, timeGridWeek, timeGridDay"
+          end: "dayGridMonth,timeGridWeek,timeGridDay"
         }}
       />
       <CreateTask

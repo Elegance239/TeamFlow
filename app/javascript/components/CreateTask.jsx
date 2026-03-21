@@ -27,7 +27,7 @@ export default function CreateTask({ open, onClose, anchorEl, clickedTime }) {
   const [allDay, setAllDay] = React.useState(false);
   const [title, setTitle] = React.useState("(No title)");
   const [description, setDescription] = React.useState("");
-  const [point, setPoint] = React.useState(1);
+  const [point, setPoint] = React.useState(3);
 
   const [startDate, setStartDate] = React.useState(
     dayjs().format("YYYY-MM-DD"),
@@ -63,7 +63,7 @@ export default function CreateTask({ open, onClose, anchorEl, clickedTime }) {
       setDescription("");
       setAssignee(null);
       setAllDay(false);
-      setPoint(1);
+      setPoint(3);
       setDateError(false);
       setTimeError(false);
     }
