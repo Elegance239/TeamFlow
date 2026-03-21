@@ -8,6 +8,7 @@ import Settings from './components/Settings';
 import SignIn from './components/SignIn'
 import Drawer from './components/Drawer';
 import SignUp from './components/SignUp';
+import { SnackbarProvider, useSnackbar } from 'notistack';
 import  { ThemeProvider, createTheme } from '@mui/material/styles';
 // I think it is better to use React Routing soon.
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
@@ -39,21 +40,22 @@ export default function App() {
   };
 
   return (
-    <ThemeProvider theme={theme}>
-      {/* For my testing only. To return back to normal comment out the div below and restore the commented part*/}
-      <div>
-        <Drawer auth= {auth} setAuth= {setAuth} onNavigate= {setCurrentPage} 
-        onRequestOpenCreateTask={handleRequestOpenCreateTask}>
+    <SnackbarProvider maxSnack={3}>
+      <ThemeProvider theme={theme}>
+        {/* For my testing only. To return back to normal comment out the div below and restore the commented part*/}
+        <div>
+          <Drawer auth= {auth} setAuth= {setAuth} onNavigate= {setCurrentPage} 
+          onRequestOpenCreateTask={handleRequestOpenCreateTask}>
+            {pages[currentPage]}
+          </Drawer>
+        </div>
+        {/*
+        <div>
           {pages[currentPage]}
-        </Drawer>
-      </div>
-      {/*
-      <div>
-        {pages[currentPage]}
-      </div>
-        */}
-      
-    </ThemeProvider>
-    
+        </div>
+          */}
+        
+      </ThemeProvider>
+    </SnackbarProvider>
   )
 }

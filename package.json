@@ -20,8 +20,10 @@
     "@fullcalendar/react": "^6.1.20",
     "@mui/icons-material": "^7.3.9",
     "@mui/material": "^7.3.9",
+    "axios": "^1.13.6",
     "dayjs": "^1.11.20",
     "fullcalendar": "^6.1.20",
+    "notistack": "^3.0.2",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-router-dom": "^7.13.1"
