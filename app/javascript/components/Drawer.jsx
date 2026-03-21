@@ -127,7 +127,15 @@ export default function PersistentDrawerLeft( { onNavigate, onRequestOpenCreateT
   return (
     <Box sx={{ display: 'flex', height: '100%'}}>
       <CssBaseline />
-      <AppBar position="fixed" open={open} color='#fff'>
+      <AppBar position="fixed" open={open} elevation={0}
+      sx={{ 
+        backgroundColor: (theme) => theme.palette.background.default, 
+        color: (theme) => theme.palette.text.primary,
+        zIndex: (theme) => theme.zIndex.drawer + 1,
+        borderBottom: `1px solid ${theme.palette.divider}`,
+        boxShadow: 'none', 
+      }}
+    >
         <Toolbar>
           <IconButton
             color="inherit"
@@ -188,6 +196,8 @@ export default function PersistentDrawerLeft( { onNavigate, onRequestOpenCreateT
           '& .MuiDrawer-paper': {
             width: drawerWidth,
             boxSizing: 'border-box',
+            backgroundColor: (theme) => theme.palette.background.default,
+            color: (theme) => theme.palette.text.primary,
           },
         }}
         variant="persistent"
