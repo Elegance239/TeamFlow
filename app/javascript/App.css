@@ -1,4 +1,23 @@
-.content {
-    display: grid;
-    grid-template-columns: 10% 90%;
+/* .sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 10px; 
+  width: 150px; 
+} */
+
+.tag-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px; 
+}
+
+.skill-tag {
+  background-color: '#333';
+  
+  color: inherit; 
+  
+  padding: 5px 12px;
+  border-radius: 16px;
+  font-size: 14px;
+  border: 1px solid #444;
 }
