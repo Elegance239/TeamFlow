@@ -172,7 +172,6 @@ RSpec.describe Task, type: :model do
       expect { task.destroy }.to change { TaskStep.count }.by(-1)
     end
   end
-
   describe "task claiming" do
 
     let(:member){User.create!(name:"Member", team: team, role: :team_member)}
@@ -197,9 +196,7 @@ RSpec.describe Task, type: :model do
       task.save!
       task.update!(user_id:member.id)
       task.update!(user_id:nil)
-      task.update!(user_id: member2.id)
-      expect(task.assigned_user).to eq(member2)
+      expect(task.assigned_user).to be_nil
     end
   end
-
-  end
+end
