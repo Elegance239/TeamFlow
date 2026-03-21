@@ -40,7 +40,7 @@ export default function App() {
   };
 
   return (
-    <SnackbarProvider maxSnack={3}>
+    <SnackbarProvider maxSnack={3} autoHideDuration={3000}>
       <ThemeProvider theme={theme}>
         {/* For my testing only. To return back to normal comment out the div below and restore the commented part*/}
         <div>
