@@ -172,4 +172,30 @@ RSpec.describe Task, type: :model do
       expect { task.destroy }.to change { TaskStep.count }.by(-1)
     end
   end
+  describe "task claiming" do
+    let(:member) { User.create!(name: "Member", team: team, role: :team_member) }
+    let(:other_team) { Team.create!(name: "Other Team") }
+    let(:outsider) { User.create! name: "Outsider", team: other_team, role: :team_member }
+
+    it "uncliamed when first created" do
+      task= valid_task
+      task.save!
+      expect(task.assigned_user).to be_nil
+    end
+
+    it "can be claimed by a member" do
+      task= valid_task
+      task.save!
+      task.update!(user_id: member.id)
+      expect(task.assigned_user).to eq(member)
+    end
+
+    it "can be unclaimed, returning to unassigned" do
+      task=valid_task
+      task.save!
+      task.update!(user_id: member.id)
+      task.update!(user_id: nil)
+      expect(task.assigned_user).to be_nil
+    end
+  end
 end
