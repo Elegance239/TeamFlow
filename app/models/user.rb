@@ -1,4 +1,6 @@
 class User < ApplicationRecord
+  devise :database_authenticatable, :registerable, :recoverable, :rememberable, :validatable
+
   belongs_to :team, optional: true
 
   has_many :created_tasks, class_name: "Task", foreign_key: :created_by, dependent: :restrict_with_error

@@ -1,6 +1,8 @@
 Rails.application.routes.draw do
   get "welcome/index"
 
+  devise_for :users, controllers: { sessions: "users/sessions", registrations: "users/registrations", passwords: "users/passwords" }
+
   resources :users, only: [ :create, :show, :update ]
 
   resources :teams, only: [ :create, :show, :update ] do
