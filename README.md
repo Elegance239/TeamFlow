@@ -18,34 +18,33 @@
 #### Users
 | Method | Path | Params | Behaviour |
 |--------|------|--------|-----------|
-| `POST` | `/users` | `name` | Create a guest user (no team, no role) |
 | `GET` | `/users/:id` | — | Return user info including their team |
 | `PATCH` | `/users/:id` | `name` | Update the user's name |
 
 #### Teams
 | Method | Path | Params | Behaviour |
 |--------|------|--------|-----------|
-| `POST` | `/teams` | `user_id`, `name`, `description?` | Create a team; requesting user becomes team lead |
-| `GET` | `/teams/:id` | `user_id` | Return team info + leads; requester must be a member |
-| `PATCH` | `/teams/:id` | `user_id`, `description` | Update team description; team lead only |
+| `POST` | `/teams` | `name`, `description?` | Create a team; requesting user becomes team lead |
+| `GET` | `/teams/:id` | — | Return team info + leads; requester must be a member |
+| `PATCH` | `/teams/:id` | `description` | Update team description; team lead only |
 
 #### Team Members
 | Method | Path | Params | Behaviour |
 |--------|------|--------|-----------|
-| `GET` | `/teams/:team_id/members` | `user_id` | List all members; team lead only |
-| `POST` | `/teams/:team_id/members` | `user_id`, `existing_user_id` OR `name` | Add existing user or create new member; team lead only |
-| `DELETE` | `/teams/:team_id/members/:id` | `user_id` | Remove member from team; team lead only, cannot remove self |
+| `GET` | `/teams/:team_id/members` | — | List all members; team lead only |
+| `POST` | `/teams/:team_id/members` | `existing_user_id` OR `name` | Add existing user or create new member; team lead only |
+| `DELETE` | `/teams/:team_id/members/:id` | — | Remove member from team; team lead only, cannot remove self |
 
 #### Tasks
 | Method | Path | Params | Behaviour |
 |--------|------|--------|-----------|
-| `GET` | `/tasks` | `user_id` | List all tasks for the requester's team |
-| `POST` | `/tasks` | `user_id`, `due_date`, `points`, `description?`, `task_steps_attributes[]?` | Create task; team lead only; `team_id` and `created_by` are auto-set; `due_date` must be today or later; task steps are immutable after creation and their `due_date`s must be non-decreasing by `step_num` |
-| `GET` | `/tasks/:id` | `user_id` | Return task with its steps; requester must be in the same team |
-| `PATCH` | `/tasks/:id` | `user_id`, `description?`, `points?` | Update description or points; creating team lead only |
-| `DELETE` | `/tasks/:id` | `user_id` | Delete task; creating team lead only |
-| `POST` | `/tasks/:id/assign` | `user_id` | Assign unassigned task to requester; logs a `TaskHistory` entry |
-| `DELETE` | `/tasks/:id/unassign` | `user_id` | Give up an assigned task; assigned user only |
+| `GET` | `/tasks` | — | List all tasks for the requester's team |
+| `POST` | `/tasks` | `due_date`, `points`, `description?`, `task_steps_attributes[]?` | Create task; team lead only; `team_id` and `created_by` are auto-set; `due_date` must be today or later; task steps are immutable after creation and their `due_date`s must be non-decreasing by `step_num` |
+| `GET` | `/tasks/:id` | — | Return task with its steps; requester must be in the same team |
+| `PATCH` | `/tasks/:id` | `description?`, `points?` | Update description or points; creating team lead only |
+| `DELETE` | `/tasks/:id` | — | Delete task; creating team lead only |
+| `POST` | `/tasks/:id/assign` | — | Assign unassigned task to requester; logs a `TaskHistory` entry |
+| `DELETE` | `/tasks/:id/unassign` | — | Give up an assigned task; assigned user only |
 
 #### Task Steps
 | Method | Path | Params | Behaviour |
