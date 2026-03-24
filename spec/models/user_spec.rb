@@ -14,7 +14,7 @@ RSpec.describe User, type: :model do
     end
 
     it "can store a list of skills" do
-    user = User.new(skills: ["React", "CSS"])
+    user = User.new(skills: [ "React", "CSS" ])
     expect(user.skills).to include("React")
   end
   end

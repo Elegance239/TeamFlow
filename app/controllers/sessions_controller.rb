@@ -1,7 +1,7 @@
 class SessionsController < ApplicationController
-  # This allows your React form to POST to this controller 
+  # This allows your React form to POST to this controller
   # without needing the Rails Authenticity Token for now.
-  skip_before_action :verify_authenticity_token, only: [:create]
+  skip_before_action :verify_authenticity_token, only: [ :create ]
 
   def new
     # This will render your React Sign In page
