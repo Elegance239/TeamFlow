@@ -1,23 +1,22 @@
 class TasksController < ApplicationController
-  # GET /tasks?user_id=X
+  before_action :authenticate_user!
+
+  # GET /tasks
   # Returns all tasks belonging to the requester's team.
   def index
-    requester = User.find(params[:user_id])
-
-    unless requester.team_id.present?
+    unless current_user.team_id.present?
       return render json: { error: "User is not part of a team" }, status: :unprocessable_content
     end
 
-    tasks = Task.where(team_id: requester.team_id)
+    tasks = Task.where(team_id: current_user.team_id)
     render json: tasks.as_json(include: :task_steps)
   end
 
-  # GET /tasks/:id?user_id=X
+  # GET /tasks/:id
   def show
-    requester = User.find(params[:user_id])
     task = Task.find(params[:id])
 
-    unless requester.team_id == task.team_id
+    unless current_user.team_id == task.team_id
       return render json: { error: "Not authorized" }, status: :forbidden
     end
 
@@ -28,19 +27,17 @@ class TasksController < ApplicationController
   # Only a team_lead can create a task. team_id and created_by are auto-set.
   # Task steps may be included via task_steps_attributes.
   def create
-    requester = User.find(params[:user_id])
-
-    unless requester.team_lead?
+    unless current_user.team_lead?
       return render json: { error: "Only team leads can create tasks" }, status: :forbidden
     end
 
-    unless requester.team_id.present?
+    unless current_user.team_id.present?
       return render json: { error: "Team lead must belong to a team" }, status: :unprocessable_content
     end
 
     task = Task.new(task_create_params)
-    task.team_id    = requester.team_id
-    task.created_by = requester.id
+    task.team_id    = current_user.team_id
+    task.created_by = current_user.id
 
     if task.save
       render json: task.as_json(include: :task_steps), status: :created
@@ -52,10 +49,9 @@ class TasksController < ApplicationController
   # PATCH /tasks/:id
   # Only the creating team_lead may update. Only description and points are editable.
   def update
-    requester = User.find(params[:user_id])
-    task      = Task.find(params[:id])
+    task = Task.find(params[:id])
 
-    unless task.created_by == requester.id
+    unless task.created_by == current_user.id
       return render json: { error: "Only the creating team lead can update this task" }, status: :forbidden
     end
 
@@ -69,10 +65,9 @@ class TasksController < ApplicationController
   # DELETE /tasks/:id
   # Only the creating team_lead may destroy the task.
   def destroy
-    requester = User.find(params[:user_id])
-    task      = Task.find(params[:id])
+    task = Task.find(params[:id])
 
-    unless task.created_by == requester.id
+    unless task.created_by == current_user.id
       return render json: { error: "Only the creating team lead can delete this task" }, status: :forbidden
     end
 
@@ -83,10 +78,9 @@ class TasksController < ApplicationController
   # POST /tasks/:id/assign
   # A team member takes an unassigned task. Logs to TaskHistory.
   def assign
-    requester = User.find(params[:user_id])
-    task      = Task.find(params[:id])
+    task = Task.find(params[:id])
 
-    unless requester.team_id == task.team_id
+    unless current_user.team_id == task.team_id
       return render json: { error: "Not authorized" }, status: :forbidden
     end
 
@@ -94,18 +88,17 @@ class TasksController < ApplicationController
       return render json: { error: "Task is already assigned" }, status: :unprocessable_content
     end
 
-    task.update!(user_id: requester.id)
-    TaskHistory.create!(user_id: requester.id, task_id: task.id, start_date: Date.today)
+    task.update!(user_id: current_user.id)
+    TaskHistory.create!(user_id: current_user.id, task_id: task.id, start_date: Date.today)
     render json: task
   end
 
   # DELETE /tasks/:id/unassign
   # The assigned user gives up the task.
   def unassign
-    requester = User.find(params[:user_id])
-    task      = Task.find(params[:id])
+    task = Task.find(params[:id])
 
-    unless task.user_id == requester.id
+    unless task.user_id == current_user.id
       return render json: { error: "You are not assigned to this task" }, status: :forbidden
     end
 

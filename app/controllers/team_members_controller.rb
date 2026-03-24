@@ -1,11 +1,12 @@
 class TeamMembersController < ApplicationController
+  before_action :authenticate_user!
+
   # GET /teams/:team_id/members
   # Lists all members of the team. Only accessible by the team_lead.
   def index
     team = Team.find(params[:team_id])
-    requester = User.find(params[:user_id])
 
-    unless requester.team_lead? && requester.team_id == team.id
+    unless current_user.team_lead? && current_user.team_id == team.id
       return render json: { error: "Only the team lead can view all members" }, status: :forbidden
     end
 
@@ -16,15 +17,14 @@ class TeamMembersController < ApplicationController
   # Removes a user from the team (sets team to nil, clears role). Only the team_lead can do this.
   def destroy
     team = Team.find(params[:team_id])
-    requester = User.find(params[:user_id])
 
-    unless requester.team_lead? && requester.team_id == team.id
+    unless current_user.team_lead? && current_user.team_id == team.id
       return render json: { error: "Only the team lead can remove members" }, status: :forbidden
     end
 
     member = team.users.find(params[:id])
 
-    if member.id == requester.id
+    if member.id == current_user.id
       return render json: { error: "Team lead cannot remove themselves" }, status: :unprocessable_content
     end
 
@@ -38,9 +38,8 @@ class TeamMembersController < ApplicationController
   # Otherwise a new user is created and added to the team.
   def create
     team = Team.find(params[:team_id])
-    requester = User.find(params[:user_id])
 
-    unless requester.team_lead? && requester.team_id == team.id
+    unless current_user.team_lead? && current_user.team_id == team.id
       return render json: { error: "Only the team lead can add members" }, status: :forbidden
     end
 
