@@ -1,8 +1,19 @@
-CSCI3100 - Group 25
+# CSCI3100 - Group 25
 
 ## Documentation
 
 ### Routes
+
+#### Authentication (Via Devise)
+| Method | Path | Params | Behaviour |
+|--------|------|--------|-----------|
+| `POST` | `/users/sign_in` | `email`, `password` | Log in an existing user. Returns user details on success, `401 Unauthorized` on failure |
+| `DELETE` | `/users/sign_out` | — | Log out the current user |
+| `POST` | `/users/password` | `email` | Send password reset instructions to the given email. Returns `200 OK` if email is found, `422 Unprocessable Content` otherwise |
+| `PATCH` / `PUT` | `/users/password` | `reset_password_token`, `password`, `password_confirmation` | Reset the user’s password |
+| `POST` | `/users` | `name`, `email`, `password`, `password_confirmation`, `role?` | Create a new non-guest user account |
+| `PATCH` / `PUT` | `/users` | `email`, `password`, etc. | Update the current user’s account details |
+| `DELETE` | `/users` | — | Delete the current user account |
 
 #### Users
 | Method | Path | Params | Behaviour |
