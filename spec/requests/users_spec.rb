@@ -135,7 +135,7 @@ RSpec.describe "Users", type: :request do
       delete "/users", headers: json_headers
 
       # Devise may return 204, 200, or other success codes depending on configuration
-      expect([200, 204, 302].include?(response.status)).to be true
+      expect([ 200, 204, 302 ].include?(response.status)).to be true
       expect(User.find_by(id: user.id)).to be_nil
     end
 
