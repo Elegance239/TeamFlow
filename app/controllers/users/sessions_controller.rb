@@ -1,13 +1,12 @@
+# app/controllers/users/sessions_controller.rb
 class Users::SessionsController < Devise::SessionsController
   respond_to :json
 
-  # If you are looking for the definition of the routes, it is inherited by Devise's implementation here:
-  # https://github.com/heartcombo/devise/blob/main/app/controllers/devise/registrations_controller.rb#L17
-  # Look for the right file on the left.
-  private
+  def create
+    resource = warden.authenticate(auth_options)
 
-  def respond_with(resource, _opts = {})
-    if resource.persisted?
+    if resource
+      sign_in(resource_name, resource)
       render json: {
         message: "Logged in successfully",
         user: {
@@ -20,5 +19,10 @@ class Users::SessionsController < Devise::SessionsController
     else
       render json: { error: "Invalid email or password" }, status: :unauthorized
     end
+  end
+
+  def destroy
+    sign_out current_user
+    render json: { message: "Logged out successfully" }, status: :ok
   end
 end

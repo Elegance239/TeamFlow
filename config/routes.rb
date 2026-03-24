@@ -1,6 +1,10 @@
 Rails.application.routes.draw do
   get "welcome/index"
 
+  # Not sure how to fix the hash argument warning, docs asked to do so this way:
+  # devise_for :users, controllers: { sessions: "users/sessions" },
+  # https://www.rubydoc.info/github/plataformatec/devise/ActionDispatch%2FRouting%2FMapper:devise_for
+
   devise_for :users, controllers: { sessions: "users/sessions", registrations: "users/registrations", passwords: "users/passwords" }
 
   resources :users, only: [ :create, :show, :update ]
