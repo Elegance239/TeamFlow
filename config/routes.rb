@@ -7,7 +7,7 @@ Rails.application.routes.draw do
 
   devise_for :users, controllers: { sessions: "users/sessions", registrations: "users/registrations", passwords: "users/passwords" }
 
-  resources :users, only: [ :create, :show, :update ]
+  resources :users, only: [ :show, :update ]
 
   resources :teams, only: [ :create, :show, :update ] do
     resources :members, only: [ :create, :index, :destroy ], controller: "team_members"

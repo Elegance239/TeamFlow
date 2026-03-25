@@ -4,6 +4,16 @@ class Users::RegistrationsController < Devise::RegistrationsController
   # If you are looking for the definition of the routes, it is inherited by Devise's implementation here:
   # https://github.com/heartcombo/devise/blob/main/app/controllers/devise/registrations_controller.rb#L17
   # Look for the right file on the left.
+
+  def destroy
+    if resource.destroy
+      Devise.sign_out_all_scopes ? sign_out : sign_out(resource_name)
+      render json: { message: "Account deleted successfully" }, status: :ok
+    else
+      render json: { errors: resource.errors.full_messages }, status: :unprocessable_content
+    end
+  end
+
   private
 
   def respond_with(resource, _opts = {})
