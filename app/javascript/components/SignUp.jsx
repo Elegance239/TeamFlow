@@ -24,6 +24,8 @@ const Card = styled(MuiCard)(({ theme }) => ({
   flexDirection: 'column',
   alignSelf: 'center',
   width: '100%',
+  maxWidth: '450px',
+  height: '70vh',
   padding: theme.spacing(4),
   gap: theme.spacing(2),
   margin: 'auto',
@@ -61,8 +63,17 @@ const SignUpContainer = styled(Stack)(({ theme }) => ({
   },
 }));
 
+const ScrollableForm = styled(Box)(({ theme }) => ({
+  flex: 1,
+  overflowY: 'auto',
+  paddingRight: theme.spacing(1),
+  display: 'flex',
+  flexDirection: 'column',
+  gap: theme.spacing(2),
+}));
+
 export default function SignUp(props) {
-  const onNavigate = props.onNavigate; 
+  const onNavigate = props.onNavigate;
   const [nameError, setNameError] = React.useState(false);
   const [nameErrorMessage, setNameErrorMessage] = React.useState('');
   const [emailError, setEmailError] = React.useState(false);
@@ -77,6 +88,11 @@ export default function SignUp(props) {
   const [deptNameErrorMessage, setDeptNameErrorMessage] = React.useState('');
   const [deptCodeError, setDeptCodeError] = React.useState(false);
   const [deptCodeErrorMessage, setDeptCodeErrorMessage] = React.useState('');
+  const [adminDeptOption, setAdminDeptOption] = React.useState('new');
+  const [adminDeptNameError, setAdminDeptNameError] = React.useState(false);
+  const [adminDeptNameErrorMessage, setAdminDeptNameErrorMessage] = React.useState('');
+  const [adminDeptCodeError, setAdminDeptCodeError] = React.useState(false);
+  const [adminDeptCodeErrorMessage, setAdminDeptCodeErrorMessage] = React.useState('');
 
   const [role, setRole] = React.useState('user');
 
@@ -85,6 +101,11 @@ export default function SignUp(props) {
     setRole(newRole);
 
     if (newRole === 'admin') {
+      setAdminDeptOption('new');
+      setAdminDeptNameError(false);
+      setAdminDeptNameErrorMessage('');
+      setAdminDeptCodeError(false);
+      setAdminDeptCodeErrorMessage('');
       setDeptCodeError(false);
       setDeptCodeErrorMessage('');
     } else {
@@ -150,16 +171,29 @@ export default function SignUp(props) {
     }
 
     if (selectedRole === 'admin') {
-      const deptNameEl = document.getElementById('departmentName');
-      if (!deptNameEl || !deptNameEl.value.trim()) {
-        setDeptNameError(true);
-        setDeptNameErrorMessage('Department name is required.');
-        isValid = false;
-      } else {
-        setDeptNameError(false);
-        setDeptNameErrorMessage('');
+      if (adminDeptOption === 'new') {
+        const deptNameEl = document.getElementById('adminDeptName');
+        if (!deptNameEl || !deptNameEl.value.trim()) {
+          setAdminDeptNameError(true);
+          setAdminDeptNameErrorMessage('Department name is required.');
+          isValid = false;
+        } else {
+          setAdminDeptNameError(false);
+          setAdminDeptNameErrorMessage('');
+        }
+      } else if (adminDeptOption === 'existing') {
+        const deptCodeEl = document.getElementById('adminDeptCode');
+        if (!deptCodeEl || !deptCodeEl.value.trim()) {
+          setAdminDeptCodeError(true);
+          setAdminDeptCodeErrorMessage('Department ID is required.');
+          isValid = false;
+        } else {
+          setAdminDeptCodeError(false);
+          setAdminDeptCodeErrorMessage('');
+        }
       }
-    } else if (selectedRole === 'user') {
+    }
+    else if (selectedRole === 'user') {
       const deptCodeEl = document.getElementById('departmentCode');
       if (!deptCodeEl || !deptCodeEl.value.trim()) {
         setDeptCodeError(true);
@@ -181,10 +215,11 @@ export default function SignUp(props) {
       passwordError ||
       confirmPasswordError ||
       roleError ||
-      deptNameError ||
-      deptCodeError
+      (role === 'admin' && adminDeptOption === 'new' && adminDeptNameError) ||
+      (role === 'admin' && adminDeptOption === 'existing' && adminDeptCodeError) ||
+      (role === 'user' && deptCodeError)
     ) {
-    //Stops a login if there's errors
+      //Stops a login if there's errors
       event.preventDefault();
       return;
     }
@@ -223,137 +258,173 @@ export default function SignUp(props) {
             Sign Up
           </Typography>
 
-          <Box
-            component="form"
-            onSubmit={handleSubmit}
-            noValidate
-            sx={{ display: 'flex', flexDirection: 'column', width: '100%', gap: 2 }}
-          >
-
-            <FormControl>
-              <FormLabel htmlFor="name">Display Name</FormLabel>
-              <TextField
-                error={nameError}
-                helperText={nameErrorMessage}
-                id="name"
-                type="text"
-                name="name"
-                placeholder="Chris Wong"
-                autoComplete="name"
-                autoFocus
-                required
-                fullWidth
-                variant="outlined"
-                color={emailError ? 'error' : 'primary'}
-              />
-            </FormControl>
-
-            <FormControl>
-              <FormLabel htmlFor="email">Email</FormLabel>
-              <TextField
-                error={emailError}
-                helperText={emailErrorMessage}
-                id="email"
-                type="email"
-                name="email"
-                placeholder="your@email.com"
-                autoComplete="email"
-                autoFocus
-                required
-                fullWidth
-                variant="outlined"
-                color={emailError ? 'error' : 'primary'}
-              />
-            </FormControl>
-
-            <FormControl>
-              <FormLabel htmlFor="password">Password</FormLabel>
-              <TextField
-                error={passwordError}
-                helperText={passwordErrorMessage}
-                name="password"
-                placeholder="••••••"
-                type="password"
-                id="password"
-                autoComplete="new-password"
-                required
-                fullWidth
-                variant="outlined"
-                color={passwordError ? 'error' : 'primary'}
-              />
-            </FormControl>
-
-            <FormControl>
-              <FormLabel htmlFor="confirmPassword">Confirm Password</FormLabel>
-              <TextField
-                error={confirmPasswordError}
-                helperText={confirmPasswordErrorMessage}
-                id="confirmPassword"
-                name="confirmPassword"
-                placeholder="••••••"
-                type="password"
-                required
-                fullWidth
-                variant="outlined"
-                color={confirmPasswordError ? 'error' : 'primary'}
-              />
-            </FormControl>
-
-            <FormControl error={roleError}>
-              <FormLabel component="legend">Register as</FormLabel>
-              <RadioGroup
-                row
-                name="role"
-                value={role}
-                onChange={handleRoleChange}
-              >
-                <FormControlLabel value="user" control={<Radio />} label="User" />
-                <FormControlLabel value="admin" control={<Radio />} label="Admin" />
-              </RadioGroup>
-              <FormHelperText>{roleErrorMessage}</FormHelperText>
-            </FormControl>
-
-            {role === 'admin' && (
-              <FormControl>
-                <FormLabel htmlFor="departmentName">Give your Department a Name:</FormLabel>
-                <TextField
-                  error={deptNameError}
-                  helperText={deptNameErrorMessage}
-                  id="departmentName"
-                  name="departmentName"
-                  placeholder="e.g. Logistics"
-                  required
-                  fullWidth
-                  variant="outlined"
-                />
-              </FormControl>
-            )}
-
-            {role === 'user' && (
-              <FormControl>
-                <FormLabel htmlFor="departmentCode">Department Code ID</FormLabel>
-                <TextField
-                  error={deptCodeError}
-                  helperText={deptCodeErrorMessage}
-                  id="departmentCode"
-                  name="departmentCode"
-                  placeholder="e.g. DEPT-helloworld"
-                  required
-                  fullWidth
-                  variant="outlined"
-                />
-              </FormControl>
-            )}
-
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              onClick={validateInputs}
+          <ScrollableForm>
+            <Box
+              component="form"
+              onSubmit={handleSubmit}
+              noValidate
+              sx={{ display: 'flex', flexDirection: 'column', width: '100%', gap: 2 }}
             >
-              Sign Up
-            </Button>
-          </Box>
+
+              <FormControl>
+                <FormLabel htmlFor="name">Display Name</FormLabel>
+                <TextField
+                  error={nameError}
+                  helperText={nameErrorMessage}
+                  id="name"
+                  type="text"
+                  name="name"
+                  placeholder="Chris Wong"
+                  autoComplete="name"
+                  autoFocus
+                  required
+                  fullWidth
+                  variant="outlined"
+                  color={emailError ? 'error' : 'primary'}
+                />
+              </FormControl>
+
+              <FormControl>
+                <FormLabel htmlFor="email">Email</FormLabel>
+                <TextField
+                  error={emailError}
+                  helperText={emailErrorMessage}
+                  id="email"
+                  type="email"
+                  name="email"
+                  placeholder="your@email.com"
+                  autoComplete="email"
+                  autoFocus
+                  required
+                  fullWidth
+                  variant="outlined"
+                  color={emailError ? 'error' : 'primary'}
+                />
+              </FormControl>
+
+              <FormControl>
+                <FormLabel htmlFor="password">Password</FormLabel>
+                <TextField
+                  error={passwordError}
+                  helperText={passwordErrorMessage}
+                  name="password"
+                  placeholder="••••••"
+                  type="password"
+                  id="password"
+                  autoComplete="new-password"
+                  required
+                  fullWidth
+                  variant="outlined"
+                  color={passwordError ? 'error' : 'primary'}
+                />
+              </FormControl>
+
+              <FormControl>
+                <FormLabel htmlFor="confirmPassword">Confirm Password</FormLabel>
+                <TextField
+                  error={confirmPasswordError}
+                  helperText={confirmPasswordErrorMessage}
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  placeholder="••••••"
+                  type="password"
+                  required
+                  fullWidth
+                  variant="outlined"
+                  color={confirmPasswordError ? 'error' : 'primary'}
+                />
+              </FormControl>
+
+              <FormControl error={roleError}>
+                <FormLabel component="legend">Register as</FormLabel>
+                <RadioGroup
+                  row
+                  name="role"
+                  value={role}
+                  onChange={handleRoleChange}
+                >
+                  <FormControlLabel value="user" control={<Radio />} label="User" />
+                  <FormControlLabel value="admin" control={<Radio />} label="Admin" />
+                </RadioGroup>
+                <FormHelperText>{roleErrorMessage}</FormHelperText>
+              </FormControl>
+
+              {role === 'admin' && (
+                <>
+                  <FormControl>
+                    <FormLabel component="legend">Department option</FormLabel>
+                    <RadioGroup
+                      row
+                      value={adminDeptOption}
+                      onChange={(e) => setAdminDeptOption(e.target.value)}
+                    >
+                      <FormControlLabel value="new" control={<Radio />} label="Create new department" />
+                      <FormControlLabel value="existing" control={<Radio />} label="Join existing department" />
+                    </RadioGroup>
+                  </FormControl>
+
+                  {adminDeptOption === 'new' && (
+                    <FormControl>
+                      <FormLabel htmlFor="adminDeptName">Department Name</FormLabel>
+                      <TextField
+                        error={adminDeptNameError}
+                        helperText={adminDeptNameErrorMessage}
+                        id="adminDeptName"
+                        name="adminDeptName"
+                        placeholder="e.g. Logistics"
+                        required
+                        fullWidth
+                        variant="outlined"
+                        color={adminDeptNameError ? 'error' : 'primary'}
+                      />
+                    </FormControl>
+                  )}
+
+                  {adminDeptOption === 'existing' && (
+                    <FormControl>
+                      <FormLabel htmlFor="adminDeptCode">Department ID</FormLabel>
+                      <TextField
+                        error={adminDeptCodeError}
+                        helperText={adminDeptCodeErrorMessage}
+                        id="adminDeptCode"
+                        name="adminDeptCode"
+                        placeholder="e.g. DEPT-123456"
+                        required
+                        fullWidth
+                        variant="outlined"
+                        color={adminDeptCodeError ? 'error' : 'primary'}
+                      />
+                    </FormControl>
+                  )}
+                </>
+              )}
+
+              {role === 'user' && (
+                <FormControl>
+                  <FormLabel htmlFor="departmentCode">Department Code ID</FormLabel>
+                  <TextField
+                    error={deptCodeError}
+                    helperText={deptCodeErrorMessage}
+                    id="departmentCode"
+                    name="departmentCode"
+                    placeholder="e.g. DEPT-helloworld"
+                    required
+                    fullWidth
+                    variant="outlined"
+                  />
+                </FormControl>
+              )}
+
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                onClick={validateInputs}
+              >
+                Sign Up
+              </Button>
+            </Box>
+          </ScrollableForm>
 
           <Divider>or</Divider>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
