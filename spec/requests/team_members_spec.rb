@@ -43,7 +43,7 @@ RSpec.describe "TeamMembers", type: :request do
     it "allows team lead to create a new user and add them to the team" do
       sign_in lead
 
-      post "/teams/#{team.id}/members", params: { name: "New Member" }
+      post "/teams/#{team.id}/members", params: { name: "New Member", email: "guest@example.com", password: "password", password_confirmation: "password" }
 
       expect(response).to have_http_status(:created)
       json = JSON.parse(response.body)

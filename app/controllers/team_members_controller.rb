@@ -48,7 +48,7 @@ class TeamMembersController < ApplicationController
       member.update!(team: team, role: :team_member)
       render json: member
     else
-      member = User.new(name: params[:name], team: team, role: :team_member)
+      member = User.new(name: params[:name], email: params[:email], password: params[:password], password_confirmation: params[:password_confirmation], team: team, role: :team_member)
       if member.save
         render json: member, status: :created
       else

@@ -70,6 +70,7 @@ group :test do
   gem "selenium-webdriver"
   gem "cucumber-rails", "~> 4.0", require: false
   gem "database_cleaner"
+  gem "factory_bot", "~> 6.5"
 end
 
 gem "jsbundling-rails", "~> 1.3", ">= 1.3.1"
