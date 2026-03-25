@@ -2,14 +2,15 @@ require 'rails_helper'
 
 RSpec.describe "TeamMembers", type: :request do
   let(:team)   { Team.create!(name: "Dev Team") }
-  let(:lead)   { User.create!(name: "Lead", team: team, role: :team_lead) }
-  let(:member) { User.create!(name: "Member", team: team, role: :team_member) }
+  let(:lead)   { User.create!(name: "Lead", email: "lead@example.com", password: "password", password_confirmation: "password", team: team, role: :team_lead) }
+  let(:member) { User.create!(name: "Member", email: "member@example.com", password: "password", password_confirmation: "password", team: team, role: :team_member) }
 
   describe "GET /teams/:team_id/members" do
     it "allows team lead to list all members" do
       lead; member  # ensure both are created
+      sign_in lead
 
-      get "/teams/#{team.id}/members", params: { user_id: lead.id }
+      get "/teams/#{team.id}/members"
 
       expect(response).to have_http_status(:ok)
       json = JSON.parse(response.body)
@@ -18,7 +19,9 @@ RSpec.describe "TeamMembers", type: :request do
     end
 
     it "forbids a regular member from listing members" do
-      get "/teams/#{team.id}/members", params: { user_id: member.id }
+      sign_in member
+
+      get "/teams/#{team.id}/members"
 
       expect(response).to have_http_status(:forbidden)
     end
@@ -26,9 +29,10 @@ RSpec.describe "TeamMembers", type: :request do
 
   describe "POST /teams/:team_id/members" do
     it "allows team lead to add an existing user to the team" do
-      guest = User.create!(name: "Guest")
+      sign_in lead
+      guest = User.create!(name: "Guest", email: "guest@example.com", password: "password", password_confirmation: "password")
 
-      post "/teams/#{team.id}/members", params: { user_id: lead.id, existing_user_id: guest.id }
+      post "/teams/#{team.id}/members", params: { existing_user_id: guest.id }
 
       expect(response).to have_http_status(:ok)
       guest.reload
@@ -37,7 +41,9 @@ RSpec.describe "TeamMembers", type: :request do
     end
 
     it "allows team lead to create a new user and add them to the team" do
-      post "/teams/#{team.id}/members", params: { user_id: lead.id, name: "New Member" }
+      sign_in lead
+
+      post "/teams/#{team.id}/members", params: { name: "New Member", email: "guest@example.com", password: "password", password_confirmation: "password" }
 
       expect(response).to have_http_status(:created)
       json = JSON.parse(response.body)
@@ -47,15 +53,18 @@ RSpec.describe "TeamMembers", type: :request do
     end
 
     it "forbids a regular member from adding members" do
-      guest = User.create!(name: "Guest")
+      sign_in member
+      guest = User.create!(name: "Guest", email: "guest@example.com", password: "password", password_confirmation: "password")
 
-      post "/teams/#{team.id}/members", params: { user_id: member.id, existing_user_id: guest.id }
+      post "/teams/#{team.id}/members", params: { existing_user_id: guest.id }
 
       expect(response).to have_http_status(:forbidden)
     end
 
     it "returns error when creating new member without a name" do
-      post "/teams/#{team.id}/members", params: { user_id: lead.id, name: "" }
+      sign_in lead
+
+      post "/teams/#{team.id}/members", params: { name: "" }
 
       expect(response).to have_http_status(:unprocessable_content)
     end
@@ -63,7 +72,9 @@ RSpec.describe "TeamMembers", type: :request do
 
   describe "DELETE /teams/:team_id/members/:id" do
     it "allows team lead to remove a member from the team" do
-      delete "/teams/#{team.id}/members/#{member.id}", params: { user_id: lead.id }
+      sign_in lead
+
+      delete "/teams/#{team.id}/members/#{member.id}"
 
       expect(response).to have_http_status(:ok)
       member.reload
@@ -72,15 +83,18 @@ RSpec.describe "TeamMembers", type: :request do
     end
 
     it "forbids team lead from removing themselves" do
-      delete "/teams/#{team.id}/members/#{lead.id}", params: { user_id: lead.id }
+      sign_in lead
+
+      delete "/teams/#{team.id}/members/#{lead.id}"
 
       expect(response).to have_http_status(:unprocessable_content)
     end
 
     it "forbids a regular member from removing anyone" do
-      other = User.create!(name: "Other", team: team, role: :team_member)
+      sign_in member
+      other = User.create!(name: "Other", email: "other@example.com", password: "password", password_confirmation: "password", team: team, role: :team_member)
 
-      delete "/teams/#{team.id}/members/#{other.id}", params: { user_id: member.id }
+      delete "/teams/#{team.id}/members/#{other.id}"
 
       expect(response).to have_http_status(:forbidden)
     end

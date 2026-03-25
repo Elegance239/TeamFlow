@@ -2,10 +2,10 @@ require 'rails_helper'
 
 RSpec.describe "Tasks", type: :request do
   let(:team)    { Team.create!(name: "Dev Team") }
-  let(:lead)    { User.create!(name: "Lead",    team: team, role: :team_lead) }
-  let(:member)  { User.create!(name: "Member",  team: team, role: :team_member) }
+  let(:lead)    { User.create!(name: "Lead", email: "lead@example.com", password: "password", password_confirmation: "password", team: team, role: :team_lead) }
+  let(:member)  { User.create!(name: "Member", email: "member@example.com", password: "password", password_confirmation: "password", team: team, role: :team_member) }
   let(:other_team) { Team.create!(name: "Other Team") }
-  let(:other_lead) { User.create!(name: "Other Lead", team: other_team, role: :team_lead) }
+  let(:other_lead) { User.create!(name: "Other Lead", email: "other_lead@example.com", password: "password", password_confirmation: "password", team: other_team, role: :team_lead) }
 
   def create_task(overrides = {})
     Task.create!({ due_date: Date.today + 7, team: team, created_by: lead.id, points: 1 }.merge(overrides))
@@ -13,8 +13,9 @@ RSpec.describe "Tasks", type: :request do
 
   describe "POST /tasks" do
     it "creates a task and auto-sets team_id and created_by" do
+      sign_in lead
+
       post "/tasks", params: {
-        user_id:     lead.id,
         description: "Fix the bug",
         due_date:    (Date.today + 7).iso8601,
         points:      5
@@ -30,8 +31,9 @@ RSpec.describe "Tasks", type: :request do
     end
 
     it "creates a task with nested task_steps" do
+      sign_in lead
+
       post "/tasks", params: {
-        user_id:  lead.id,
         due_date: (Date.today + 10).iso8601,
         points:   3,
         task_steps_attributes: [
@@ -47,35 +49,46 @@ RSpec.describe "Tasks", type: :request do
     end
 
     it "forbids a team_member from creating a task" do
-      post "/tasks", params: { user_id: member.id, due_date: (Date.today + 5).iso8601 }
+      sign_in member
+
+      post "/tasks", params: { due_date: (Date.today + 5).iso8601 }
       expect(response).to have_http_status(:forbidden)
     end
 
     it "forbids a team_lead without a team from creating a task" do
-      teamless_lead = User.create!(name: "No Team Lead", role: :team_lead)
-      post "/tasks", params: { user_id: teamless_lead.id, due_date: (Date.today + 5).iso8601 }
+      teamless_lead = User.create!(name: "No Team Lead", email: "teamless@example.com", password: "password", password_confirmation: "password", role: :team_lead)
+      sign_in teamless_lead
+
+      post "/tasks", params: { due_date: (Date.today + 5).iso8601 }
       expect(response).to have_http_status(:unprocessable_content)
     end
 
     it "rejects a task with a past due_date" do
-      post "/tasks", params: { user_id: lead.id, due_date: (Date.today - 1).iso8601 }
+      sign_in lead
+
+      post "/tasks", params: { due_date: (Date.today - 1).iso8601 }
       expect(response).to have_http_status(:unprocessable_content)
       expect(JSON.parse(response.body)["errors"]).to be_present
     end
 
     it "rejects a task with today-1 as due_date (boundary check)" do
-      post "/tasks", params: { user_id: lead.id, due_date: (Date.today - 1).iso8601 }
+      sign_in lead
+
+      post "/tasks", params: { due_date: (Date.today - 1).iso8601 }
       expect(response).to have_http_status(:unprocessable_content)
     end
 
     it "accepts a task with today as the due_date (boundary)" do
-      post "/tasks", params: { user_id: lead.id, due_date: Date.today.iso8601, points: 1 }
+      sign_in lead
+
+      post "/tasks", params: { due_date: Date.today.iso8601, points: 1 }
       expect(response).to have_http_status(:created)
     end
 
     it "rejects steps with descending due_dates" do
+      sign_in lead
+
       post "/tasks", params: {
-        user_id:  lead.id,
         due_date: (Date.today + 10).iso8601,
         task_steps_attributes: [
           { step_num: 0, name: "Later Step",   due_date: (Date.today + 8).iso8601 },
@@ -86,8 +99,9 @@ RSpec.describe "Tasks", type: :request do
     end
 
     it "rejects a step with a negative step_num" do
+      sign_in lead
+
       post "/tasks", params: {
-        user_id:  lead.id,
         due_date: (Date.today + 5).iso8601,
         task_steps_attributes: [ { step_num: -1, name: "Bad Step" } ]
       }
@@ -95,8 +109,9 @@ RSpec.describe "Tasks", type: :request do
     end
 
     it "rejects steps with duplicate step_nums" do
+      sign_in lead
+
       post "/tasks", params: {
-        user_id:  lead.id,
         due_date: (Date.today + 5).iso8601,
         task_steps_attributes: [
           { step_num: 0, name: "Step A" },
@@ -107,8 +122,9 @@ RSpec.describe "Tasks", type: :request do
     end
 
     it "accepts steps where intermediate steps have no due_date" do
+      sign_in lead
+
       post "/tasks", params: {
-        user_id:  lead.id,
         due_date: (Date.today + 10).iso8601,
         points:   2,
         task_steps_attributes: [
@@ -121,12 +137,13 @@ RSpec.describe "Tasks", type: :request do
     end
 
     it "ignores attempts to manually set team_id or created_by" do
-      other_team = Team.create!(name: "Other")
+      sign_in lead
+      other_team_obj = Team.create!(name: "Other")
+
       post "/tasks", params: {
-        user_id:    lead.id,
         due_date:   (Date.today + 5).iso8601,
         points:     1,
-        team_id:    other_team.id,
+        team_id:    other_team_obj.id,
         created_by: 9999
       }
       json = JSON.parse(response.body)
@@ -137,11 +154,12 @@ RSpec.describe "Tasks", type: :request do
 
   describe "GET /tasks" do
     it "returns all tasks for the requester's team" do
+      sign_in member
       t1 = create_task(description: "Task 1")
       t2 = create_task(description: "Task 2")
       create_task_in_other = Task.create!(due_date: Date.today + 5, team: other_team, created_by: other_lead.id, points: 1)
 
-      get "/tasks", params: { user_id: member.id }
+      get "/tasks"
       expect(response).to have_http_status(:ok)
       ids = JSON.parse(response.body).map { |t| t["id"] }
       expect(ids).to include(t1.id, t2.id)
@@ -149,24 +167,29 @@ RSpec.describe "Tasks", type: :request do
     end
 
     it "returns empty array when team has no tasks" do
-      get "/tasks", params: { user_id: member.id }
+      sign_in member
+
+      get "/tasks"
       expect(response).to have_http_status(:ok)
       expect(JSON.parse(response.body)).to eq([])
     end
 
     it "returns 422 for a user not in any team" do
-      guest = User.create!(name: "Guest")
-      get "/tasks", params: { user_id: guest.id }
+      guest = User.create!(name: "Guest", email: "guest@example.com", password: "password", password_confirmation: "password")
+      sign_in guest
+
+      get "/tasks"
       expect(response).to have_http_status(:unprocessable_content)
     end
   end
 
   describe "GET /tasks/:id" do
     it "returns the task with its steps for a team member" do
+      sign_in member
       task = create_task
       TaskStep.create!(task: task, step_num: 0, name: "Step A")
 
-      get "/tasks/#{task.id}", params: { user_id: member.id }
+      get "/tasks/#{task.id}"
       expect(response).to have_http_status(:ok)
       json = JSON.parse(response.body)
       expect(json["id"]).to eq(task.id)
@@ -174,17 +197,20 @@ RSpec.describe "Tasks", type: :request do
     end
 
     it "forbids a user from another team from viewing the task" do
+      sign_in other_lead
       task = create_task
-      get "/tasks/#{task.id}", params: { user_id: other_lead.id }
+
+      get "/tasks/#{task.id}"
       expect(response).to have_http_status(:forbidden)
     end
   end
 
   describe "PATCH /tasks/:id" do
     it "allows the creating team_lead to update description and points" do
+      sign_in lead
       task = create_task(description: "Old", points: 1)
 
-      patch "/tasks/#{task.id}", params: { user_id: lead.id, description: "New", points: 20 }
+      patch "/tasks/#{task.id}", params: { description: "New", points: 20 }
 
       expect(response).to have_http_status(:ok)
       json = JSON.parse(response.body)
@@ -193,84 +219,103 @@ RSpec.describe "Tasks", type: :request do
     end
 
     it "forbids a team_member from updating a task" do
+      sign_in member
       task = create_task
-      patch "/tasks/#{task.id}", params: { user_id: member.id, description: "Hacked" }
+
+      patch "/tasks/#{task.id}", params: { description: "Hacked" }
       expect(response).to have_http_status(:forbidden)
     end
 
     it "forbids another team_lead in the same team from updating" do
-      second_lead = User.create!(name: "Lead2", team: team, role: :team_lead)
+      second_lead = User.create!(name: "Lead2", email: "lead2@example.com", password: "password", password_confirmation: "password", team: team, role: :team_lead)
       task = create_task
-      patch "/tasks/#{task.id}", params: { user_id: second_lead.id, description: "Sneaky" }
+      sign_in second_lead
+
+      patch "/tasks/#{task.id}", params: { description: "Sneaky" }
       expect(response).to have_http_status(:forbidden)
     end
 
     it "forbids a team_lead from a different team from updating" do
+      sign_in other_lead
       task = create_task
-      patch "/tasks/#{task.id}", params: { user_id: other_lead.id, description: "Hacked" }
+
+      patch "/tasks/#{task.id}", params: { description: "Hacked" }
       expect(response).to have_http_status(:forbidden)
     end
 
     it "silently ignores attempts to change due_date via update" do
+      sign_in lead
       task     = create_task(due_date: Date.today + 10)
       old_date = task.due_date
-      patch "/tasks/#{task.id}", params: { user_id: lead.id, due_date: (Date.today + 99).iso8601 }
+
+      patch "/tasks/#{task.id}", params: { due_date: (Date.today + 99).iso8601 }
       expect(task.reload.due_date).to eq(old_date)
     end
 
     it "rejects non-integer points" do
+      sign_in lead
       task = create_task
-      patch "/tasks/#{task.id}", params: { user_id: lead.id, points: "not_a_number" }
+
+      patch "/tasks/#{task.id}", params: { points: "not_a_number" }
       expect(response).to have_http_status(:unprocessable_content)
     end
   end
 
   describe "DELETE /tasks/:id" do
     it "allows the creating team_lead to destroy the task" do
+      sign_in lead
       task = create_task
-      delete "/tasks/#{task.id}", params: { user_id: lead.id }
+
+      delete "/tasks/#{task.id}"
       expect(response).to have_http_status(:no_content)
       expect(Task.find_by(id: task.id)).to be_nil
     end
 
     it "forbids a team_member from destroying a task" do
+      sign_in member
       task = create_task
-      delete "/tasks/#{task.id}", params: { user_id: member.id }
+
+      delete "/tasks/#{task.id}"
       expect(response).to have_http_status(:forbidden)
       expect(Task.find_by(id: task.id)).not_to be_nil
     end
 
     it "forbids another team_lead from destroying the task" do
-      second_lead = User.create!(name: "Lead2", team: team, role: :team_lead)
+      second_lead = User.create!(name: "Lead2", email: "lead2@example.com", password: "password", password_confirmation: "password", team: team, role: :team_lead)
       task = create_task
-      delete "/tasks/#{task.id}", params: { user_id: second_lead.id }
+      sign_in second_lead
+
+      delete "/tasks/#{task.id}"
       expect(response).to have_http_status(:forbidden)
     end
 
     it "destroys task even after it has been assigned to a user" do
+      sign_in lead
       task   = create_task
       member # ensure created
       task.update!(user_id: member.id)
 
-      delete "/tasks/#{task.id}", params: { user_id: lead.id }
+      delete "/tasks/#{task.id}"
       expect(response).to have_http_status(:no_content)
     end
   end
 
   describe "POST /tasks/:id/assign" do
     it "assigns an unassigned task to the requesting user" do
+      sign_in member
       task = create_task
 
-      post "/tasks/#{task.id}/assign", params: { user_id: member.id }
+      post "/tasks/#{task.id}/assign"
 
       expect(response).to have_http_status(:ok)
       expect(task.reload.user_id).to eq(member.id)
     end
 
     it "creates a TaskHistory entry when a user takes a task" do
+      sign_in member
       task = create_task
       expect {
-        post "/tasks/#{task.id}/assign", params: { user_id: member.id }
+        post "/tasks/#{task.id}/assign"
       }.to change { TaskHistory.count }.by(1)
 
       history = TaskHistory.last
@@ -280,27 +325,33 @@ RSpec.describe "Tasks", type: :request do
     end
 
     it "rejects assigning an already-assigned task" do
+      sign_in member
       task = create_task
       task.update!(user_id: member.id)
-      other_member = User.create!(name: "Member2", team: team, role: :team_member)
+      other_member = User.create!(name: "Member2", email: "member2@example.com", password: "password", password_confirmation: "password", team: team, role: :team_member)
+      sign_out member
+      sign_in other_member
 
-      post "/tasks/#{task.id}/assign", params: { user_id: other_member.id }
+      post "/tasks/#{task.id}/assign"
       expect(response).to have_http_status(:unprocessable_content)
     end
 
     it "forbids assigning a task from a different team" do
+      sign_in other_lead
       task = create_task  # belongs to `team`
-      post "/tasks/#{task.id}/assign", params: { user_id: other_lead.id }
+
+      post "/tasks/#{task.id}/assign"
       expect(response).to have_http_status(:forbidden)
     end
 
     it "records a second TaskHistory entry when the same user re-takes a task" do
+      sign_in member
       task = create_task
-      post "/tasks/#{task.id}/assign", params: { user_id: member.id }
-      delete "/tasks/#{task.id}/unassign", params: { user_id: member.id }  # give up first
+      post "/tasks/#{task.id}/assign"
+      delete "/tasks/#{task.id}/unassign"  # give up first
 
       expect {
-        post "/tasks/#{task.id}/assign", params: { user_id: member.id }
+        post "/tasks/#{task.id}/assign"
       }.to change { TaskHistory.count }.by(1)
 
       expect(TaskHistory.where(user_id: member.id, task_id: task.id).count).to eq(2)
@@ -309,36 +360,42 @@ RSpec.describe "Tasks", type: :request do
 
   describe "DELETE /tasks/:id/unassign" do
     it "allows the assigned user to give up a task" do
+      sign_in member
       task = create_task
       task.update!(user_id: member.id)
 
-      delete "/tasks/#{task.id}/unassign", params: { user_id: member.id }
+      delete "/tasks/#{task.id}/unassign"
 
       expect(response).to have_http_status(:no_content)
       expect(task.reload.user_id).to be_nil
     end
 
     it "forbids a non-assigned user from unassigning" do
+      sign_in member
       task = create_task
       task.update!(user_id: member.id)
-      other_member = User.create!(name: "Other", team: team, role: :team_member)
+      other_member = User.create!(name: "Other", email: "other@example.com", password: "password", password_confirmation: "password", team: team, role: :team_member)
+      sign_out member
+      sign_in other_member
 
-      delete "/tasks/#{task.id}/unassign", params: { user_id: other_member.id }
+      delete "/tasks/#{task.id}/unassign"
       expect(response).to have_http_status(:forbidden)
     end
 
     it "forbids unassigning from a task that has no assigned user" do
+      sign_in member
       task = create_task  # user_id is nil
 
-      delete "/tasks/#{task.id}/unassign", params: { user_id: member.id }
+      delete "/tasks/#{task.id}/unassign"
       expect(response).to have_http_status(:forbidden)
     end
 
     it "does not add a TaskHistory entry on unassign" do
+      sign_in member
       task = create_task
       task.update!(user_id: member.id)
       expect {
-        delete "/tasks/#{task.id}/unassign", params: { user_id: member.id }
+        delete "/tasks/#{task.id}/unassign"
       }.not_to change { TaskHistory.count }
     end
   end
