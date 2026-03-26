@@ -3,6 +3,25 @@ require 'rails_helper'
 RSpec.describe "Users", type: :request do
   let(:json_headers) { { 'ACCEPT' => 'application/json' } }
 
+  describe "POST /users" do
+    it "creates a new account" do
+      post "/users",
+           params: {
+             user: {
+               name: "Signup User",
+               email: "signup@example.com",
+               password: "password123",
+               password_confirmation: "password123",
+               role: :team_member
+             }
+           },
+           headers: json_headers
+
+      expect(response).to have_http_status(:created)
+      expect(JSON.parse(response.body).dig("user", "email")).to eq("signup@example.com")
+    end
+  end
+
   describe "POST /users/sign_in" do
     let!(:user) { create(:user, name: "Login Test", email: "login@example.com", role: :team_member) }
 
@@ -55,6 +74,36 @@ RSpec.describe "Users", type: :request do
       expect(response).to have_http_status(:ok)
       json = JSON.parse(response.body)
       expect(json["message"]).to eq("Password reset email sent")
+    end
+
+    it "returns 422 when email is not found" do
+      post "/users/password",
+           params: { user: { email: "missing@example.com" } },
+           headers: json_headers
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(JSON.parse(response.body)["error"]).to be_present
+    end
+  end
+
+  describe "PATCH /users/password" do
+    let!(:user) { create(:user, email: "reset@example.com") }
+
+    it "resets password with a valid reset token" do
+      raw_token, enc_token = Devise.token_generator.generate(User, :reset_password_token)
+      user.update!(reset_password_token: enc_token, reset_password_sent_at: Time.current)
+
+      patch "/users/password",
+            params: {
+              user: {
+                reset_password_token: raw_token,
+                password: "newpassword123",
+                password_confirmation: "newpassword123"
+              }
+            },
+            headers: json_headers
+
+      expect(response).to have_http_status(:ok)
     end
   end
 

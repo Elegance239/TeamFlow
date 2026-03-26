@@ -76,6 +76,22 @@ RSpec.describe "Tasks", type: :request do
       expect(json["current_state"]).to eq(Task::ASSIGNED)
       expect(TaskHistory.where(user_id: skilled_member.id, task_id: json["id"]).count).to eq(1)
     end
+
+    it "forbids a team member from creating a task" do
+      sign_in member
+
+      post "/tasks", params: { due_date: (Date.today + 7).iso8601, points: 1 }
+
+      expect(response).to have_http_status(:forbidden)
+    end
+
+    it "rejects past due_date" do
+      sign_in lead
+
+      post "/tasks", params: { due_date: (Date.today - 1).iso8601, points: 1 }
+
+      expect(response).to have_http_status(:unprocessable_content)
+    end
   end
 
   describe "GET /tasks" do
@@ -103,6 +119,61 @@ RSpec.describe "Tasks", type: :request do
       json = JSON.parse(response.body)
       expect(json["id"]).to eq(task.id)
       expect(json["all_states"]).to be_present
+    end
+
+    it "forbids users from another team" do
+      sign_in other_lead
+      task = create_task
+
+      get "/tasks/#{task.id}"
+
+      expect(response).to have_http_status(:forbidden)
+    end
+  end
+
+  describe "PATCH /tasks/:id" do
+    it "allows creating team lead to update description and points" do
+      sign_in lead
+      task = create_task(description: "Old", points: 1)
+
+      patch "/tasks/#{task.id}", params: { description: "New", points: 3 }
+
+      expect(response).to have_http_status(:ok)
+      task.reload
+      expect(task.description).to eq("New")
+      expect(task.points).to eq(3)
+    end
+
+    it "forbids non-creator from updating" do
+      other_lead_same_team = User.create!(name: "Lead 2", email: "lead2@example.com", password: "password", password_confirmation: "password", team: team, role: :team_lead)
+      task = create_task(description: "Old")
+      sign_in other_lead_same_team
+
+      patch "/tasks/#{task.id}", params: { description: "New" }
+
+      expect(response).to have_http_status(:forbidden)
+    end
+  end
+
+  describe "DELETE /tasks/:id" do
+    it "allows creating team lead to delete task" do
+      sign_in lead
+      task = create_task
+
+      delete "/tasks/#{task.id}"
+
+      expect(response).to have_http_status(:no_content)
+      expect(Task.find_by(id: task.id)).to be_nil
+    end
+
+    it "forbids non-creator from deleting" do
+      task = create_task
+      sign_in member
+
+      delete "/tasks/#{task.id}"
+
+      expect(response).to have_http_status(:forbidden)
+      expect(Task.find_by(id: task.id)).to be_present
     end
   end
 
@@ -194,6 +265,29 @@ RSpec.describe "Tasks", type: :request do
     end
   end
 
+  describe "DELETE /tasks/:id/unassign" do
+    it "allows assigned user to unassign" do
+      task = create_task(user_id: member.id, current_state: Task::ASSIGNED)
+      sign_in member
+
+      delete "/tasks/#{task.id}/unassign"
+
+      expect(response).to have_http_status(:no_content)
+      expect(task.reload.user_id).to be_nil
+      expect(task.current_state).to eq(Task::UNASSIGNED)
+    end
+
+    it "forbids non-assigned user" do
+      task = create_task(user_id: member.id, current_state: Task::ASSIGNED)
+      other_member = User.create!(name: "Other Member", email: "other_member@example.com", password: "password", password_confirmation: "password", team: team, role: :team_member)
+      sign_in other_member
+
+      delete "/tasks/#{task.id}/unassign"
+
+      expect(response).to have_http_status(:forbidden)
+    end
+  end
+
   describe "GET /tasks/scores" do
     it "returns per-task score for the selected user" do
       skilled_member = User.create!(name: "Skilled5", email: "skilled5@example.com", password: "password", password_confirmation: "password", team: team, role: :team_member, skills: "ruby")
@@ -210,6 +304,15 @@ RSpec.describe "Tasks", type: :request do
 
       expect(row1["user_score"]).to eq(7)
       expect(row2["user_score"]).to eq(0)
+    end
+
+    it "forbids access across teams" do
+      outsider = User.create!(name: "Outsider", email: "outsider_scores@example.com", password: "password", password_confirmation: "password", team: other_team, role: :team_member)
+      sign_in outsider
+
+      get "/tasks/scores", params: { user_id: member.id }
+
+      expect(response).to have_http_status(:forbidden)
     end
   end
 end
