@@ -12,13 +12,32 @@ RSpec.describe "Users", type: :request do
                email: "signup@example.com",
                password: "password123",
                password_confirmation: "password123",
-               role: :team_member
+                role: :team_member,
+                team_name: "Signup Team"
              }
            },
            headers: json_headers
 
       expect(response).to have_http_status(:created)
-      expect(JSON.parse(response.body).dig("user", "email")).to eq("signup@example.com")
+      json = JSON.parse(response.body)
+      expect(json.dig("user", "email")).to eq("signup@example.com")
+      expect(json.dig("user", "team_id")).to be_present
+    end
+
+    it "returns 422 when team_name is missing" do
+      post "/users",
+           params: {
+             user: {
+               name: "Signup User",
+               email: "signup-missing-team@example.com",
+               password: "password123",
+               password_confirmation: "password123"
+             }
+           },
+           headers: json_headers
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(JSON.parse(response.body)["errors"]).to include("Team name can't be blank")
     end
   end
 
@@ -161,15 +180,15 @@ RSpec.describe "Users", type: :request do
       expect(json["overall_score"]).to eq(10)
     end
 
-    it "returns user info with nil team for guest user" do
-      user = create(:user, :guest, name: "Guest")
+    it "returns user info including team for every user" do
+      user = create(:user, name: "Member With Team")
 
       sign_in user
       get "/users/#{user.id}"
 
       expect(response).to have_http_status(:ok)
       json = JSON.parse(response.body)
-      expect(json["team"]).to be_nil
+      expect(json["team"]).to be_present
     end
   end
 

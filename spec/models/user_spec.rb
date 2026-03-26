@@ -22,11 +22,11 @@ RSpec.describe User, type: :model do
     end
   end
 
-  describe "guest mode" do
-    it "can be created without a team (guest)" do
-      user = create(:user, :guest, name: "Guest User")
-      expect(user.team).to be_nil
-      expect(user.role).to be_nil
+  describe "team membership" do
+    it "is invalid without a team" do
+      user = build(:user, team: nil)
+      expect(user).not_to be_valid
+      expect(user.errors[:team]).to be_present
     end
   end
 

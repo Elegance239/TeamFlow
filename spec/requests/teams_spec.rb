@@ -3,7 +3,7 @@ require 'rails_helper'
 RSpec.describe "Teams", type: :request do
   describe "POST /teams" do
     it "creates a team and makes the requesting user a team_lead" do
-      user = User.create!(name: "Alice", email: "alice@test.com", password: "password123", password_confirmation: "password123")
+      user = User.create!(name: "Alice", email: "alice@test.com", password: "password123", password_confirmation: "password123", team: create(:team), role: :team_member)
       sign_in user
 
       post "/teams", params: { name: "Dev Team", description: "A dev team" }
@@ -17,7 +17,7 @@ RSpec.describe "Teams", type: :request do
 
     it "fails when team name already exists" do
       Team.create!(name: "Dev Team")
-      user = User.create!(name: "Bob", email: "bob@test.com", password: "password123", password_confirmation: "password123")
+      user = User.create!(name: "Bob", email: "bob@test.com", password: "password123", password_confirmation: "password123", team: create(:team), role: :team_member)
       sign_in user
 
       post "/teams", params: { name: "Dev Team" }
@@ -54,7 +54,7 @@ RSpec.describe "Teams", type: :request do
     end
 
     it "forbids a user not in the team from viewing it" do
-      outsider = User.create!(name: "Outsider", email: "outsider@test.com", password: "password123", password_confirmation: "password123")
+      outsider = User.create!(name: "Outsider", email: "outsider@test.com", password: "password123", password_confirmation: "password123", team: create(:team), role: :team_member)
       sign_in outsider
 
       get "/teams/#{team.id}"
@@ -87,7 +87,7 @@ RSpec.describe "Teams", type: :request do
     end
 
     it "forbids an outsider from updating the description" do
-      outsider = User.create!(name: "Outsider", email: "outsider@test.com", password: "password123", password_confirmation: "password123")
+      outsider = User.create!(name: "Outsider", email: "outsider2@test.com", password: "password123", password_confirmation: "password123", team: create(:team), role: :team_member)
       sign_in outsider
 
       patch "/teams/#{team.id}", params: { description: "Hacked" }

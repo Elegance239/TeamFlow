@@ -30,7 +30,7 @@ RSpec.describe "TeamMembers", type: :request do
   describe "POST /teams/:team_id/members" do
     it "allows team lead to add an existing user to the team" do
       sign_in lead
-      guest = User.create!(name: "Guest", email: "guest@example.com", password: "password", password_confirmation: "password")
+      guest = User.create!(name: "Guest", email: "guest@example.com", password: "password", password_confirmation: "password", team: create(:team), role: :team_member)
 
       post "/teams/#{team.id}/members", params: { existing_user_id: guest.id }
 
@@ -54,7 +54,7 @@ RSpec.describe "TeamMembers", type: :request do
 
     it "forbids a regular member from adding members" do
       sign_in member
-      guest = User.create!(name: "Guest", email: "guest@example.com", password: "password", password_confirmation: "password")
+      guest = User.create!(name: "Guest", email: "guest2@example.com", password: "password", password_confirmation: "password", team: create(:team), role: :team_member)
 
       post "/teams/#{team.id}/members", params: { existing_user_id: guest.id }
 
@@ -78,8 +78,8 @@ RSpec.describe "TeamMembers", type: :request do
 
       expect(response).to have_http_status(:ok)
       member.reload
-      expect(member.team_id).to be_nil
-      expect(member.role).to be_nil
+      expect(member.team.name).to eq("Unassigned Team")
+      expect(member.role).to eq("team_member")
     end
 
     it "forbids team lead from removing themselves" do

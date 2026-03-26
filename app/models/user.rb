@@ -1,7 +1,7 @@
 class User < ApplicationRecord
   devise :database_authenticatable, :registerable, :recoverable, :rememberable, :validatable
 
-  belongs_to :team, optional: true
+  belongs_to :team
 
   has_many :created_tasks, class_name: "Task", foreign_key: :created_by, dependent: :restrict_with_error
   has_many :assigned_tasks, class_name: "Task", foreign_key: :user_id, dependent: :nullify
@@ -11,6 +11,7 @@ class User < ApplicationRecord
   enum :role, { team_lead: 0, team_member: 1 }
 
   validates :name, presence: true
+  validates :team, presence: true
   before_validation :normalize_skills
 
   def skills_list
