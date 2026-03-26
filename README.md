@@ -5,48 +5,73 @@
 ### Routes
 
 #### Authentication (Via Devise)
-| Method | Path | Params | Behaviour |
-|--------|------|--------|-----------|
-| `POST` | `/users/sign_in` | `email`, `password` | Log in an existing user. Returns user details on success, `401 Unauthorized` on failure |
-| `DELETE` | `/users/sign_out` | — | Log out the current user |
-| `POST` | `/users/password` | `email` | Send password reset instructions to the given email. Returns `200 OK` if email is found, `422 Unprocessable Content` otherwise |
-| `PATCH` / `PUT` | `/users/password` | `reset_password_token`, `password`, `password_confirmation` | Reset the user’s password |
-| `POST` | `/users` | `name`, `email`, `password`, `password_confirmation`, `role?` | Create a new non-guest user account |
-| `PATCH` / `PUT` | `/users` | `email`, `password`, etc. | Update the current user’s account details |
-| `DELETE` | `/users` | — | Delete the current user account |
+| Method | Path | Params | Behaviour | Success JSON (example) | Error JSON (example) |
+|--------|------|--------|-----------|-------------------------|----------------------|
+| `POST` | `/users/sign_in` | `email`, `password` | Log in existing user | `{ "message": "Logged in successfully", "user": { "id": 1, "name": "Riley", "email": "riley@team.dev", "role": "team_member" } }` | `{ "error": "Invalid email or password" }` |
+| `DELETE` | `/users/sign_out` | — | Log out current user | `{ "message": "Logged out successfully" }` | Devise auth error |
+| `POST` | `/users` | `user[name]`, `user[email]`, `user[password]`, `user[password_confirmation]`, `user[role]?` | Create account | `{ "message": "Account created successfully", "user": { "id": 1, "name": "Riley", "email": "riley@team.dev", "role": "team_member" } }` | `{ "errors": ["Email has already been taken"] }` |
+| `PATCH` / `PUT` | `/users` | Devise account fields | Update current account | Devise default JSON/response for update | Devise validation errors |
+| `DELETE` | `/users` | — | Delete current account | `{ "message": "Account deleted successfully" }` | `{ "errors": ["..."] }` |
+| `POST` | `/users/password` | `user[email]` | Send password reset email | `{ "message": "Password reset email sent" }` | `{ "error": "Email not found" }` |
+| `PATCH` / `PUT` | `/users/password` | `user[reset_password_token]`, `user[password]`, `user[password_confirmation]` | Reset password | Devise default JSON/response for reset | Devise validation errors |
+| `GET` | `/users/sign_in` | — | Devise sign-in page route | HTML page (not JSON API) | — |
+| `GET` | `/users/sign_up` | — | Devise sign-up page route | HTML page (not JSON API) | — |
+| `GET` | `/users/password/new` | — | Devise forgot-password page route | HTML page (not JSON API) | — |
+| `GET` | `/users/password/edit` | — | Devise reset-password page route | HTML page (not JSON API) | — |
+| `GET` | `/users/cancel` | — | Devise registration cancel route | HTML response | — |
+| `GET` | `/users/edit` | — | Devise account edit page route | HTML page (not JSON API) | — |
 
 #### Users
-| Method | Path | Params | Behaviour |
-|--------|------|--------|-----------|
-| `GET` | `/users/:id` | — | Return user info including their team |
-| `PATCH` | `/users/:id` | `name` | Update the user's name |
+| Method | Path | Params | Behaviour | Success JSON (example) | Error JSON (example) |
+|--------|------|--------|-----------|-------------------------|----------------------|
+| `GET` | `/users/:id` | — | Return own user info including team and overall score | `{ "id": 2, "name": "Riley", "email": "member@teamflow.dev", "team_id": 1, "team": { "id": 1, "name": "Platform" }, "overall_score": 13 }` | `{ "error": "Unauthorized" }` |
+| `PATCH` / `PUT` | `/users/:id` | `name` | Update own name | User JSON object | `{ "error": "Unauthorized" }` or `{ "errors": ["Name can't be blank"] }` |
 
 #### Teams
-| Method | Path | Params | Behaviour |
-|--------|------|--------|-----------|
-| `POST` | `/teams` | `name`, `description?` | Create a team; requesting user becomes team lead |
-| `GET` | `/teams/:id` | — | Return team info + leads; requester must be a member |
-| `PATCH` | `/teams/:id` | `description` | Update team description; team lead only |
+| Method | Path | Params | Behaviour | Success JSON (example) | Error JSON (example) |
+|--------|------|--------|-----------|-------------------------|----------------------|
+| `POST` | `/teams` | `name`, `description?` | Create team and set requester as team lead | `{ "team": { "id": 1, "name": "Platform", "description": "Core team" }, "user": { "id": 1, "role": "team_lead", "team_id": 1 } }` | `{ "errors": ["Name has already been taken"] }` |
+| `GET` | `/teams/:id` | — | Return team info + team leads (member only) | `{ "id": 1, "name": "Platform", "description": "Core team", "team_leads": [{ "id": 1, "name": "Taylor" }] }` | `{ "error": "You are not a member of this team" }` |
+| `PATCH` / `PUT` | `/teams/:id` | `description` | Update team description (team lead only) | Team JSON object | `{ "error": "Only the team lead can update the team description" }` |
 
 #### Team Members
-| Method | Path | Params | Behaviour |
-|--------|------|--------|-----------|
-| `GET` | `/teams/:team_id/members` | — | List all members; team lead only |
-| `POST` | `/teams/:team_id/members` | `existing_user_id` OR `name` | Add existing user or create new member; team lead only |
-| `DELETE` | `/teams/:team_id/members/:id` | — | Remove member from team; team lead only, cannot remove self |
+| Method | Path | Params | Behaviour | Success JSON (example) | Error JSON (example) |
+|--------|------|--------|-----------|-------------------------|----------------------|
+| `GET` | `/teams/:team_id/members` | — | List team members (team lead only) | `[{ "id": 1, "name": "Taylor", "role": "team_lead" }, { "id": 2, "name": "Riley", "role": "team_member" }]` | `{ "error": "Only the team lead can view all members" }` |
+| `POST` | `/teams/:team_id/members` | `existing_user_id` OR `name`, `email`, `password`, `password_confirmation` | Add existing user or create new member | User JSON object | `{ "error": "Only the team lead can add members" }` or `{ "errors": ["Email has already been taken"] }` |
+| `DELETE` | `/teams/:team_id/members/:id` | — | Remove member from team (team lead only, cannot remove self) | `{ "message": "User removed from team" }` | `{ "error": "Team lead cannot remove themselves" }` |
 
 #### Tasks
-| Method | Path | Params | Behaviour |
-|--------|------|--------|-----------|
-| `GET` | `/tasks` | — | List all tasks for the requester's team |
-| `POST` | `/tasks` | `due_date`, `points`, `description?`, `required_skills?`, `needs_validation?`, `all_states?`, `user_id?` | Create task; team lead only; `team_id` and `created_by` are auto-set; `due_date` must be today or later; required skills are normalized and immutable after creation; optional workflow states can be opted in via `all_states` |
-| `GET` | `/tasks/:id` | — | Return task; requester must be in the same team |
-| `PATCH` | `/tasks/:id` | `description?`, `points?` | Update description or points; creating team lead only |
-| `DELETE` | `/tasks/:id` | — | Delete task; creating team lead only |
-| `POST` | `/tasks/:id/assign` | `user_id?` | Assign task to requester, or to a specified teammate when caller is a team lead; assignee skills must satisfy required skills |
-| `DELETE` | `/tasks/:id/unassign` | — | Give up an assigned task; assigned user only |
-| `POST` | `/tasks/:id/progress` | — | Move task to the next state in `all_states`; if `needs_validation=true`, creates a pending transition for team lead approval |
-| `GET` | `/tasks/scores` | `user_id` | Return per-task score for a specific user within their team |
+| Method | Path | Params | Behaviour | Success JSON (example) | Error JSON (example) |
+|--------|------|--------|-----------|-------------------------|----------------------|
+| `GET` | `/tasks` | — | List tasks for requester's team | `[ { "id": 1001, "description": "Build feature", "current_state": "UNASSIGNED", "all_states": "UNASSIGNED,ASSIGNED,COMPLETED", "team_id": 1 } ]` | `{ "error": "User is not part of a team" }` |
+| `POST` | `/tasks` | `due_date`, `points`, `description?`, `required_skills?`, `needs_validation?`, `all_states?`, `user_id?` | Create task (team lead only) | Task JSON object | `{ "error": "Only team leads can create tasks" }` or `{ "errors": ["Due date can't be in the past"] }` |
+| `GET` | `/tasks/:id` | — | Get a single task in same team | Task JSON object | `{ "error": "Not authorized" }` |
+| `PATCH` / `PUT` | `/tasks/:id` | `description?`, `points?` | Update description/points (creator lead only) | Task JSON object | `{ "error": "Only the creating team lead can update this task" }` |
+| `DELETE` | `/tasks/:id` | — | Delete task (creator lead only) | `204 No Content` | `{ "error": "Only the creating team lead can delete this task" }` |
+| `POST` | `/tasks/:id/assign` | `user_id?` | Self-assign or assign teammate (lead) | Task JSON object | `{ "error": "Task is already assigned" }` or `{ "errors": ["...validation..."] }` |
+| `DELETE` | `/tasks/:id/unassign` | — | Assigned user gives up task | `204 No Content` | `{ "error": "You are not assigned to this task" }` |
+| `POST` | `/tasks/:id/progress` | — | Move to next state; pending approval when `needs_validation=true` | Immediate: Task JSON object. Pending: `{ "message": "Transition is pending team lead approval", "task": { ...task } }` (`202 Accepted`) | `{ "error": "Only the assigned user can progress this task" }` or `{ "errors": ["..."] }` |
+| `GET` | `/tasks/scores` | `user_id` | Per-task score for user in same team | `[ { "task_id": 1001, "description": "Build feature", "current_state": "ASSIGNED", "points": 5, "user_score": 0 } ]` | `{ "error": "Not authorized" }` |
+
+#### Task Transition Pendings
+| Method | Path | Params | Behaviour | Success JSON (example) | Error JSON (example) |
+|--------|------|--------|-----------|-------------------------|----------------------|
+| `GET` | `/task_transition_pendings` | — | List pending approvals assigned to current approver | `[ { "id": 2001, "task_id": 1001, "requested_by_id": 2, "approved_by_id": 1, "from_state": "ASSIGNED", "to_state": "DEVELOPMENT", "status": "pending" } ]` | Devise auth error |
+| `POST` | `/task_transition_pendings/:id/approve` | — | Approve pending transition | Pending record JSON object (status becomes `approved`) | `{ "error": "Not authorized" }` or `{ "errors": ["..."] }` |
+| `POST` | `/task_transition_pendings/:id/reject` | — | Reject pending transition | Pending record JSON object (status becomes `rejected`) | `{ "error": "Not authorized" }` |
+
+#### System And Utility Routes
+| Method | Path | Behaviour | Output |
+|--------|------|-----------|--------|
+| `GET` | `/` | Root page | HTML from `welcome#index` |
+| `GET` | `/welcome/index` | Welcome page | HTML |
+| `GET` | `/up` | Rails health check | Health JSON/HTML response from Rails health controller |
+
+Notes:
+
+- Internal Rails/Turbo/ActiveStorage/ActionMailbox routes (for example under `/rails/...`, `/recede_historical_location`) are framework-provided and are omitted from API documentation.
+- For protected routes, unauthenticated requests are handled by Devise and may return an authentication error/redirect depending on request format.
 
 ### Task Workflow States
 
