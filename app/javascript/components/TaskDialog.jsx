@@ -25,7 +25,7 @@ const STATE_COLORS = {
 };
 
 function roleText(role) {
-  return role === 0 ? "team_lead" : "team_member";
+  return role === 0 || role === "team_lead" ? "team_lead" : "team_member";
 }
 
 function stateChipSx(state) {
@@ -75,16 +75,30 @@ export default function TaskDialog({
 
   const canConfirmPatch = isPatching && canPatch && normalizedPoints !== null;
 
-  const nextState = useMemo(() => {
-    if (!task?.all_states || !task?.current_state) return null;
-    const states = task.all_states
-      .split(",")
-      .map((s) => s.trim())
+  const workflowStates = useMemo(() => {
+    if (!task) return [];
+
+    const rawStates = Array.isArray(task.all_states)
+      ? task.all_states
+      : (task.all_states || "")
+          .toString()
+          .split(",");
+
+    const cleaned = rawStates
+      .map((s) => s.toString().trim())
       .filter(Boolean);
-    const currentIndex = states.indexOf(task.current_state);
-    if (currentIndex < 0 || currentIndex >= states.length - 1) return null;
-    return states[currentIndex + 1];
+
+    if (cleaned.length > 0) return cleaned;
+    if (task.current_state) return [task.current_state];
+    return [];
   }, [task]);
+
+  const nextState = useMemo(() => {
+    if (!task?.current_state || workflowStates.length === 0) return null;
+    const currentIndex = workflowStates.indexOf(task.current_state);
+    if (currentIndex < 0 || currentIndex >= workflowStates.length - 1) return null;
+    return workflowStates[currentIndex + 1];
+  }, [task, workflowStates]);
 
   const handleConfirmPatch = () => {
     if (!canConfirmPatch || !task) return;
@@ -122,13 +136,9 @@ export default function TaskDialog({
             <Box sx={{ p: 1.2, borderRadius: 1.5, bgcolor: "#f8faff", border: "1px solid #dbe5ff" }}>
               <Typography variant="subtitle2" color="text.secondary">Workflow</Typography>
               <Stack direction="row" spacing={1} sx={{ mt: 1 }} flexWrap="wrap">
-                {task.all_states
-                  .split(",")
-                  .map((state) => state.trim())
-                  .filter(Boolean)
-                  .map((state) => (
-                    <Chip key={state} label={state} size="small" sx={stateChipSx(state)} />
-                  ))}
+                {workflowStates.map((state) => (
+                  <Chip key={state} label={state} size="small" sx={stateChipSx(state)} />
+                ))}
               </Stack>
               <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1.2 }}>
                 <Typography variant="body2" color="text.secondary">Current:</Typography>

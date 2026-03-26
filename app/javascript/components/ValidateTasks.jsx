@@ -1,15 +1,18 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Box,
   Card,
   CardContent,
   Chip,
   IconButton,
+  LinearProgress,
   Stack,
   Typography,
 } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
+import { useSnackbar } from "notistack";
+import { getCsrfHeaders } from "../utils/csrf";
 
 const STATE_COLORS = {
   UNASSIGNED: "#757575",
@@ -20,47 +23,15 @@ const STATE_COLORS = {
   COMPLETED: "#2e7d32",
 };
 
-const mockTeamUsers = [
-  { id: 1, name: "Taylor Lead", email: "lead@teamflow.dev" },
-  { id: 2, name: "Riley Member", email: "member@teamflow.dev" },
-  { id: 3, name: "Jordan QA", email: "qa@teamflow.dev" },
-];
-
-const mockTaskTransitionPendings = [
-  {
-    id: 2001,
-    approved_by_id: 1,
-    requested_by_id: 2,
-    from_state: "ASSIGNED",
-    to_state: "DEVELOPMENT",
-    status: "pending",
-    task_id: 1001,
-    created_at: "2026-03-26T09:30:00Z",
-    updated_at: "2026-03-26T09:30:00Z",
-  },
-  {
-    id: 2002,
-    approved_by_id: 1,
-    requested_by_id: 3,
-    from_state: "TESTING",
-    to_state: "PRODUCTION",
-    status: "pending",
-    task_id: 1008,
-    created_at: "2026-03-26T10:00:00Z",
-    updated_at: "2026-03-26T10:00:00Z",
-  },
-  {
-    id: 2003,
-    approved_by_id: 1,
-    requested_by_id: 2,
-    from_state: "PRODUCTION",
-    to_state: "COMPLETED",
-    status: "approved",
-    task_id: 1010,
-    created_at: "2026-03-25T10:00:00Z",
-    updated_at: "2026-03-25T10:05:00Z",
-  },
-];
+function getStoredUser() {
+  try {
+    const raw = localStorage.getItem("teamflowCurrentUser");
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch (error) {
+    return null;
+  }
+}
 
 function stateChip(state) {
   return (
@@ -122,37 +93,144 @@ function RequestCard({ item, requester, onApprove, onReject }) {
 }
 
 export default function ValidateTasks() {
-  const [pendingRequests, setPendingRequests] = useState(mockTaskTransitionPendings);
+  const { enqueueSnackbar } = useSnackbar();
+  const [pendingRequests, setPendingRequests] = useState([]);
+  const [teamUsers, setTeamUsers] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchPendingRequests = async () => {
+    const response = await fetch("/task_transition_pendings", {
+      method: "GET",
+      headers: { Accept: "application/json" },
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      let message = "Failed to load pending requests";
+      try {
+        const data = await response.json();
+        message = data?.error || data?.errors?.join(", ") || message;
+      } catch (error) {
+        // Keep fallback message when response body is not JSON.
+      }
+      throw new Error(message);
+    }
+
+    const data = await response.json();
+    return Array.isArray(data) ? data : [];
+  };
+
+  const fetchTeamUsers = async (teamId) => {
+    if (!teamId) return [];
+
+    const response = await fetch(`/teams/${teamId}/members`, {
+      method: "GET",
+      headers: { Accept: "application/json" },
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      return [];
+    }
+
+    const data = await response.json();
+    return Array.isArray(data) ? data : [];
+  };
+
+  useEffect(() => {
+    let alive = true;
+
+    const loadData = async () => {
+      setIsLoading(true);
+      try {
+        const storedUser = getStoredUser();
+        if (storedUser?.id) {
+          const userResponse = await fetch(`/users/${storedUser.id}`, {
+            method: "GET",
+            headers: { Accept: "application/json" },
+            credentials: "include",
+          });
+
+          if (userResponse.ok) {
+            const resolvedUser = await userResponse.json();
+            const mergedUser = {
+              ...storedUser,
+              ...resolvedUser,
+              team_id: resolvedUser.team_id ?? resolvedUser.team?.id ?? storedUser.team_id,
+            };
+            localStorage.setItem("teamflowCurrentUser", JSON.stringify(mergedUser));
+            const members = await fetchTeamUsers(mergedUser.team_id);
+            if (alive) setTeamUsers(members);
+          }
+        }
+
+        const requests = await fetchPendingRequests();
+        if (alive) setPendingRequests(requests);
+      } catch (error) {
+        if (alive) {
+          setPendingRequests([]);
+          enqueueSnackbar(error.message || "Failed to load validation queue", { variant: "error" });
+        }
+      } finally {
+        if (alive) setIsLoading(false);
+      }
+    };
+
+    loadData();
+    return () => {
+      alive = false;
+    };
+  }, [enqueueSnackbar]);
 
   const userById = useMemo(() => {
     const map = {};
-    mockTeamUsers.forEach((user) => {
+    teamUsers.forEach((user) => {
       map[user.id] = user;
     });
     return map;
-  }, []);
+  }, [teamUsers]);
 
   const visiblePending = useMemo(
     () => pendingRequests.filter((r) => r.status === "pending"),
     [pendingRequests],
   );
 
-  const updateStatus = (requestId, status) => {
-    setPendingRequests((prev) =>
-      prev.map((item) =>
-        item.id === requestId
-          ? {
-              ...item,
-              status,
-              updated_at: new Date().toISOString(),
-            }
-          : item,
-      ),
-    );
+  const updateStatus = async (requestId, status) => {
+    const endpoint = status === "approved" ? "approve" : "reject";
+
+    try {
+      const response = await fetch(`/task_transition_pendings/${requestId}/${endpoint}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          ...getCsrfHeaders(),
+        },
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        let message = `Failed to ${endpoint} request`;
+        try {
+          const data = await response.json();
+          message = data?.error || data?.errors?.join(", ") || message;
+        } catch (error) {
+          // Keep fallback message when response body is not JSON.
+        }
+        enqueueSnackbar(message, { variant: "error" });
+        return;
+      }
+
+      setPendingRequests((prev) => prev.filter((item) => item.id !== requestId));
+      enqueueSnackbar(`Request ${status}`, { variant: "success" });
+    } catch (error) {
+      enqueueSnackbar(`Network error while trying to ${endpoint} request`, { variant: "error" });
+    }
   };
 
   return (
     <Box sx={{ p: 1 }}>
+      {isLoading && <LinearProgress sx={{ mb: 1 }} />}
       <Typography variant="h5" sx={{ fontWeight: 700, mb: 0.5 }}>
         Validate Task Transitions
       </Typography>

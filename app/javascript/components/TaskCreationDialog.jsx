@@ -34,7 +34,7 @@ export default function TaskCreationDialog({ open, onClose, currentUser, onCreat
   const [allStates, setAllStates] = useState("UNASSIGNED,ASSIGNED,COMPLETED");
   const [userId, setUserId] = useState("");
 
-  const isTeamLead = currentUser.role === 0;
+  const isTeamLead = currentUser.role === 0 || currentUser.role === "team_lead";
 
   const parsedPoints = useMemo(() => {
     const p = Number(points);
@@ -60,7 +60,7 @@ export default function TaskCreationDialog({ open, onClose, currentUser, onCreat
     onClose();
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (!canCreate) return;
 
     const parsedUserId = userId === "" ? null : Number(userId);
@@ -72,14 +72,12 @@ export default function TaskCreationDialog({ open, onClose, currentUser, onCreat
       needs_validation: needsValidation,
       all_states: allStates.trim() || "UNASSIGNED,ASSIGNED,COMPLETED",
       user_id: Number.isFinite(parsedUserId) ? parsedUserId : null,
-      created_by: currentUser.id,
-      team_id: currentUser.team_id,
-      completed_by_id: null,
-      current_state: Number.isFinite(parsedUserId) ? "ASSIGNED" : "UNASSIGNED",
     };
 
-    onCreate(createdTask);
-    handleClose();
+    const created = await onCreate(createdTask);
+    if (created) {
+      handleClose();
+    }
   };
 
   return (

@@ -1,18 +1,23 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import dayjs from "dayjs";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import {
   Box,
+  Button,
   Chip,
   Fab,
+  LinearProgress,
   Stack,
+  TextField,
+  Typography,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import { useSnackbar } from "notistack";
 import TaskDialog from "./TaskDialog";
 import TaskCreationDialog from "./TaskCreationDialog";
+import { getCsrfHeaders } from "../utils/csrf";
 import "./CalendarForTasks.css";
 
 const COLORS = {
@@ -36,103 +41,26 @@ const COLOR_INDEX = COLOR_ORDER.reduce((acc, key, idx) => {
   return acc;
 }, {});
 
-const mockUsers = [
-  {
-    id: 1,
-    email: "lead@teamflow.dev",
-    name: "Taylor Lead",
-    role: 0,
-    skills: "ruby,react,testing,devops",
-    team_id: 1,
-  },
-  {
-    id: 2,
-    email: "member@teamflow.dev",
-    name: "Riley Member",
-    role: 1,
-    skills: "ruby,react,testing",
-    team_id: 1,
-  },
-];
+function getStoredUser() {
+  try {
+    const raw = localStorage.getItem("teamflowCurrentUser");
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch (error) {
+    return null;
+  }
+}
 
-const mockCurrentUser = mockUsers[1];
-
-const mockTasks = [
-  {
-    id: 1001,
-    all_states: "UNASSIGNED,ASSIGNED,DEVELOPMENT,TESTING,PRODUCTION,COMPLETED",
-    completed_by_id: null,
-    created_by: 1,
-    current_state: "UNASSIGNED",
-    description: "Build timeline rendering for profile page",
-    due_date: "2026-03-24",
-    needs_validation: false,
-    points: 5,
-    required_skills: "react",
-    team_id: 1,
-    user_id: null,
-  },
-  {
-    id: 1002,
-    all_states: "UNASSIGNED,ASSIGNED,COMPLETED",
-    completed_by_id: 2,
-    created_by: 1,
-    current_state: "COMPLETED",
-    description: "Fix flaky request spec",
-    due_date: "2026-03-25",
-    needs_validation: true,
-    points: 3,
-    required_skills: "testing,ruby",
-    team_id: 1,
-    user_id: 2,
-  },
-  {
-    id: 1003,
-    all_states: "UNASSIGNED,ASSIGNED,DEVELOPMENT,TESTING,COMPLETED",
-    completed_by_id: null,
-    created_by: 1,
-    current_state: "ASSIGNED",
-    description: "Set up monitoring dashboard",
-    due_date: "2026-03-24",
-    needs_validation: true,
-    points: 8,
-    required_skills: "devops",
-    team_id: 1,
-    user_id: 5,
-  },
-  {
-    id: 1004,
-    all_states: "UNASSIGNED,ASSIGNED,COMPLETED",
-    completed_by_id: null,
-    created_by: 1,
-    current_state: "UNASSIGNED",
-    description: "Refactor email sender job",
-    due_date:"2026-03-24",
-    needs_validation: false,
-    points: 2,
-    required_skills: "ruby",
-    team_id: 1,
-    user_id: null,
-  },
-  {
-    id: 1005,
-    all_states: "UNASSIGNED,ASSIGNED,COMPLETED",
-    completed_by_id: null,
-    created_by: 1,
-    current_state: "ASSIGNED",
-    description: "Update team settings UI",
-    due_date: "2026-03-24",
-    needs_validation: false,
-    points: 6,
-    required_skills: "react,css",
-    team_id: 1,
-    user_id: 2,
-  },
-];
+function isTeamLead(role) {
+  return role === 0 || role === "team_lead";
+}
 
 function splitCsv(value) {
-  return value
-    .toString()
+  if (value === null || value === undefined) return [];
+
+  const normalized = Array.isArray(value) ? value.join(",") : String(value);
+
+  return normalized
     .split(",")
     .map((v) => v.trim().toLowerCase())
     .filter(Boolean);
@@ -155,6 +83,7 @@ function eventColorFromCategory(category) {
 }
 
 function canTakeTask(task, currentUser) {
+  if (!currentUser) return false;
   if (task.user_id) return false;
   if (task.current_state === "COMPLETED") return false;
   if (isPastDate(task.due_date)) return false;
@@ -167,18 +96,165 @@ function canTakeTask(task, currentUser) {
 }
 
 function canPatchTask(task, currentUser) {
-  return currentUser.role === 0 || task.user_id === currentUser.id;
+  if (!currentUser) return false;
+  return isTeamLead(currentUser.role) && task.created_by === currentUser.id;
 }
 
 function canProgressTask(task, currentUser) {
+  if (!currentUser) return false;
   return task.user_id === currentUser.id && task.current_state !== "COMPLETED";
 }
 
 export default function CalendarForTasks() {
   const { enqueueSnackbar } = useSnackbar();
-  const [tasks, setTasks] = useState(mockTasks);
+  const [tasks, setTasks] = useState([]);
+  const [currentUser, setCurrentUser] = useState(getStoredUser());
+  const [isLoading, setIsLoading] = useState(true);
+  const [noTeam, setNoTeam] = useState(false);
+  const [teamName, setTeamName] = useState("");
+  const [isCreatingTeam, setIsCreatingTeam] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState(null);
   const [isCreationOpen, setIsCreationOpen] = useState(false);
+
+  const fetchTasks = async () => {
+    const response = await fetch("/tasks", {
+      method: "GET",
+      headers: { Accept: "application/json" },
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      let message = "Failed to load tasks";
+      try {
+        const data = await response.json();
+        message = data?.error || data?.errors?.join(", ") || message;
+      } catch (error) {
+        // Keep fallback message when response body is not JSON.
+      }
+
+      if (message === "User is not part of a team") {
+        const noTeamError = new Error(message);
+        noTeamError.code = "no_team";
+        throw noTeamError;
+      }
+
+      throw new Error(message);
+    }
+
+    const data = await response.json();
+    return Array.isArray(data) ? data : [];
+  };
+
+  const refreshTasks = async () => {
+    const loadedTasks = await fetchTasks();
+    setTasks(loadedTasks);
+  };
+
+  useEffect(() => {
+    let alive = true;
+
+    const loadData = async () => {
+      setIsLoading(true);
+      try {
+        const storedUser = getStoredUser();
+        if (storedUser?.id) {
+          const userResponse = await fetch(`/users/${storedUser.id}`, {
+            method: "GET",
+            headers: { Accept: "application/json" },
+            credentials: "include",
+          });
+
+          if (userResponse.ok) {
+            const resolvedUser = await userResponse.json();
+            const mergedUser = {
+              ...storedUser,
+              ...resolvedUser,
+              team_id: resolvedUser.team_id ?? resolvedUser.team?.id ?? storedUser.team_id,
+            };
+            localStorage.setItem("teamflowCurrentUser", JSON.stringify(mergedUser));
+            if (alive) setCurrentUser(mergedUser);
+          } else if (alive) {
+            setCurrentUser(storedUser);
+          }
+        }
+
+        const loadedTasks = await fetchTasks();
+        if (alive) {
+          setTasks(loadedTasks);
+          setNoTeam(false);
+        }
+      } catch (error) {
+        if (alive) {
+          if (error.code === "no_team") {
+            setTasks([]);
+            setNoTeam(true);
+          } else {
+            setTasks([]);
+            enqueueSnackbar(error.message || "Failed to load task data", { variant: "error" });
+          }
+        }
+      } finally {
+        if (alive) setIsLoading(false);
+      }
+    };
+
+    loadData();
+    return () => {
+      alive = false;
+    };
+  }, [enqueueSnackbar]);
+
+  const handleCreateTeam = async () => {
+    const cleanedName = teamName.trim();
+    if (!cleanedName) {
+      enqueueSnackbar("Please enter a team name", { variant: "warning" });
+      return;
+    }
+
+    try {
+      setIsCreatingTeam(true);
+      const response = await fetch("/teams", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          ...getCsrfHeaders(),
+        },
+        credentials: "include",
+        body: JSON.stringify({ name: cleanedName }),
+      });
+
+      if (!response.ok) {
+        let message = "Failed to create team";
+        try {
+          const data = await response.json();
+          message = data?.error || data?.errors?.join(", ") || message;
+        } catch (error) {
+          // Keep fallback message when response body is not JSON.
+        }
+        enqueueSnackbar(message, { variant: "error" });
+        return;
+      }
+
+      const payload = await response.json();
+      const storedUser = getStoredUser();
+      const mergedUser = {
+        ...storedUser,
+        ...payload.user,
+        team_id: payload.team?.id ?? payload.user?.team_id,
+      };
+      localStorage.setItem("teamflowCurrentUser", JSON.stringify(mergedUser));
+      setCurrentUser(mergedUser);
+      setNoTeam(false);
+      setTeamName("");
+      await refreshTasks();
+      enqueueSnackbar("Team created successfully", { variant: "success" });
+    } catch (error) {
+      enqueueSnackbar("Network error while creating team", { variant: "error" });
+    } finally {
+      setIsCreatingTeam(false);
+    }
+  };
 
   const selectedTask = useMemo(
     () => tasks.find((t) => t.id === selectedTaskId) || null,
@@ -189,13 +265,14 @@ export default function CalendarForTasks() {
     () =>
       [ ...tasks ]
       .sort((a, b) => {
-        const aCategory = taskVisualCategory(a, mockCurrentUser.id);
-        const bCategory = taskVisualCategory(b, mockCurrentUser.id);
+        const viewerId = currentUser?.id ?? -1;
+        const aCategory = taskVisualCategory(a, viewerId);
+        const bCategory = taskVisualCategory(b, viewerId);
 
         return COLOR_INDEX[aCategory] - COLOR_INDEX[bCategory];
       })
       .map((task) => {
-        const category = taskVisualCategory(task, mockCurrentUser.id);
+        const category = taskVisualCategory(task, currentUser?.id ?? -1);
         const startDate = dayjs(task.due_date).format("YYYY-MM-DD");
         const endDateExclusive = dayjs(task.due_date).add(1, "day").format("YYYY-MM-DD");
         return {
@@ -214,7 +291,7 @@ export default function CalendarForTasks() {
           },
         };
       }),
-    [tasks],
+    [currentUser, tasks],
   );
 
   const legendItems = [
@@ -231,47 +308,105 @@ export default function CalendarForTasks() {
 
   const handleClose = () => setSelectedTaskId(null);
 
-  const handleTakeTask = () => {
+  const handleTakeTask = async () => {
     if (!selectedTask) return;
 
-    setTasks((prev) =>
-      prev.map((task) => {
-        if (task.id !== selectedTask.id) return task;
-        return {
-          ...task,
-          user_id: mockCurrentUser.id,
-          current_state: task.current_state === "UNASSIGNED" ? "ASSIGNED" : task.current_state,
-        };
-      }),
-    );
+    try {
+      const response = await fetch(`/tasks/${selectedTask.id}/assign`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          ...getCsrfHeaders(),
+        },
+        credentials: "include",
+      });
 
-    enqueueSnackbar("Task taken successfully", { variant: "success" });
-    handleClose();
+      if (!response.ok) {
+        let message = "Failed to take task";
+        try {
+          const data = await response.json();
+          message = data?.error || data?.errors?.join(", ") || message;
+        } catch (error) {
+          // Keep fallback message when response body is not JSON.
+        }
+        enqueueSnackbar(message, { variant: "error" });
+        return;
+      }
+
+      await refreshTasks();
+      enqueueSnackbar("Task taken successfully", { variant: "success" });
+      handleClose();
+    } catch (error) {
+      enqueueSnackbar("Network error while taking task", { variant: "error" });
+    }
   };
 
-  const handleConfirmPatch = ({ description, points }) => {
+  const handleConfirmPatch = async ({ description, points }) => {
     if (!selectedTask) return;
 
-    setTasks((prev) =>
-      prev.map((task) => {
-        if (task.id !== selectedTask.id) return task;
-        return {
-          ...task,
-          description,
-          points,
-        };
-      }),
-    );
+    try {
+      const response = await fetch(`/tasks/${selectedTask.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          ...getCsrfHeaders(),
+        },
+        credentials: "include",
+        body: JSON.stringify({ description, points }),
+      });
 
-    enqueueSnackbar("Task patched successfully", { variant: "success" });
+      if (!response.ok) {
+        let message = "Failed to patch task";
+        try {
+          const data = await response.json();
+          message = data?.error || data?.errors?.join(", ") || message;
+        } catch (error) {
+          // Keep fallback message when response body is not JSON.
+        }
+        enqueueSnackbar(message, { variant: "error" });
+        return;
+      }
+
+      await refreshTasks();
+      enqueueSnackbar("Task patched successfully", { variant: "success" });
+    } catch (error) {
+      enqueueSnackbar("Network error while patching task", { variant: "error" });
+    }
   };
 
-  const handleDeleteTask = () => {
+  const handleDeleteTask = async () => {
     if (!selectedTask) return;
 
-    setTasks((prev) => prev.filter((task) => task.id !== selectedTask.id));
-    enqueueSnackbar("Task deleted successfully", { variant: "success" });
-    handleClose();
+    try {
+      const response = await fetch(`/tasks/${selectedTask.id}`, {
+        method: "DELETE",
+        headers: {
+          Accept: "application/json",
+          ...getCsrfHeaders(),
+        },
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        let message = "Failed to delete task";
+        try {
+          const data = await response.json();
+          message = data?.error || data?.errors?.join(", ") || message;
+        } catch (error) {
+          // Keep fallback message when response body is not JSON.
+        }
+        enqueueSnackbar(message, { variant: "error" });
+        return;
+      }
+
+      await refreshTasks();
+      enqueueSnackbar("Task deleted successfully", { variant: "success" });
+      handleClose();
+    } catch (error) {
+      enqueueSnackbar("Network error while deleting task", { variant: "error" });
+    }
   };
 
   const handleProgressTask = async () => {
@@ -283,7 +418,9 @@ export default function CalendarForTasks() {
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
+          ...getCsrfHeaders(),
         },
+        credentials: "include",
       });
 
       if (!response.ok) {
@@ -305,24 +442,84 @@ export default function CalendarForTasks() {
     }
   };
 
-  const handleCreateTask = (newTask) => {
-    const nextId = tasks.length ? Math.max(...tasks.map((t) => t.id)) + 1 : 1;
-    setTasks((prev) => [
-      {
-        id: nextId,
-        ...newTask,
-      },
-      ...prev,
-    ]);
-    enqueueSnackbar("Task created successfully", { variant: "success" });
+  const handleCreateTask = async (newTask) => {
+    try {
+      const response = await fetch("/tasks", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          ...getCsrfHeaders(),
+        },
+        credentials: "include",
+        body: JSON.stringify(newTask),
+      });
+
+      if (!response.ok) {
+        let message = "Failed to create task";
+        try {
+          const data = await response.json();
+          message = data?.error || data?.errors?.join(", ") || message;
+        } catch (error) {
+          // Keep fallback message when response body is not JSON.
+        }
+        enqueueSnackbar(message, { variant: "error" });
+        return false;
+      }
+
+      await refreshTasks();
+      enqueueSnackbar("Task created successfully", { variant: "success" });
+      return true;
+    } catch (error) {
+      enqueueSnackbar("Network error while creating task", { variant: "error" });
+      return false;
+    }
   };
 
-  const taskCanBeTaken = selectedTask ? canTakeTask(selectedTask, mockCurrentUser) : false;
-  const taskCanBePatched = selectedTask ? canPatchTask(selectedTask, mockCurrentUser) : false;
-  const taskCanProgress = selectedTask ? canProgressTask(selectedTask, mockCurrentUser) : false;
+  const taskCanBeTaken = selectedTask ? canTakeTask(selectedTask, currentUser) : false;
+  const taskCanBePatched = selectedTask ? canPatchTask(selectedTask, currentUser) : false;
+  const taskCanProgress = selectedTask ? canProgressTask(selectedTask, currentUser) : false;
+  const safeCurrentUser = currentUser || {
+    id: null,
+    name: "Unknown User",
+    email: "unknown@example.com",
+    role: "team_member",
+    skills: "",
+    team_id: null,
+  };
+  const canCreateTask = isTeamLead(safeCurrentUser.role);
 
   return (
     <Box className="calendar-for-tasks-root">
+      {isLoading && <LinearProgress sx={{ mb: 1 }} />}
+
+      {noTeam && (
+        <Box sx={{ mb: 2, p: 2, border: "1px dashed #c9c9c9", borderRadius: 2, bgcolor: "#fafafa" }}>
+          <Typography variant="h6" sx={{ mb: 0.5 }}>You are not part of a team yet</Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+            Create a team to start using task calendar features.
+          </Typography>
+          <Stack direction="row" spacing={1}>
+            <TextField
+              size="small"
+              label="Team name"
+              value={teamName}
+              onChange={(e) => setTeamName(e.target.value)}
+            />
+            <Button
+              variant="contained"
+              onClick={handleCreateTeam}
+              disabled={isCreatingTeam}
+              sx={{ bgcolor: "#d32f2f", "&:hover": { bgcolor: "#b71c1c" } }}
+            >
+              {isCreatingTeam ? "Creating..." : "Create Team"}
+            </Button>
+          </Stack>
+        </Box>
+      )}
+
+      {!noTeam && (
+        <>
       <Stack direction="row" spacing={1} className="calendar-for-tasks-legend" flexWrap="wrap">
         {legendItems.map((item) => (
           <Chip
@@ -355,11 +552,14 @@ export default function CalendarForTasks() {
         }}
         height="calc(100vh - 180px)"
       />
+        </>
+      )}
 
       <Fab
         color="primary"
         aria-label="add-task"
         className="calendar-for-tasks-add-fab"
+        disabled={!canCreateTask || noTeam}
         onClick={() => setIsCreationOpen(true)}
       >
         <AddIcon />
@@ -369,7 +569,7 @@ export default function CalendarForTasks() {
         open={Boolean(selectedTask)}
         onClose={handleClose}
         task={selectedTask}
-        currentUser={mockCurrentUser}
+        currentUser={safeCurrentUser}
         canTake={taskCanBeTaken}
         canPatch={taskCanBePatched}
         canProgress={taskCanProgress}
@@ -382,7 +582,7 @@ export default function CalendarForTasks() {
       <TaskCreationDialog
         open={isCreationOpen}
         onClose={() => setIsCreationOpen(false)}
-        currentUser={mockCurrentUser}
+        currentUser={safeCurrentUser}
         onCreate={handleCreateTask}
       />
     </Box>

@@ -27,8 +27,7 @@ export default function App() {
   const [openCreateTaskSignal, setOpenCreateTaskSignal] = useState(false);
 
   const pages = {
-    // calendar: <Calendar openCreateTaskSignal={openCreateTaskSignal} setOpenCreateTaskSignal={setOpenCreateTaskSignal} />,
-    calendar: <CalendarForTasks />,
+    calendar: <Calendar openCreateTaskSignal={openCreateTaskSignal} setOpenCreateTaskSignal={setOpenCreateTaskSignal} />,
     taskCalendar: <CalendarForTasks />,
     validateTasks: <ValidateTasks />,
     settings: <Settings />,
