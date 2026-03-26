@@ -6,7 +6,7 @@ class UsersController < ApplicationController
   def show
     return render json: { error: "Unauthorized" }, status: :forbidden unless current_user.id == params[:id].to_i
     user = User.find(params[:id])
-    render json: user.as_json(include: :team)
+    render json: user.as_json(include: :team).merge(overall_score: user.overall_score)
   end
 
   # PATCH /users/:id
