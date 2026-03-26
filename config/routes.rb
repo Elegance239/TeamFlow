@@ -14,11 +14,22 @@ Rails.application.routes.draw do
   end
 
   resources :tasks, only: [ :index, :show, :create, :update, :destroy ] do
+    collection do
+      get :scores
+    end
+
     member do
       post   :assign
+      post   :progress
       delete :unassign
     end
-    resources :task_steps, only: [ :index, :show ]
+  end
+
+  resources :task_transition_pendings, only: [ :index ] do
+    member do
+      post :approve
+      post :reject
+    end
   end
 
   get "up" => "rails/health#show", as: :rails_health_check

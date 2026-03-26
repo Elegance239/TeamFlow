@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_23_130939) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_26_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -21,26 +21,38 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_23_130939) do
     t.index ["user_id", "task_id"], name: "index_task_histories_on_user_id_and_task_id"
   end
 
-  create_table "task_steps", primary_key: ["task_id", "step_num"], force: :cascade do |t|
-    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
-    t.text "description"
-    t.date "due_date"
-    t.string "name", null: false
-    t.integer "step_num", null: false
+  create_table "task_transition_pendings", force: :cascade do |t|
+    t.bigint "approved_by_id", null: false
+    t.datetime "created_at", null: false
+    t.string "from_state", null: false
+    t.bigint "requested_by_id", null: false
+    t.string "status", default: "pending", null: false
     t.bigint "task_id", null: false
-    t.index ["task_id"], name: "index_task_steps_on_task_id"
+    t.string "to_state", null: false
+    t.datetime "updated_at", null: false
+    t.index ["approved_by_id"], name: "index_task_transition_pendings_on_approved_by_id"
+    t.index ["requested_by_id"], name: "index_task_transition_pendings_on_requested_by_id"
+    t.index ["task_id", "status"], name: "index_task_transition_pendings_on_task_id_and_status"
+    t.index ["task_id"], name: "index_task_transition_pendings_on_task_id"
   end
 
   create_table "tasks", force: :cascade do |t|
+    t.text "all_states", default: "UNASSIGNED,ASSIGNED,COMPLETED", null: false
+    t.bigint "completed_by_id"
     t.datetime "created_at", null: false
     t.bigint "created_by", null: false
+    t.string "current_state", default: "UNASSIGNED", null: false
     t.text "description"
     t.date "due_date", null: false
+    t.boolean "needs_validation", default: false, null: false
     t.integer "points", null: false
+    t.text "required_skills", default: "", null: false
     t.bigint "team_id", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id"
+    t.index ["completed_by_id"], name: "index_tasks_on_completed_by_id"
     t.index ["created_by"], name: "index_tasks_on_created_by"
+    t.index ["current_state"], name: "index_tasks_on_current_state"
     t.index ["team_id"], name: "index_tasks_on_team_id"
     t.index ["user_id"], name: "index_tasks_on_user_id"
     t.check_constraint "points > 0", name: "check_tasks_points_positive"
@@ -73,9 +85,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_23_130939) do
 
   add_foreign_key "task_histories", "tasks"
   add_foreign_key "task_histories", "users"
-  add_foreign_key "task_steps", "tasks"
+  add_foreign_key "task_transition_pendings", "tasks"
+  add_foreign_key "task_transition_pendings", "users", column: "approved_by_id"
+  add_foreign_key "task_transition_pendings", "users", column: "requested_by_id"
   add_foreign_key "tasks", "teams"
   add_foreign_key "tasks", "users"
+  add_foreign_key "tasks", "users", column: "completed_by_id"
   add_foreign_key "tasks", "users", column: "created_by"
   add_foreign_key "users", "teams"
 end
