@@ -4,33 +4,36 @@ import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
 import interactionPlugin from '@fullcalendar/interaction'
 import Calendar from './components/Calendar';
+import CalendarForTasks from './components/CalendarForTasks'
+import ValidateTasks from './components/ValidateTasks';
 import Settings from './components/Settings';
 import SignIn from './components/SignIn'
 import Drawer from './components/Drawer';
 import SignUp from './components/SignUp';
-import { SnackbarProvider, useSnackbar } from 'notistack';
+import { SnackbarProvider } from 'notistack';
 import  { ThemeProvider, createTheme } from '@mui/material/styles';
-// I think it is better to use React Routing soon.
-import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import './App.css';
 
 
 const theme = createTheme({
-  colorSchemes: {
-    dark: true,
+  palette: {
+    mode: 'light',
   },
 });
 
 export default function App() {
-  const [auth, setAuth] = useState(true);
+  const [auth, setAuth] = useState(() => Boolean(localStorage.getItem('teamflowCurrentUser')));
   const [currentPage, setCurrentPage] = useState('calendar'); // 'Calendar' as default page
   const [openCreateTaskSignal, setOpenCreateTaskSignal] = useState(false);
 
   const pages = {
-    calendar: <Calendar openCreateTaskSignal={openCreateTaskSignal} setOpenCreateTaskSignal={setOpenCreateTaskSignal} />,
+    // calendar: <Calendar openCreateTaskSignal={openCreateTaskSignal} setOpenCreateTaskSignal={setOpenCreateTaskSignal} />,
+    calendar: <CalendarForTasks />,
+    taskCalendar: <CalendarForTasks />,
+    validateTasks: <ValidateTasks />,
     settings: <Settings />,
     //For my testing only
-    signin: <SignIn onNavigate= {setCurrentPage}/>,
+    signin: <SignIn onNavigate= {setCurrentPage} onSignedIn={() => setAuth(true)} />,
     signup: <SignUp onNavigate= {setCurrentPage}/>
   };
 
