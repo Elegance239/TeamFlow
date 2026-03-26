@@ -16,6 +16,7 @@ import Stack from '@mui/material/Stack';
 import MuiCard from '@mui/material/Card';
 import { styled } from '@mui/material/styles';
 import AppTheme from '../shared-theme/AppTheme';
+import { getCsrfHeaders } from '../utils/csrf';
 
 // This is just styling stuff straight from MUI
 
@@ -74,6 +75,7 @@ const ScrollableForm = styled(Box)(({ theme }) => ({
 
 export default function SignUp(props) {
   const onNavigate = props.onNavigate;
+  const [submitError, setSubmitError] = React.useState('');
   const [nameError, setNameError] = React.useState(false);
   const [nameErrorMessage, setNameErrorMessage] = React.useState('');
   const [emailError, setEmailError] = React.useState(false);
@@ -82,6 +84,8 @@ export default function SignUp(props) {
   const [passwordErrorMessage, setPasswordErrorMessage] = React.useState('');
   const [confirmPasswordError, setConfirmPasswordError] = React.useState(false);
   const [confirmPasswordErrorMessage, setConfirmPasswordErrorMessage] = React.useState('');
+  const [teamNameError, setTeamNameError] = React.useState(false);
+  const [teamNameErrorMessage, setTeamNameErrorMessage] = React.useState('');
   const [roleError, setRoleError] = React.useState(false);
   const [roleErrorMessage, setRoleErrorMessage] = React.useState('');
   const [deptNameError, setDeptNameError] = React.useState(false);
@@ -119,11 +123,9 @@ export default function SignUp(props) {
     const email = document.getElementById('email');
     const password = document.getElementById('password');
     const confirmPassword = document.getElementById('confirmPassword');
-    const selectedRole = document.querySelector('input[name="role"]:checked')?.value || '';
+    const teamName = document.getElementById('teamName');
 
     let isValid = true;
-
-    // Validations (Name, Email, Password, Role, Department stuff)
 
     if (!name.value || /[^a-zA-Z\s]+/.test(name.value)) {
       setNameError(true);
@@ -161,87 +163,69 @@ export default function SignUp(props) {
       setConfirmPasswordErrorMessage('');
     }
 
-    if (!selectedRole) {
-      setRoleError(true);
-      setRoleErrorMessage('Please select a role.');
+    if (!teamName.value || !teamName.value.trim()) {
+      setTeamNameError(true);
+      setTeamNameErrorMessage('Please enter a team name.');
       isValid = false;
     } else {
-      setRoleError(false);
-      setRoleErrorMessage('');
-    }
-
-    if (selectedRole === 'admin') {
-      if (adminDeptOption === 'new') {
-        const deptNameEl = document.getElementById('adminDeptName');
-        if (!deptNameEl || !deptNameEl.value.trim()) {
-          setAdminDeptNameError(true);
-          setAdminDeptNameErrorMessage('Department name is required.');
-          isValid = false;
-        } else {
-          setAdminDeptNameError(false);
-          setAdminDeptNameErrorMessage('');
-        }
-      } else if (adminDeptOption === 'existing') {
-        const deptCodeEl = document.getElementById('adminDeptCode');
-        if (!deptCodeEl || !deptCodeEl.value.trim()) {
-          setAdminDeptCodeError(true);
-          setAdminDeptCodeErrorMessage('Department ID is required.');
-          isValid = false;
-        } else {
-          setAdminDeptCodeError(false);
-          setAdminDeptCodeErrorMessage('');
-        }
-      }
-    }
-    else if (selectedRole === 'user') {
-      const deptCodeEl = document.getElementById('departmentCode');
-      if (!deptCodeEl || !deptCodeEl.value.trim()) {
-        setDeptCodeError(true);
-        setDeptCodeErrorMessage('Department ID is required.');
-        isValid = false;
-      } else {
-        setDeptCodeError(false);
-        setDeptCodeErrorMessage('');
-      }
+      setTeamNameError(false);
+      setTeamNameErrorMessage('');
     }
 
     return isValid;
   };
 
-  const handleSubmit = (event) => {
-    if (
-      nameError ||
-      emailError ||
-      passwordError ||
-      confirmPasswordError ||
-      roleError ||
-      (role === 'admin' && adminDeptOption === 'new' && adminDeptNameError) ||
-      (role === 'admin' && adminDeptOption === 'existing' && adminDeptCodeError) ||
-      (role === 'user' && deptCodeError)
-    ) {
-      //Stops a login if there's errors
-      event.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    
+    if (!validateInputs()) {
       return;
     }
 
     const data = new FormData(event.currentTarget);
-    // For debugging use only
-    console.log({
-      email: data.get('email'),
-      password: data.get('password'),
-      role: data.get('role'),
-      departmentName: data.get('departmentName'),
-      departmentCode: data.get('departmentCode'),
-    });
+    const name = data.get('name');
+    const email = data.get('email');
+    const password = data.get('password');
+    const confirmPassword = data.get('confirmPassword');
+    const teamName = data.get('teamName');
 
-    //Backend integration is needed!!!
+    try {
+      const response = await fetch('/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          ...getCsrfHeaders(),
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          user: {
+            name,
+            email,
+            password,
+            password_confirmation: confirmPassword,
+            team_name: teamName,
+          },
+        }),
+      });
 
-    //Todo: Replace the department code binding with the backend stuff
-    if (data.get('role') === 'admin') {
-      const uniqueCode = `DEPT-${123456}`;
-      console.log(`Department assigned unique Code ID: ${uniqueCode}`);
+      if (response.ok) {
+        setSubmitError('');
+        document.getElementById('name').value = '';
+        document.getElementById('email').value = '';
+        document.getElementById('password').value = '';
+        document.getElementById('confirmPassword').value = '';
+        document.getElementById('teamName').value = '';
+        onNavigate('signin');
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        const message = errorData.error || (errorData.errors && errorData.errors.join(', ')) || 'Sign up failed. Please try again.';
+        setSubmitError(message);
+      }
+    } catch (error) {
+      setSubmitError('An error occurred. Please try again.');
+      console.error('Sign up error:', error);
     }
-
   };
 
   // This is just reusing the SignIn themes, fields and stuff
@@ -335,6 +319,21 @@ export default function SignUp(props) {
                 />
               </FormControl>
 
+              <FormControl>
+                <FormLabel htmlFor="teamName">Team Name</FormLabel>
+                <TextField
+                  error={teamNameError}
+                  helperText={teamNameErrorMessage}
+                  id="teamName"
+                  name="teamName"
+                  placeholder="e.g. Platform Team"
+                  required
+                  fullWidth
+                  variant="outlined"
+                  color={teamNameError ? 'error' : 'primary'}
+                />
+              </FormControl>
+
               <FormControl error={roleError}>
                 <FormLabel component="legend">Register as</FormLabel>
                 <RadioGroup
@@ -423,6 +422,11 @@ export default function SignUp(props) {
               >
                 Sign Up
               </Button>
+              {submitError && (
+                <Typography color="error" variant="body2" sx={{ mt: 1 }}>
+                  {submitError}
+                </Typography>
+              )}
             </Box>
           </ScrollableForm>
 

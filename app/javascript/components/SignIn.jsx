@@ -16,6 +16,7 @@ import { styled } from '@mui/material/styles';
 import ForgotPassword from './ForgotPassword';
 import AppTheme from '../shared-theme/AppTheme';
 import ColorModeSelect from '../shared-theme/ColorModeSelect';
+import { getCsrfHeaders } from '../utils/csrf';
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: 'flex',
@@ -61,6 +62,7 @@ const SignInContainer = styled(Stack)(({ theme }) => ({
 
 export default function SignIn(props) {
   const onNavigate = props.onNavigate;
+  const onSignedIn = props.onSignedIn;
   const [emailError, setEmailError] = React.useState(false);
   const [emailErrorMessage, setEmailErrorMessage] = React.useState('');
   const [passwordError, setPasswordError] = React.useState(false);
@@ -75,16 +77,63 @@ export default function SignIn(props) {
     setOpen(false);
   };
 
-  const handleSubmit = (event) => {
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [submitError, setSubmitError] = React.useState('');
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    
     if (emailError || passwordError) {
-      event.preventDefault();
       return;
     }
+
+    setIsLoading(true);
+    setSubmitError('');
+
     const data = new FormData(event.currentTarget);
-    console.log({
-      email: data.get('email'),
-      password: data.get('password'),
-    });
+    const email = data.get('email');
+    const password = data.get('password');
+
+    try {
+      const response = await fetch('/users/sign_in', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          ...getCsrfHeaders(),
+        },
+        credentials: 'include', // Send cookies with request
+        body: JSON.stringify({
+          user: {
+            email,
+            password,
+          },
+        }),
+      });
+
+      if (response.ok) {
+        const payload = await response.json();
+        if (payload?.user) {
+          localStorage.setItem('teamflowCurrentUser', JSON.stringify(payload.user));
+        }
+        if (typeof onSignedIn === 'function') {
+          onSignedIn(payload?.user || null);
+        }
+        // Clear form
+        document.getElementById('email').value = '';
+        document.getElementById('password').value = '';
+        // Navigate to main app
+        onNavigate('calendar');
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        setSubmitError(errorData.error || 'Login failed. Please check your credentials.');
+      }
+    } catch (error) {
+      setSubmitError('An error occurred. Please try again.');
+      console.error('Login error:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const validateInputs = () => {
@@ -175,14 +224,20 @@ export default function SignIn(props) {
               control={<Checkbox value="remember" color="primary" />}
               label="Remember me"
             />
+            {submitError && (
+              <Typography color="error" variant="body2" sx={{ mt: 1, mb: 1 }}>
+                {submitError}
+              </Typography>
+            )}
             <ForgotPassword open={open} handleClose={handleClose} />
             <Button
               type="submit"
               fullWidth
               variant="contained"
               onClick={validateInputs}
+              disabled={isLoading}
             >
-              Sign in
+              {isLoading ? 'Signing in...' : 'Sign in'}
             </Button>
             <Link
               component="button"
