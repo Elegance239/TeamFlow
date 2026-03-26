@@ -39,15 +39,29 @@
 | Method | Path | Params | Behaviour |
 |--------|------|--------|-----------|
 | `GET` | `/tasks` | — | List all tasks for the requester's team |
-| `POST` | `/tasks` | `due_date`, `points`, `description?`, `task_steps_attributes[]?` | Create task; team lead only; `team_id` and `created_by` are auto-set; `due_date` must be today or later; task steps are immutable after creation and their `due_date`s must be non-decreasing by `step_num` |
-| `GET` | `/tasks/:id` | — | Return task with its steps; requester must be in the same team |
+| `POST` | `/tasks` | `due_date`, `points`, `description?`, `required_skills?`, `needs_validation?`, `all_states?`, `user_id?` | Create task; team lead only; `team_id` and `created_by` are auto-set; `due_date` must be today or later; required skills are normalized and immutable after creation; optional workflow states can be opted in via `all_states` |
+| `GET` | `/tasks/:id` | — | Return task; requester must be in the same team |
 | `PATCH` | `/tasks/:id` | `description?`, `points?` | Update description or points; creating team lead only |
 | `DELETE` | `/tasks/:id` | — | Delete task; creating team lead only |
-| `POST` | `/tasks/:id/assign` | — | Assign unassigned task to requester; logs a `TaskHistory` entry |
+| `POST` | `/tasks/:id/assign` | `user_id?` | Assign task to requester, or to a specified teammate when caller is a team lead; assignee skills must satisfy required skills |
 | `DELETE` | `/tasks/:id/unassign` | — | Give up an assigned task; assigned user only |
+| `POST` | `/tasks/:id/progress` | — | Move task to the next state in `all_states`; if `needs_validation=true`, creates a pending transition for team lead approval |
+| `GET` | `/tasks/scores` | `user_id` | Return per-task score for a specific user within their team |
 
-#### Task Steps
-| Method | Path | Params | Behaviour |
-|--------|------|--------|-----------|
-| `GET` | `/tasks/:task_id/task_steps` | — | List steps for a task, ordered by `step_num` |
-| `GET` | `/tasks/:task_id/task_steps/:id` | — | Return a single step by `step_num` |
+### Task Workflow States
+
+`Task` now stores workflow directly in two fields:
+
+- `all_states`: comma-separated list of states the task can go through.
+- `current_state`: current position in that workflow.
+
+Allowed state set and order are predetermined:
+
+`UNASSIGNED -> ASSIGNED -> DEVELOPMENT -> TESTING -> PRODUCTION -> COMPLETED`
+
+Rules:
+
+- Every task always includes `UNASSIGNED`, `ASSIGNED`, and `COMPLETED`.
+- Optional states are `DEVELOPMENT`, `TESTING`, `PRODUCTION` and are selected at task creation time.
+- Optional states are normalized to the predetermined order, regardless of input order.
+- Progression must be sequential; skipping states is not allowed.

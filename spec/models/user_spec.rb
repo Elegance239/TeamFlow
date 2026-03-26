@@ -13,9 +13,12 @@ RSpec.describe User, type: :model do
       expect(user.errors[:name]).to be_present
     end
 
-    it "can store a list of skills" do
-      user = build(:user, skills: [ "React", "CSS" ])
-      expect(user.skills).to include("React")
+    it "normalizes skills into a lowercased comma-separated string" do
+      user = build(:user, skills: " React, CSS,react ")
+      user.valid?
+
+      expect(user.skills).to eq("react,css")
+      expect(user.skills_list).to eq([ "react", "css" ])
     end
   end
 

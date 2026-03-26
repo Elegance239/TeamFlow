@@ -95,6 +95,23 @@ RSpec.describe "Users", type: :request do
       expect(json["team"]["name"]).to eq("Dev Team")
     end
 
+    it "returns user's overall_score" do
+      team = create(:team, name: "Score Team")
+      user = create(:user, :team_member, name: "Scorer", team: team)
+      other_user = create(:user, :team_member, name: "Other", team: team)
+
+      Task.create!(due_date: Date.today + 5, team: team, created_by: other_user.id, points: 4, current_state: Task::COMPLETED, completed_by_id: user.id)
+      Task.create!(due_date: Date.today + 6, team: team, created_by: other_user.id, points: 6, current_state: Task::COMPLETED, completed_by_id: user.id)
+      Task.create!(due_date: Date.today + 7, team: team, created_by: other_user.id, points: 8, current_state: Task::COMPLETED, completed_by_id: other_user.id)
+
+      sign_in user
+      get "/users/#{user.id}"
+
+      expect(response).to have_http_status(:ok)
+      json = JSON.parse(response.body)
+      expect(json["overall_score"]).to eq(10)
+    end
+
     it "returns user info with nil team for guest user" do
       user = create(:user, :guest, name: "Guest")
 
