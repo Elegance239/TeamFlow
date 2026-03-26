@@ -25,6 +25,7 @@ import Menu from '@mui/material/Menu';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import DeleteIcon from '@mui/icons-material/Delete';
 import Filters from './Filters';
+import { getCsrfHeaders } from '../utils/csrf';
 
 const drawerWidth = 240;
 
@@ -82,8 +83,7 @@ const DrawerHeader = styled('div')(({ theme }) => ({
   justifyContent: 'space-between',
 }));
 
-export default function PersistentDrawerLeft( { onNavigate, onRequestOpenCreateTask, children }) {
-  const [auth, setAuth] = React.useState(true);
+export default function PersistentDrawerLeft( { auth, setAuth, onNavigate, onRequestOpenCreateTask, children }) {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const theme = useTheme();
   const [open, setOpen] = React.useState(false);
@@ -106,6 +106,27 @@ export default function PersistentDrawerLeft( { onNavigate, onRequestOpenCreateT
 
   const handleSettingsClick = () => {
     onNavigate('settings');
+    handleClose();
+  }
+
+  const handleLogoutClick = async () => {
+    try {
+      await fetch('/users/sign_out', {
+        method: 'DELETE',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          ...getCsrfHeaders(),
+        },
+        credentials: 'include',
+      });
+    } catch (error) {
+      // Local logout still proceeds if network call fails.
+    }
+
+    localStorage.removeItem('teamflowCurrentUser');
+    if (typeof setAuth === 'function') setAuth(false);
+    onNavigate('signin');
     handleClose();
   }
 
@@ -183,7 +204,7 @@ export default function PersistentDrawerLeft( { onNavigate, onRequestOpenCreateT
                 onClose={handleClose}
               >
                 <MenuItem onClick={handleSettingsClick}>Settings</MenuItem>
-                <MenuItem onClick={handleClose}>Log Out</MenuItem>
+                <MenuItem onClick={handleLogoutClick}>Log Out</MenuItem>
               </Menu>
             </div>
           )}
@@ -230,6 +251,16 @@ export default function PersistentDrawerLeft( { onNavigate, onRequestOpenCreateT
         <ListItem disablePadding>
             <ListItemButton onClick={() => { onNavigate('calendar')}}>
             <ListItemText primary="Calendar" />
+            </ListItemButton>
+        </ListItem>
+        <ListItem disablePadding>
+          <ListItemButton onClick={() => { onNavigate('taskCalendar')}}>
+          <ListItemText primary="Task Self-Election" />
+          </ListItemButton>
+        </ListItem>
+        <ListItem disablePadding>
+            <ListItemButton onClick={() => { onNavigate('validateTasks')}}>
+            <ListItemText primary="Validate Tasks" />
             </ListItemButton>
         </ListItem>
         <ListItem disablePadding>
