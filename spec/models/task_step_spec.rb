@@ -1,10 +1,10 @@
 require 'rails_helper'
 
 RSpec.describe TaskStep, type: :model do
-  let(:team) { Team.create!(name: "Dev Team") }
-  let(:lead) { User.create!(name: "Lead", team: team, role: :team_lead) }
-  let(:task) { Task.create!(due_date: Date.today + 5, team: team, created_by: lead.id, points: 1) }
-  let(:other_task) { Task.create!(due_date: Date.today + 5, team: team, created_by: lead.id, points: 1) }
+  let(:team) { create(:team, name: "Dev Team") }
+  let(:lead) { create(:user, :team_lead, name: "Lead", team: team) }
+  let(:task) { create(:task, due_date: Date.today + 5, team: team, created_by: lead.id, points: 1) }
+  let(:other_task) { create(:task, due_date: Date.today + 5, team: team, created_by: lead.id, points: 1) }
 
   def valid_step(overrides = {})
     TaskStep.new({ task: task, step_num: 0, name: "Step One" }.merge(overrides))

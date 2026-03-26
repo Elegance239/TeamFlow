@@ -36,6 +36,12 @@ rescue ActiveRecord::PendingMigrationError => e
 end
 RSpec.configure do |config|
   # Remove this line if you're not using ActiveRecord or ActiveRecord fixtures
+  config.include FactoryBot::Syntax::Methods
+  config.before(:suite) do
+    FactoryBot.definition_file_paths = [ Rails.root.join('spec/factories') ]
+    FactoryBot.find_definitions
+  end
+
   config.fixture_paths = [
     Rails.root.join('spec/fixtures')
   ]
@@ -44,6 +50,9 @@ RSpec.configure do |config|
   # examples within a transaction, remove the following line or assign false
   # instead of true.
   config.use_transactional_fixtures = true
+
+  # Include Devise helpers for request specs
+  config.include Devise::Test::IntegrationHelpers, type: :request
 
   # You can uncomment this line to turn off ActiveRecord support entirely.
   # config.use_active_record = false
