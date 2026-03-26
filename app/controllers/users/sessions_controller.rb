@@ -15,7 +15,8 @@ class Users::SessionsController < Devise::SessionsController
           id: resource.id,
           name: resource.name,
           email: resource.email,
-          role: resource.role
+          role: resource.role,
+          team_id: resource.team_id
         }
       }, status: :ok
     else
