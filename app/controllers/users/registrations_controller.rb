@@ -3,19 +3,36 @@ class Users::RegistrationsController < Devise::RegistrationsController
   skip_before_action :require_no_authentication, only: [ :create ]
 
   def create
-    team_name = sign_up_params[:team_name].to_s.strip
-    if team_name.blank?
+    team_name = sign_up_params[:team_name]
+    if team_name.nil?
       return render json: { errors: [ "Team name can't be blank" ] }, status: :unprocessable_content
     end
 
-    team = Team.find_or_initialize_by(name: team_name)
-    if team.new_record? && !team.save
-      return render json: { errors: team.errors.full_messages }, status: :unprocessable_content
+    is_team_lead = sign_up_params[:role] == "team_lead" || sign_up_params[:role] == 0 ? true : false
+    create_new = ActiveModel::Type::Boolean.new.cast(sign_up_params[:create_new])
+    team = Team.find_by(name: team_name)
+
+    if team.nil?
+      if is_team_lead && create_new
+        team = Team.new(name: team_name)
+        unless team.save
+          return render json: { errors: team.errors.full_messages }, status: :unprocessable_content
+        end
+      else
+        # Any other case gives a 422
+        return render json: { errors: [ "Department name does not exist" ] }, status: :unprocessable_content
+      end
+    else
+      # Team already exists 422
+      if is_team_lead && create_new
+        # Team Lead tried to create an already existing department
+        return render json: { errors: [ "Department name has already been taken!" ] }, status: :unprocessable_content
+      end
     end
 
-    resource = build_resource(sign_up_params.except(:team_name))
+    resource = build_resource(sign_up_params.except(:team_name, :create_new))
     resource.team = team
-    resource.role ||= team.users.exists? ? :team_member : :team_lead
+    resource.role = is_team_lead ? :team_lead : :team_member
 
     if resource.save
       sign_up(resource_name, resource)
@@ -34,30 +51,18 @@ class Users::RegistrationsController < Devise::RegistrationsController
     end
   end
 
-  # If you are looking for the definition of the routes, it is inherited by Devise's implementation here:
-  # https://github.com/heartcombo/devise/blob/main/app/controllers/devise/registrations_controller.rb#L17
-  # Look for the right file on the left.
+  def update
+    resource = current_user
 
-  def destroy
-    if resource.destroy
-      Devise.sign_out_all_scopes ? sign_out : sign_out(resource_name)
-      render json: { message: "Account deleted successfully" }, status: :ok
-    else
-      render json: { errors: resource.errors.full_messages }, status: :unprocessable_content
-    end
-  end
-
-  private
-
-  def respond_with(resource, _opts = {})
-    if resource.persisted?
+    if resource.update(account_update_params)
       render json: {
-        message: "Account created successfully",
+        message: "Account updated successfully",
         user: {
           id: resource.id,
           name: resource.name,
           email: resource.email,
-          role: resource.role
+          role: resource.role,
+          team_id: resource.team_id
         }
       }, status: :created
     else
@@ -65,8 +70,12 @@ class Users::RegistrationsController < Devise::RegistrationsController
     end
   end
 
+  private
   def sign_up_params
-    # Strong Params that are allowed for the sign up form (by default devise only uses email, password, password_confirmation)
-    params.require(:user).permit(:name, :email, :password, :password_confirmation, :role, :team_name)
+    params.require(:user).permit(:name, :email, :password, :password_confirmation, :role, :team_name, :create_new)
+  end
+
+  def account_update_params
+    params.require(:user).permit(:email, :current_password)
   end
 end

@@ -164,5 +164,4 @@ class Task < ApplicationRecord
     return unless due_date.present?
     errors.add(:due_date, "cannot be in the past") if due_date < Date.today
   end
-
 end
