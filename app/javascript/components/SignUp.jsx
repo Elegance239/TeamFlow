@@ -18,7 +18,6 @@ import Stack from '@mui/material/Stack';
 import MuiCard from '@mui/material/Card';
 import { styled } from '@mui/material/styles';
 import AppTheme from '../shared-theme/AppTheme';
-import { getCsrfHeaders } from '../utils/csrf';
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: 'flex',
@@ -224,7 +223,6 @@ export default function SignUp(props) {
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
-          ...getCsrfHeaders(),
         },
         credentials: 'include',
         body: JSON.stringify({

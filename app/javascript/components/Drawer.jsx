@@ -25,7 +25,6 @@ import Menu from '@mui/material/Menu';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import DeleteIcon from '@mui/icons-material/Delete';
 import Filters from './Filters';
-import { getCsrfHeaders } from '../utils/csrf';
 
 const drawerWidth = 240;
 
@@ -116,7 +115,6 @@ export default function PersistentDrawerLeft( { auth, setAuth, onNavigate, onReq
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
-          ...getCsrfHeaders(),
         },
         credentials: 'include',
       });
@@ -125,9 +123,7 @@ export default function PersistentDrawerLeft( { auth, setAuth, onNavigate, onReq
     }
 
     localStorage.removeItem('teamflowCurrentUser');
-    if (typeof setAuth === 'function') setAuth(false);
-    onNavigate('signin');
-    handleClose();
+    window.location.href = '/';
   }
 
 

@@ -17,7 +17,6 @@ import AddIcon from "@mui/icons-material/Add";
 import { useSnackbar } from "notistack";
 import TaskDialog from "./TaskDialog";
 import TaskCreationDialog from "./TaskCreationDialog";
-import { getCsrfHeaders } from "../utils/csrf";
 import "./CalendarForTasks.css";
 
 const COLORS = {
@@ -218,7 +217,6 @@ export default function CalendarForTasks() {
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
-          ...getCsrfHeaders(),
         },
         credentials: "include",
         body: JSON.stringify({ name: cleanedName }),
@@ -317,7 +315,6 @@ export default function CalendarForTasks() {
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
-          ...getCsrfHeaders(),
         },
         credentials: "include",
       });
@@ -351,7 +348,6 @@ export default function CalendarForTasks() {
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
-          ...getCsrfHeaders(),
         },
         credentials: "include",
         body: JSON.stringify({ description, points }),
@@ -384,7 +380,6 @@ export default function CalendarForTasks() {
         method: "DELETE",
         headers: {
           Accept: "application/json",
-          ...getCsrfHeaders(),
         },
         credentials: "include",
       });
@@ -418,7 +413,6 @@ export default function CalendarForTasks() {
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
-          ...getCsrfHeaders(),
         },
         credentials: "include",
       });
@@ -449,7 +443,6 @@ export default function CalendarForTasks() {
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
-          ...getCsrfHeaders(),
         },
         credentials: "include",
         body: JSON.stringify(newTask),

@@ -16,7 +16,6 @@ import { styled } from '@mui/material/styles';
 import ForgotPassword from './ForgotPassword';
 import AppTheme from '../shared-theme/AppTheme';
 import ColorModeSelect from '../shared-theme/ColorModeSelect';
-import { getCsrfHeaders } from '../utils/csrf';
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: 'flex',
@@ -100,7 +99,6 @@ export default function SignIn(props) {
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
-          ...getCsrfHeaders(),
         },
         credentials: 'include', // Send cookies with request
         body: JSON.stringify({
@@ -116,14 +114,9 @@ export default function SignIn(props) {
         if (payload?.user) {
           localStorage.setItem('teamflowCurrentUser', JSON.stringify(payload.user));
         }
-        if (typeof onSignedIn === 'function') {
-          onSignedIn(payload?.user || null);
-        }
-        // Clear form
-        document.getElementById('email').value = '';
-        document.getElementById('password').value = '';
-        // Navigate to main app
-        onNavigate('calendar');
+        // Force full page reload to get new CSRF token for the authenticated session
+        window.location.href = '/';
+        return;
       } else {
         const errorData = await response.json().catch(() => ({}));
         setSubmitError(errorData.error || 'Login failed. Please check your credentials.');

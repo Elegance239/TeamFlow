@@ -12,7 +12,6 @@ import {
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
 import { useSnackbar } from "notistack";
-import { getCsrfHeaders } from "../utils/csrf";
 
 const STATE_COLORS = {
   UNASSIGNED: "#757575",
@@ -204,7 +203,6 @@ export default function ValidateTasks() {
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
-          ...getCsrfHeaders(),
         },
         credentials: "include",
       });
