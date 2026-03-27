@@ -277,7 +277,7 @@ export default function PersistentDrawerLeft( { auth, setAuth, onNavigate, onReq
         </List>
         <Divider />
 
-        <Filters />
+        <Filters/>
         
       </Drawer>
       <Main open={open}>
