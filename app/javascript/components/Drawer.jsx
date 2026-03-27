@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { useState, useEffect } from 'react';
 import { styled, useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Drawer from '@mui/material/Drawer';
@@ -84,6 +84,7 @@ const DrawerHeader = styled('div')(({ theme }) => ({
 
 export default function PersistentDrawerLeft( { auth, setAuth, onNavigate, onRequestOpenCreateTask, children, user, setUser}) {
   const [anchorEl, setAnchorEl] = React.useState(null);
+  const [teamName, setTeamName] = useState('');
   const theme = useTheme();
   const [open, setOpen] = React.useState(false);
 
@@ -126,7 +127,21 @@ export default function PersistentDrawerLeft( { auth, setAuth, onNavigate, onReq
     window.location.href = '/';
   }
 
-
+  useEffect(() => {
+    if (user?.team_id) {
+      fetch(`/teams/${user.team_id}`, {
+        headers: { Accept: 'application/json' },
+        credentials: 'include',
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.name) setTeamName(data.name);
+        })
+        .catch((err) => console.error('Failed to fetch team name', err));
+    } else {
+      setTeamName('');
+    }
+  }, [user?.team_id]);
 
   const adminItems = [
     {
@@ -139,6 +154,11 @@ export default function PersistentDrawerLeft( { auth, setAuth, onNavigate, onReq
       icon: <DeleteIcon />,
       onClick: () => {},
     },
+    {
+      text: "Validate Tasks",
+      icon: <AssignmentIcon />,
+      onClick: () => {onNavigate('validateTasks')}
+    }
   ];
 
   return (
@@ -222,7 +242,7 @@ export default function PersistentDrawerLeft( { auth, setAuth, onNavigate, onReq
         open={open}
       >
         <DrawerHeader>
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>Department</Typography>
+          <Typography variant="h6" sx={{ flexGrow: 1 }}>{teamName}</Typography>
           <IconButton onClick={handleDrawerClose}>
             {theme.direction === 'ltr' ? <ChevronLeftIcon /> : <ChevronRightIcon />}
           </IconButton>
@@ -256,11 +276,6 @@ export default function PersistentDrawerLeft( { auth, setAuth, onNavigate, onReq
           </ListItemButton>
         </ListItem>
         <ListItem disablePadding>
-            <ListItemButton onClick={() => { onNavigate('validateTasks')}}>
-            <ListItemText primary="Validate Tasks" />
-            </ListItemButton>
-        </ListItem>
-        <ListItem disablePadding>
             <ListItemButton onClick={() => { onNavigate('settings')}}>
             <ListItemText primary="Settings" />
             </ListItemButton>
@@ -273,7 +288,7 @@ export default function PersistentDrawerLeft( { auth, setAuth, onNavigate, onReq
         </List>
         <Divider />
 
-        <Filters/>
+        <Filters user={user}/>
         
       </Drawer>
       <Main open={open}>
