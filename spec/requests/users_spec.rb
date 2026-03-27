@@ -133,6 +133,20 @@ RSpec.describe "Users", type: :request do
       expect(response).to have_http_status(:unprocessable_content)
       expect(JSON.parse(response.body)["errors"]).to include("Team name can't be blank")
     end
+    it "returns 422 when email is missing" do
+      create(:team, name: "test")
+      post "/users", params: {
+        user: {
+          name: "Signup User",
+          password: "password123",
+          password_confirmation: "password123",
+          team_name: "test"
+        }
+      }, headers: json_headers
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(JSON.parse(response.body)["errors"]).to include("Email can't be blank")
+    end
   end
 
   describe "POST /users/sign_in" do

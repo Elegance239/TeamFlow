@@ -83,7 +83,7 @@ const DrawerHeader = styled('div')(({ theme }) => ({
   justifyContent: 'space-between',
 }));
 
-export default function PersistentDrawerLeft( { auth, setAuth, onNavigate, onRequestOpenCreateTask, children }) {
+export default function PersistentDrawerLeft( { auth, setAuth, onNavigate, onRequestOpenCreateTask, children, user, setUser}) {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const theme = useTheme();
   const [open, setOpen] = React.useState(false);
@@ -232,7 +232,8 @@ export default function PersistentDrawerLeft( { auth, setAuth, onNavigate, onReq
           </IconButton>
         </DrawerHeader>
         <Divider />
-        <List>
+        {user?.role === "team_lead" && (
+          <List>
           <div className='admin'>
             <h4 style={{ paddingLeft: '20px' }}>Admin Panel</h4>
             {adminItems.map((item) => (
@@ -244,8 +245,8 @@ export default function PersistentDrawerLeft( { auth, setAuth, onNavigate, onReq
               </ListItem>
             ))}
           </div>
-
         </List>
+        )}
         <Divider />
         <List>
         <ListItem disablePadding>

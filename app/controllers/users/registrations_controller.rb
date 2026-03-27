@@ -8,7 +8,7 @@ class Users::RegistrationsController < Devise::RegistrationsController
       return render json: { errors: [ "Team name can't be blank" ] }, status: :unprocessable_content
     end
 
-    is_team_lead = sign_up_params[:role] == "team_lead" ? true : false
+    is_team_lead = sign_up_params[:role] == "team_lead" || sign_up_params[:role] == 0 ? true : false
     create_new = ActiveModel::Type::Boolean.new.cast(sign_up_params[:create_new])
     team = Team.find_by(name: team_name)
 

@@ -22,6 +22,10 @@ const theme = createTheme({
 });
 
 export default function App() {
+  const [user, setUser] = useState(() => {
+    const stored = localStorage.getItem('teamflowCurrentUser');
+    return stored ? JSON.parse(stored) : null;
+  })
   const [auth, setAuth] = useState(() => Boolean(localStorage.getItem('teamflowCurrentUser')));
   const [currentPage, setCurrentPage] = useState('calendar'); // 'Calendar' as default page
   const [openCreateTaskSignal, setOpenCreateTaskSignal] = useState(false);
@@ -32,7 +36,7 @@ export default function App() {
     validateTasks: <ValidateTasks />,
     settings: <Settings />,
     //For my testing only
-    signin: <SignIn onNavigate= {setCurrentPage} onSignedIn={() => setAuth(true)} />,
+    signin: <SignIn onNavigate= {setCurrentPage} onSignedIn={(userData) => {setAuth(true); setUser(userData)}} />,
     signup: <SignUp onNavigate= {setCurrentPage}/>
   };
 
@@ -46,7 +50,7 @@ export default function App() {
       <ThemeProvider theme={theme}>
         {/* For my testing only. To return back to normal comment out the div below and restore the commented part*/}
         <div>
-          <Drawer auth= {auth} setAuth= {setAuth} onNavigate= {setCurrentPage} 
+          <Drawer auth= {auth} setAuth= {setAuth} user = {user} setUser = {setUser} onNavigate= {setCurrentPage} 
           onRequestOpenCreateTask={handleRequestOpenCreateTask}>
             {pages[currentPage]}
           </Drawer>
