@@ -1,6 +1,8 @@
 import * as React from 'react';
+import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
+import CheckIcon from '@mui/icons-material/Check';
 import CssBaseline from '@mui/material/CssBaseline';
 import FormControl from '@mui/material/FormControl';
 import FormControlLabel from '@mui/material/FormControlLabel';
@@ -17,16 +19,14 @@ import MuiCard from '@mui/material/Card';
 import { styled } from '@mui/material/styles';
 import AppTheme from '../shared-theme/AppTheme';
 
-// This is just styling stuff straight from MUI
-
 const Card = styled(MuiCard)(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
   alignSelf: 'center',
   width: '100%',
-  maxWidth: '450px',
+  maxWidth: '600px',
   height: '70vh',
-  padding: theme.spacing(4),
+  padding: theme.spacing(2),
   gap: theme.spacing(2),
   margin: 'auto',
   [theme.breakpoints.up('sm')]: {
@@ -74,6 +74,7 @@ const ScrollableForm = styled(Box)(({ theme }) => ({
 
 export default function SignUp(props) {
   const onNavigate = props.onNavigate;
+  const [submitError, setSubmitError] = React.useState('');
   const [nameError, setNameError] = React.useState(false);
   const [nameErrorMessage, setNameErrorMessage] = React.useState('');
   const [emailError, setEmailError] = React.useState(false);
@@ -82,17 +83,15 @@ export default function SignUp(props) {
   const [passwordErrorMessage, setPasswordErrorMessage] = React.useState('');
   const [confirmPasswordError, setConfirmPasswordError] = React.useState(false);
   const [confirmPasswordErrorMessage, setConfirmPasswordErrorMessage] = React.useState('');
+  const [joinDeptNameError, setjoinDeptNameError] = React.useState(false);
+  const [joinDeptNameErrorMessage, setjoinDeptNameErrorMessage] = React.useState('');
   const [roleError, setRoleError] = React.useState(false);
   const [roleErrorMessage, setRoleErrorMessage] = React.useState('');
-  const [deptNameError, setDeptNameError] = React.useState(false);
-  const [deptNameErrorMessage, setDeptNameErrorMessage] = React.useState('');
-  const [deptCodeError, setDeptCodeError] = React.useState(false);
-  const [deptCodeErrorMessage, setDeptCodeErrorMessage] = React.useState('');
   const [adminDeptOption, setAdminDeptOption] = React.useState('new');
   const [adminDeptNameError, setAdminDeptNameError] = React.useState(false);
   const [adminDeptNameErrorMessage, setAdminDeptNameErrorMessage] = React.useState('');
-  const [adminDeptCodeError, setAdminDeptCodeError] = React.useState(false);
-  const [adminDeptCodeErrorMessage, setAdminDeptCodeErrorMessage] = React.useState('');
+  const [adminDeptCreateNameError, setadminDeptCreateNameError] = React.useState(false);
+  const [adminDeptCreateNameErrorMessage, setadminDeptCreateNameErrorMessage] = React.useState('');
 
   const [role, setRole] = React.useState('user');
 
@@ -104,13 +103,11 @@ export default function SignUp(props) {
       setAdminDeptOption('new');
       setAdminDeptNameError(false);
       setAdminDeptNameErrorMessage('');
-      setAdminDeptCodeError(false);
-      setAdminDeptCodeErrorMessage('');
-      setDeptCodeError(false);
-      setDeptCodeErrorMessage('');
+      setadminDeptCreateNameError(false);
+      setadminDeptCreateNameErrorMessage('');
     } else {
-      setDeptNameError(false);
-      setDeptNameErrorMessage('');
+      setjoinDeptNameError(false);
+      setjoinDeptNameErrorMessage('');
     }
   };
 
@@ -119,11 +116,7 @@ export default function SignUp(props) {
     const email = document.getElementById('email');
     const password = document.getElementById('password');
     const confirmPassword = document.getElementById('confirmPassword');
-    const selectedRole = document.querySelector('input[name="role"]:checked')?.value || '';
-
     let isValid = true;
-
-    // Validations (Name, Email, Password, Role, Department stuff)
 
     if (!name.value || /[^a-zA-Z\s]+/.test(name.value)) {
       setNameError(true);
@@ -161,112 +154,142 @@ export default function SignUp(props) {
       setConfirmPasswordErrorMessage('');
     }
 
-    if (!selectedRole) {
-      setRoleError(true);
-      setRoleErrorMessage('Please select a role.');
-      isValid = false;
-    } else {
-      setRoleError(false);
-      setRoleErrorMessage('');
-    }
-
-    if (selectedRole === 'admin') {
+    if (role === 'user') {
+      const joinDeptName = document.getElementById('joinDeptName');
+      if (!joinDeptName.value || !joinDeptName.value.trim()) {
+        setjoinDeptNameError(true);
+        setjoinDeptNameErrorMessage('Please enter a department/team name.');
+        isValid = false;
+      } else {
+        setjoinDeptNameError(false);
+        setjoinDeptNameErrorMessage('');
+      }
+    } else if (role === 'admin') {
       if (adminDeptOption === 'new') {
-        const deptNameEl = document.getElementById('adminDeptName');
-        if (!deptNameEl || !deptNameEl.value.trim()) {
+        const adminDeptName = document.getElementById('adminDeptName');
+        if (!adminDeptName.value || !adminDeptName.value.trim()) {
           setAdminDeptNameError(true);
-          setAdminDeptNameErrorMessage('Department name is required.');
+          setAdminDeptNameErrorMessage('Please enter a department name.');
           isValid = false;
         } else {
           setAdminDeptNameError(false);
           setAdminDeptNameErrorMessage('');
         }
-      } else if (adminDeptOption === 'existing') {
-        const deptCodeEl = document.getElementById('adminDeptCode');
-        if (!deptCodeEl || !deptCodeEl.value.trim()) {
-          setAdminDeptCodeError(true);
-          setAdminDeptCodeErrorMessage('Department ID is required.');
+      } else {
+        const adminDeptCreateName = document.getElementById('adminDeptCreateName');
+        if (!adminDeptCreateName.value || !adminDeptCreateName.value.trim()) {
+          setadminDeptCreateNameError(true);
+          setadminDeptCreateNameErrorMessage('Please enter a department name.');
           isValid = false;
         } else {
-          setAdminDeptCodeError(false);
-          setAdminDeptCodeErrorMessage('');
+          setadminDeptCreateNameError(false);
+          setadminDeptCreateNameErrorMessage('');
         }
-      }
-    }
-    else if (selectedRole === 'user') {
-      const deptCodeEl = document.getElementById('departmentCode');
-      if (!deptCodeEl || !deptCodeEl.value.trim()) {
-        setDeptCodeError(true);
-        setDeptCodeErrorMessage('Department ID is required.');
-        isValid = false;
-      } else {
-        setDeptCodeError(false);
-        setDeptCodeErrorMessage('');
       }
     }
 
     return isValid;
   };
 
-  const handleSubmit = (event) => {
-    if (
-      nameError ||
-      emailError ||
-      passwordError ||
-      confirmPasswordError ||
-      roleError ||
-      (role === 'admin' && adminDeptOption === 'new' && adminDeptNameError) ||
-      (role === 'admin' && adminDeptOption === 'existing' && adminDeptCodeError) ||
-      (role === 'user' && deptCodeError)
-    ) {
-      //Stops a login if there's errors
-      event.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    
+    if (!validateInputs()) {
       return;
     }
 
     const data = new FormData(event.currentTarget);
-    // For debugging use only
-    console.log({
-      email: data.get('email'),
-      password: data.get('password'),
-      role: data.get('role'),
-      departmentName: data.get('departmentName'),
-      departmentCode: data.get('departmentCode'),
-    });
+    const name = data.get('name');
+    const email = data.get('email');
+    const password = data.get('password');
+    const confirmPassword = data.get('confirmPassword');
 
-    //Backend integration is needed!!!
-
-    //Todo: Replace the department code binding with the backend stuff
-    if (data.get('role') === 'admin') {
-      const uniqueCode = `DEPT-${123456}`;
-      console.log(`Department assigned unique Code ID: ${uniqueCode}`);
+    let teamName;
+    if (role === 'user') {
+      teamName = data.get('joinDeptName');
+    } else if (role === 'admin') {
+      if (adminDeptOption === 'new') {
+        teamName = data.get('adminDeptName');
+      } else {
+        teamName = data.get('adminDeptCreateName');
+      }
     }
 
+    const roleValue = role === 'user' ? 1 : 0;
+
+    try {
+      const response = await fetch('/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          user: {
+            name,
+            email,
+            password,
+            password_confirmation: confirmPassword,
+            team_name: teamName,
+            role: roleValue,
+            create_new: role === 'admin' && adminDeptOption === 'new'
+          },
+        }),
+      });
+
+      if (response.ok) {
+        setSubmitError('');
+        document.getElementById('name').value = '';
+        document.getElementById('email').value = '';
+        document.getElementById('password').value = '';
+        document.getElementById('confirmPassword').value = '';
+        if (role === 'user') {
+          document.getElementById('joinDeptName').value = '';
+        } else {
+          if (adminDeptOption === 'new') {
+            document.getElementById('adminDeptName').value = '';
+          } else {
+            document.getElementById('adminDeptCreateName').value = '';
+          }
+        }
+        onNavigate('signin');
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        const message = errorData.error || (errorData.errors && errorData.errors.join(', ')) || 'Sign up failed. Please try again.';
+        setSubmitError(message);
+      }
+    } catch (error) {
+      setSubmitError('An error occurred. Please try again.');
+      console.error('Sign up error:', error);
+    }
   };
 
-  // This is just reusing the SignIn themes, fields and stuff
   return (
     <AppTheme {...props}>
       <CssBaseline enableColorScheme />
       <SignUpContainer direction="column" justifyContent="space-between">
         <Card variant="outlined">
-          <Typography
-            component="h1"
-            variant="h4"
-            sx={{ width: '100%', fontSize: 'clamp(2rem, 10vw, 2.15rem)' }}
-          >
-            Sign Up
-          </Typography>
+          <Box sx={{ width: '90%', mx: 'auto' }}>
+            <Typography
+              component="h1"
+              variant="h4"
+              sx={{ width: '100%', fontSize: 'clamp(2rem, 10vw, 2.15rem)', textAlign: 'left' }}
+            >
+              Sign Up
+            </Typography>
+          </Box>
 
           <ScrollableForm>
             <Box
               component="form"
               onSubmit={handleSubmit}
               noValidate
+              alignItems="center"
               sx={{ display: 'flex', flexDirection: 'column', width: '100%', gap: 2 }}
             >
 
-              <FormControl>
+              <FormControl sx={{ width: '90%' }}>
                 <FormLabel htmlFor="name">Display Name</FormLabel>
                 <TextField
                   error={nameError}
@@ -284,7 +307,7 @@ export default function SignUp(props) {
                 />
               </FormControl>
 
-              <FormControl>
+              <FormControl sx={{ width: '90%' }}>
                 <FormLabel htmlFor="email">Email</FormLabel>
                 <TextField
                   error={emailError}
@@ -302,7 +325,7 @@ export default function SignUp(props) {
                 />
               </FormControl>
 
-              <FormControl>
+              <FormControl sx={{ width: '90%' }}>
                 <FormLabel htmlFor="password">Password</FormLabel>
                 <TextField
                   error={passwordError}
@@ -319,7 +342,7 @@ export default function SignUp(props) {
                 />
               </FormControl>
 
-              <FormControl>
+              <FormControl sx={{ width: '90%' }}>
                 <FormLabel htmlFor="confirmPassword">Confirm Password</FormLabel>
                 <TextField
                   error={confirmPasswordError}
@@ -335,7 +358,7 @@ export default function SignUp(props) {
                 />
               </FormControl>
 
-              <FormControl error={roleError}>
+              <FormControl error={roleError} sx={{ width: '90%' }}>
                 <FormLabel component="legend">Register as</FormLabel>
                 <RadioGroup
                   row
@@ -351,7 +374,7 @@ export default function SignUp(props) {
 
               {role === 'admin' && (
                 <>
-                  <FormControl>
+                  <FormControl sx={{ width: '90%' }}>
                     <FormLabel component="legend">Department option</FormLabel>
                     <RadioGroup
                       row
@@ -364,7 +387,7 @@ export default function SignUp(props) {
                   </FormControl>
 
                   {adminDeptOption === 'new' && (
-                    <FormControl>
+                    <FormControl sx={{ width: '90%' }}>
                       <FormLabel htmlFor="adminDeptName">Department Name</FormLabel>
                       <TextField
                         error={adminDeptNameError}
@@ -381,18 +404,18 @@ export default function SignUp(props) {
                   )}
 
                   {adminDeptOption === 'existing' && (
-                    <FormControl>
-                      <FormLabel htmlFor="adminDeptCode">Department ID</FormLabel>
+                    <FormControl sx={{ width: '90%' }}>
+                      <FormLabel htmlFor="adminDeptCreateName">Department Name</FormLabel>
                       <TextField
-                        error={adminDeptCodeError}
-                        helperText={adminDeptCodeErrorMessage}
-                        id="adminDeptCode"
-                        name="adminDeptCode"
-                        placeholder="e.g. DEPT-123456"
+                        error={adminDeptCreateNameError}
+                        helperText={adminDeptCreateNameErrorMessage}
+                        id="adminDeptCreateName"
+                        name="adminDeptCreateName"
+                        placeholder="e.g. Logistics"
                         required
                         fullWidth
                         variant="outlined"
-                        color={adminDeptCodeError ? 'error' : 'primary'}
+                        color={adminDeptCreateNameError ? 'error' : 'primary'}
                       />
                     </FormControl>
                   )}
@@ -400,17 +423,18 @@ export default function SignUp(props) {
               )}
 
               {role === 'user' && (
-                <FormControl>
-                  <FormLabel htmlFor="departmentCode">Department Code ID</FormLabel>
+                <FormControl sx={{ width: '90%' }}>
+                  <FormLabel htmlFor="joinDeptName">Department/Team Name</FormLabel>
                   <TextField
-                    error={deptCodeError}
-                    helperText={deptCodeErrorMessage}
-                    id="departmentCode"
-                    name="departmentCode"
-                    placeholder="e.g. DEPT-helloworld"
+                    error={joinDeptNameError}
+                    helperText={joinDeptNameErrorMessage}
+                    id="joinDeptName"
+                    name="joinDeptName"
+                    placeholder="e.g. Platform Team"
                     required
                     fullWidth
                     variant="outlined"
+                    color={joinDeptNameError ? 'error' : 'primary'}
                   />
                 </FormControl>
               )}
@@ -419,10 +443,15 @@ export default function SignUp(props) {
                 type="submit"
                 fullWidth
                 variant="contained"
-                onClick={validateInputs}
+                sx={{ width: '90%' }}
               >
                 Sign Up
               </Button>
+              {submitError && (
+                <Typography color="error" variant="body2" sx={{ mt: 1 }}>
+                  {submitError}
+                </Typography>
+              )}
             </Box>
           </ScrollableForm>
 

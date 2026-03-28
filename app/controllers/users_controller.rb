@@ -1,25 +1,18 @@
 class UsersController < ApplicationController
+  before_action :authenticate_user!
+
   # GET /users/:id
   # Returns the user's info including their team (if any)
   def show
+    return render json: { error: "Unauthorized" }, status: :forbidden unless current_user.id == params[:id].to_i
     user = User.find(params[:id])
-    render json: user.as_json(include: :team)
-  end
-
-  # POST /users
-  # Creates a new guest user (no team, no role)
-  def create
-    user = User.new(name: params[:name])
-    if user.save
-      render json: user, status: :created
-    else
-      render json: { errors: user.errors.full_messages }, status: :unprocessable_content
-    end
+    render json: user.as_json(include: :team).merge(overall_score: user.overall_score)
   end
 
   # PATCH /users/:id
   # Allows a user to update their own name
   def update
+    return render json: { error: "Unauthorized" }, status: :forbidden unless current_user.id == params[:id].to_i
     user = User.find(params[:id])
     if user.update(name: params[:name])
       render json: user

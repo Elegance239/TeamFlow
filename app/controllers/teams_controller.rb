@@ -1,11 +1,12 @@
 class TeamsController < ApplicationController
+  before_action :authenticate_user!
+
   # GET /teams/:id
   # Returns team info. Any member of the team can view it, including the list of team leads.
   def show
     team = Team.find(params[:id])
-    requester = User.find(params[:user_id])
 
-    unless requester.team_id == team.id
+    unless current_user.team_id == team.id
       return render json: { error: "You are not a member of this team" }, status: :forbidden
     end
 
@@ -17,12 +18,11 @@ class TeamsController < ApplicationController
   # Creates a new team. The requesting user becomes the team_lead.
   # Fails if team name already exists.
   def create
-    requester = User.find(params[:user_id])
     team = Team.new(name: params[:name], description: params[:description])
 
     if team.save
-      requester.update!(team: team, role: :team_lead)
-      render json: { team: team, user: requester }, status: :created
+      current_user.update!(team: team, role: :team_lead)
+      render json: { team: team, user: current_user }, status: :created
     else
       render json: { errors: team.errors.full_messages }, status: :unprocessable_content
     end
@@ -32,9 +32,8 @@ class TeamsController < ApplicationController
   # Updates team description. Only the team_lead of that team may do this.
   def update
     team = Team.find(params[:id])
-    requester = User.find(params[:user_id])
 
-    unless requester.team_lead? && requester.team_id == team.id
+    unless current_user.team_lead? && current_user.team_id == team.id
       return render json: { error: "Only the team lead can update the team description" }, status: :forbidden
     end
 

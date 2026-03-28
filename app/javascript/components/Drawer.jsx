@@ -1,6 +1,7 @@
-import * as React from 'react';
+import React, { useState, useEffect } from 'react';
 import { styled, useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
+import CheckIcon from '@mui/icons-material/Check';
 import Drawer from '@mui/material/Drawer';
 import CssBaseline from '@mui/material/CssBaseline';
 import MuiAppBar from '@mui/material/AppBar';
@@ -82,9 +83,9 @@ const DrawerHeader = styled('div')(({ theme }) => ({
   justifyContent: 'space-between',
 }));
 
-export default function PersistentDrawerLeft( { onNavigate, onRequestOpenCreateTask, children }) {
-  const [auth, setAuth] = React.useState(true);
+export default function PersistentDrawerLeft( { auth, setAuth, onNavigate, onRequestOpenCreateTask, children, user, setUser}) {
   const [anchorEl, setAnchorEl] = React.useState(null);
+  const [teamName, setTeamName] = useState('');
   const theme = useTheme();
   const [open, setOpen] = React.useState(false);
 
@@ -109,7 +110,39 @@ export default function PersistentDrawerLeft( { onNavigate, onRequestOpenCreateT
     handleClose();
   }
 
+  const handleLogoutClick = async () => {
+    try {
+      await fetch('/users/sign_out', {
+        method: 'DELETE',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+    } catch (error) {
+      // Local logout still proceeds if network call fails.
+    }
 
+    localStorage.removeItem('teamflowCurrentUser');
+    window.location.href = '/';
+  }
+
+  useEffect(() => {
+    if (user?.team_id) {
+      fetch(`/teams/${user.team_id}`, {
+        headers: { Accept: 'application/json' },
+        credentials: 'include',
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.name) setTeamName(data.name);
+        })
+        .catch((err) => console.error('Failed to fetch team name', err));
+    } else {
+      setTeamName('');
+    }
+  }, [user?.team_id]);
 
   const adminItems = [
     {
@@ -122,6 +155,11 @@ export default function PersistentDrawerLeft( { onNavigate, onRequestOpenCreateT
       icon: <DeleteIcon />,
       onClick: () => {},
     },
+    {
+      text: "Validate Tasks",
+      icon: <CheckIcon />,
+      onClick: () => {onNavigate('validateTasks')}
+    }
   ];
 
   return (
@@ -183,7 +221,7 @@ export default function PersistentDrawerLeft( { onNavigate, onRequestOpenCreateT
                 onClose={handleClose}
               >
                 <MenuItem onClick={handleSettingsClick}>Settings</MenuItem>
-                <MenuItem onClick={handleClose}>Log Out</MenuItem>
+                <MenuItem onClick={handleLogoutClick}>Log Out</MenuItem>
               </Menu>
             </div>
           )}
@@ -205,13 +243,14 @@ export default function PersistentDrawerLeft( { onNavigate, onRequestOpenCreateT
         open={open}
       >
         <DrawerHeader>
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>Department</Typography>
+          <Typography variant="h6" sx={{ flexGrow: 1 }}>{teamName}</Typography>
           <IconButton onClick={handleDrawerClose}>
             {theme.direction === 'ltr' ? <ChevronLeftIcon /> : <ChevronRightIcon />}
           </IconButton>
         </DrawerHeader>
         <Divider />
-        <List>
+        {user?.role === "team_lead" && (
+          <List>
           <div className='admin'>
             <h4 style={{ paddingLeft: '20px' }}>Admin Panel</h4>
             {adminItems.map((item) => (
@@ -223,8 +262,8 @@ export default function PersistentDrawerLeft( { onNavigate, onRequestOpenCreateT
               </ListItem>
             ))}
           </div>
-
         </List>
+        )}
         <Divider />
         <List>
         <ListItem disablePadding>
@@ -233,19 +272,19 @@ export default function PersistentDrawerLeft( { onNavigate, onRequestOpenCreateT
             </ListItemButton>
         </ListItem>
         <ListItem disablePadding>
-            <ListItemButton onClick={() => { onNavigate('settings')}}>
-            <ListItemText primary="Settings" />
-            </ListItemButton>
+          <ListItemButton onClick={() => { onNavigate('taskCalendar')}}>
+          <ListItemText primary="Task Self-Election" />
+          </ListItemButton>
         </ListItem>
         <ListItem disablePadding>
-            <ListItemButton onClick={() => { onNavigate('signin')}}>
-            <ListItemText primary="Sign In" />
+            <ListItemButton onClick={() => { onNavigate('settings')}}>
+            <ListItemText primary="Settings" />
             </ListItemButton>
         </ListItem>
         </List>
         <Divider />
 
-        <Filters />
+        <Filters user={user}/>
         
       </Drawer>
       <Main open={open}>
