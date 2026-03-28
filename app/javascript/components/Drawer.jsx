@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { styled, useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
+import CheckIcon from '@mui/icons-material/Check';
 import Drawer from '@mui/material/Drawer';
 import CssBaseline from '@mui/material/CssBaseline';
 import MuiAppBar from '@mui/material/AppBar';
@@ -156,7 +157,7 @@ export default function PersistentDrawerLeft( { auth, setAuth, onNavigate, onReq
     },
     {
       text: "Validate Tasks",
-      icon: <AssignmentIcon />,
+      icon: <CheckIcon />,
       onClick: () => {onNavigate('validateTasks')}
     }
   ];
@@ -278,11 +279,6 @@ export default function PersistentDrawerLeft( { auth, setAuth, onNavigate, onReq
         <ListItem disablePadding>
             <ListItemButton onClick={() => { onNavigate('settings')}}>
             <ListItemText primary="Settings" />
-            </ListItemButton>
-        </ListItem>
-        <ListItem disablePadding>
-            <ListItemButton onClick={() => { onNavigate('signin')}}>
-            <ListItemText primary="Sign In" />
             </ListItemButton>
         </ListItem>
         </List>

@@ -94,30 +94,32 @@ export default function Filters( { user } ) {
         </List>
       )}
       
-      
-      <List disablePadding>
-        <ListItemButton onClick={() => setSkillOpen(!skillOpen)}>
-          <ListItemText primary="Skills" />
-          {skillOpen ? <ExpandLess /> : <ExpandMore />}
-        </ListItemButton>
+      {(user?.role === "team_member" || user?.role === "team_lead") && (
+        <List disablePadding>
+          <ListItemButton onClick={() => setSkillOpen(!skillOpen)}>
+            <ListItemText primary="Skills" />
+            {skillOpen ? <ExpandLess /> : <ExpandMore />}
+          </ListItemButton>
 
-        <Collapse in={skillOpen} timeout="auto">
-          <List component="div" disablePadding>
-            {/* Placeholder only, replace with the actual members in the database */}
-            {['HTML', 'CSS', 'JS'].map((skill, index) => (
-              <ListItem key={index} disablePadding>
-                <ListItemButton sx={{ paddingLeft: 4, paddingTop: 0, paddingBottom: 0, minHeight: 'auto' }}>
-                  <FormControlLabel
-                    control={<Checkbox defaultChecked size="small"/>}
-                    label={skill}
-                    sx={{ width: '100%' }}
-                  />
-                </ListItemButton>
-              </ListItem>
-            ))}
-          </List>
-        </Collapse>
-      </List>
+          <Collapse in={skillOpen} timeout="auto">
+            <List component="div" disablePadding>
+              {/* Placeholder only, replace with the actual members in the database */}
+              {['HTML', 'CSS', 'JS'].map((skill, index) => (
+                <ListItem key={index} disablePadding>
+                  <ListItemButton sx={{ paddingLeft: 4, paddingTop: 0, paddingBottom: 0, minHeight: 'auto' }}>
+                    <FormControlLabel
+                      control={<Checkbox defaultChecked size="small" />}
+                      label={skill}
+                      sx={{ width: '100%' }}
+                    />
+                  </ListItemButton>
+                </ListItem>
+              ))}
+            </List>
+          </Collapse>
+        </List>
+      )}
+      
 
     </div>
   )

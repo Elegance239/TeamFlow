@@ -1,8 +1,17 @@
 # features/step_definitions/user_steps.rb
 
 Given('I am logged in as {string}') do |name|
-  @user = User.create!(name: name, role: "team_member", skills: [ "React", "CSS" ])
-  visit login_path
+  team = Team.create!(name: "Test Team")
+  @user = User.create!(
+    name: name,
+    email: "chris@example.com",
+    role: "team_member",
+    skills: [ "React", "CSS" ],
+    password: "password123",
+    password_confirmation: "password123",
+    team: team
+    )
+  visit "/"
   fill_in "Email", with: "chris@example.com"
   fill_in "Password", with: "password123"
   click_button "Log in"

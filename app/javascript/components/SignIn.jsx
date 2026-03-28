@@ -180,7 +180,7 @@ export default function SignIn(props) {
             }}
           >
             <FormControl>
-              <FormLabel htmlFor="email">Email</FormLabel>
+              <FormLabel htmlFor="email">Email (For testing: User: user@testing.com, Admin: testing@testing.com)</FormLabel>
               <TextField
                 error={emailError}
                 helperText={emailErrorMessage}
@@ -197,7 +197,7 @@ export default function SignIn(props) {
               />
             </FormControl>
             <FormControl>
-              <FormLabel htmlFor="password">Password</FormLabel>
+              <FormLabel htmlFor="password">Password (For testing (both belong to same team): User and Admin: testing)</FormLabel>
               <TextField
                 error={passwordError}
                 helperText={passwordErrorMessage}
