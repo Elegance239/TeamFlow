@@ -11,6 +11,6 @@ class CreateTaskTransitionPendings < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :task_transition_pendings, [:task_id, :status]
+    add_index :task_transition_pendings, [ :task_id, :status ]
   end
 end
