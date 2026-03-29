@@ -10,6 +10,8 @@ import CreateTask from "./CreateTask";
 import TaskDetail from "./TaskDetail";  
 
 export default function Calendar({
+  tasks = [],
+  selectedFilters = {},
   openCreateTaskSignal,
   setOpenCreateTaskSignal,
 }) {
@@ -25,11 +27,45 @@ export default function Calendar({
   
   const [anchorEl, setAnchorEl] = useState(null);
   
+  const filteredTasks = (tasks || []).filter(task => {
+  // Skills filter - task must have ALL selected skills (or no skill filter active)
+    const skillFilters = selectedFilters.skills || [];
+    if (skillFilters.length > 0) {
+      const taskSkills = task.required_skills
+        ? task.required_skills.split(',').map(s => s.trim())
+        : [];
+      const hasAllSkills = skillFilters.every(s => taskSkills.includes(s));
+      if (!hasAllSkills) return false;
+    }
+
+  // "Assigned To" filter (team_lead sees tasks they created, filtered by assignee name)
+    const teamMemberFilters = selectedFilters.teamMembers || [];
+    if (teamMemberFilters.length > 0) {
+      if (!teamMemberFilters.includes(task.assignee_name)) return false;
+    }
+
+  // "Assigned By" filter (team_member sees tasks assigned to them, filtered by creator name)
+    const assigneeFilters = selectedFilters.assignees || [];
+      if (assigneeFilters.length > 0) {
+        if (!assigneeFilters.includes(task.creator_name)) return false;
+    }
+
+    return true;
+  });
+
+  const events = filteredTasks.map(task => ({
+    id: String(task.id),
+    title: task.description || '(No title)',
+    start: task.due_date,       // adjust if your task has a start_date field
+    end: task.due_date,
+    extendedProps: { task },    // carry the full task object for TaskDetail
+  }));
   //testing only, should come from the database
-  const events = [
-    { title: "event 1", start: "2026-03-17", end: "2026-03-19" },
-    { title: "event 2", start: "2026-03-20T11:30", end: "2026-03-20T14:00" },
-  ];
+  // const events = [
+  //   { title: "event 1", start: "2026-03-17", end: "2026-03-19" },
+  //   { title: "event 2", start: "2026-03-20T11:30", end: "2026-03-20T14:00" },
+    
+  // ];
   const previewEvent = clickedTime ? {
     title: "(No title)",
     start: clickedTime,

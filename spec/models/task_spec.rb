@@ -136,4 +136,23 @@ RSpec.describe Task, type: :model do
       expect(score_map[incomplete.id]).to eq(0)
     end
   end
+  
+  describe "assignment names" do
+    let(:member) { create(:user, name: "Alice", team: team, skills: "ruby") }
+
+    it "returns the name of the creator" do
+      task = valid_task(creator: lead)
+      expect(task.creator_name).to eq("Lead")
+    end
+
+    it "returns the name of the assignee when present" do
+      task = valid_task(assigned_user: member)
+      expect(task.assignee_name).to eq("Alice")
+    end
+
+    it "returns 'Unassigned' when no user is assigned" do
+      task = valid_task(assigned_user: nil)
+      expect(task.assignee_name).to eq("Unassigned")
+    end
+  end
 end

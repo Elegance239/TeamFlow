@@ -33,23 +33,31 @@ export default function App() {
   // states for filters
   const [teamMembers, setTeamMembers] = useState([]);
   const [availableAssignees, setAvailableAssignees] = useState([]);
+  const [tasks, setTasks] = useState([]);
   const [selectedFilters, setSelectedFilters] = useState({
     teamMembers: [],
     assignees: [],
-    skills: ['HTML', 'CSS', 'JS'] // Default skills
+    skills: [] // Default skills
   });
 
   useEffect(() => {
     if (!user?.team_id) return;
 
-    if (user.role === 'team_lead') {
+    fetch('/tasks', { credentials: 'include' })
+      .then(res => res.json())
+      .then(data => setTasks(Array.isArray(data) ? data : []));
+
+    // Fetch full member objects (ID and Name)
+    if (user.role === 'team_lead' || Number(user.role) === 0) {
       fetch(`/teams/${user.team_id}/members`, { credentials: 'include' })
         .then(res => res.json())
-        .then(data => Array.isArray(data) && setTeamMembers(data.map(m => m.name)));
+        .then(data => Array.isArray(data) && setTeamMembers(data));
     } else {
       fetch(`/teams/${user.team_id}`, { credentials: 'include' })
         .then(res => res.json())
-        .then(data => data.team_leads && setAvailableAssignees(data.team_leads.map(l => l.name)));
+        .then(data => {
+          if (data.team_leads) setAvailableAssignees(data.team_leads);
+        });
     }
   }, [user]);
 
@@ -57,9 +65,15 @@ export default function App() {
     setSelectedFilters(prev => ({ ...prev, [category]: newValues }));
   };
 
+  const handleRequestOpenCreateTask = () => {
+    setOpenCreateTaskSignal(true);
+    setCurrentPage('calendar');
+  };
+
   // Only logged in users can view
   const protectedPages = {
     calendar: <Calendar 
+                tasks={tasks}
                 openCreateTaskSignal={openCreateTaskSignal} 
                 setOpenCreateTaskSignal={setOpenCreateTaskSignal} 
                 selectedFilters={selectedFilters} 
@@ -81,11 +95,7 @@ export default function App() {
     }
   }, []);
 
-  const handleRequestOpenCreateTask = () => {
-    setOpenCreateTaskSignal(true);
-    setCurrentPage('calendar');
-  };
-
+  
   // const pages = {
   //   calendar: <Calendar openCreateTaskSignal={openCreateTaskSignal} setOpenCreateTaskSignal={setOpenCreateTaskSignal} />,
   //   taskCalendar: <CalendarForTasks />,
@@ -102,6 +112,7 @@ export default function App() {
         {auth ? (
           <Drawer auth= {auth} setAuth= {setAuth} user = {user} setUser = {setUser} onNavigate= {setCurrentPage} 
           onRequestOpenCreateTask={handleRequestOpenCreateTask}
+          tasks={tasks}
           teamMembers={teamMembers}
           availableAssignees={availableAssignees}
           selectedFilters={selectedFilters}

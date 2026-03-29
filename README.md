@@ -44,7 +44,7 @@
 #### Tasks
 | Method | Path | Params | Behaviour | Success JSON (example) | Error JSON (example) |
 |--------|------|--------|-----------|-------------------------|----------------------|
-| `GET` | `/tasks` | — | List tasks for requester's team | `[ { "id": 1001, "description": "Build feature", "current_state": "UNASSIGNED", "all_states": "UNASSIGNED,ASSIGNED,COMPLETED", "team_id": 1 } ]` | `{ "error": "User is not part of a team" }` |
+| `GET` | `/tasks` | — | List tasks for requester's team | `[ { "id": 1001, "description": "Build feature", "current_state": "UNASSIGNED", "all_states": "UNASSIGNED,ASSIGNED,COMPLETED", "team_id": 1 ,  "creator_name": "Admin User",  "assignee_name": "Unassigned"} ]` | `{ "error": "User is not part of a team" }` |
 | `POST` | `/tasks` | `due_date`, `points`, `description?`, `required_skills?`, `needs_validation?`, `all_states?`, `user_id?` | Create task (team lead only) | Task JSON object | `{ "error": "Only team leads can create tasks" }` or `{ "errors": ["Due date can't be in the past"] }` |
 | `GET` | `/tasks/:id` | — | Get a single task in same team | Task JSON object | `{ "error": "Not authorized" }` |
 | `PATCH` / `PUT` | `/tasks/:id` | `description?`, `points?` | Update description/points (creator lead only) | Task JSON object | `{ "error": "Only the creating team lead can update this task" }` |

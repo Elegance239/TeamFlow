@@ -33,11 +33,37 @@ import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 
 
-export default function Filters( { user, teamMembers, availableAssignees, selectedFilters, onFilterChange } ) {
+export default function Filters( { user, tasks, teamMembers, availableAssignees, selectedFilters, onFilterChange } ) {
 
   const [teamOpen, setTeamOpen] = React.useState(true);
   const [assigneeOpen, setAssigneeOpen] = React.useState(true);
   const [skillOpen, setSkillOpen] = React.useState(true);
+
+  const isLead = user?.role === "team_lead" || Number(user?.role) === 0;
+  const isMember = user?.role === "team_member" || Number(user?.role) === 1;
+
+  const availableSkills = [...new Set(
+  (tasks || []).flatMap(t =>
+    t.required_skills ? t.required_skills.split(',').map(s => s.trim()).filter(Boolean) : []
+  )
+  )];
+
+  const getNameById = (id, list) => {
+    const found = list.find(m => m.id === id);
+    return found ? found.name : `User ${id}`;
+  };
+
+  const assignedToNames = [...new Set(
+    (tasks || [])
+      .filter(t => t.created_by === user?.id) //&& t.user_id !== null
+      .map(t => t.assignee_name || `User ${t.user_id}`) 
+  )];
+
+  const assignedByNames = [...new Set(
+    (tasks || [])
+      .filter(t => t.user_id === user?.id)
+      .map(t => t.creator_name || `User ${t.created_by}`) 
+  )];
 
   const handleToggle = (category, value) => {
     const current = selectedFilters[category] || [];
@@ -72,41 +98,41 @@ export default function Filters( { user, teamMembers, availableAssignees, select
   return (
     // Todo: Enclose this with a check for Admin soon
     <div className='filters'>
-      {user?.role === "team_member" && (
+      {isLead && (
         <List disablePadding>
-          <ListItemButton onClick={() => setAssigneeOpen(!assigneeOpen)}>
-            <ListItemText primary="Assigned By" />
-            {assigneeOpen ? <ExpandLess /> : <ExpandMore />}
+          <ListItemButton onClick={() => setTeamOpen(!teamOpen)}>
+            <ListItemText primary="Assigned To" /> 
+            {teamOpen ? <ExpandLess /> : <ExpandMore />}
           </ListItemButton>
-          <Collapse in={assigneeOpen} timeout="auto">
-            {/* Placeholder only, replace with the actual members in the database */}
-            {renderFilterList('assignees', availableAssignees)}
+          <Collapse in={teamOpen} timeout="auto">
+          {/* Placeholder only, replace with the actual members in the database */}
+            {renderFilterList('teamMembers', assignedToNames)}
           </Collapse>
         </List>
       )}
 
-      {user?.role === "team_member" && (
+      {isMember && (
         <List disablePadding>
           <ListItemButton onClick={() => setAssigneeOpen(!assigneeOpen)}>
             <ListItemText primary="Assigned By" />
             {assigneeOpen ? <ExpandLess /> : <ExpandMore />}
           </ListItemButton>
           <Collapse in={assigneeOpen} timeout="auto">
-            {/* Placeholder only, replace with the actual members in the database */}
-            {renderFilterList('assignees', availableAssignees)}
+          {/* Placeholder only, replace with the actual members in the database */}
+            {renderFilterList('assignees', assignedByNames)}
           </Collapse>
         </List>
       )}
       
-      {(user?.role === "team_member" || user?.role === "team_lead") && (
+      {(isMember || isLead) && (
         <List disablePadding>
         <ListItemButton onClick={() => setSkillOpen(!skillOpen)}>
           <ListItemText primary="Skills" />
           {skillOpen ? <ExpandLess /> : <ExpandMore />}
         </ListItemButton>
         <Collapse in={skillOpen} timeout="auto">
-          {/* Placeholder only, replace with the actual members in the database */}
-          {renderFilterList('skills', ['HTML', 'CSS', 'JS'])}
+        {/* Placeholder only, replace with the actual members in the database */}
+          {renderFilterList('skills', availableSkills)}
         </Collapse>
       </List>
       )}
