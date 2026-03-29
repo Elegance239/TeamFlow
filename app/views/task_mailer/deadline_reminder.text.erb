@@ -1,0 +1,10 @@
+Hi <%= @assignee.name %>,
+
+This is a reminder that the following task is due tomorrow.
+
+Task: <%= @task.description %>
+Due Date: <%= @task.due_date.strftime("%B %d, %Y") %>
+Points: <%= @task.points %>
+Current State: <%= @task.current_state %>
+
+Please log in to TeamFlow to complete your task before the deadline.

@@ -1,0 +1,24 @@
+<h2>Hi <%= @assignee.name %>,</h2>
+
+<p>A new task has been assigned to you by <strong><%= @creator.name %></strong>.</p>
+
+<table>
+  <tr>
+    <td><strong>Task:</strong></td>
+    <td><%= @task.description %></td>
+  </tr>
+  <tr>
+    <td><strong>Due Date:</strong></td>
+    <td><%= @task.due_date.strftime("%B %d, %Y") %></td>
+  </tr>
+  <tr>
+    <td><strong>Points:</strong></td>
+    <td><%= @task.points %></td>
+  </tr>
+  <tr>
+    <td><strong>Required Skills:</strong></td>
+    <td><%= @task.required_skills_list.join(", ") %></td>
+  </tr>
+</table>
+
+<p>Please log in to TeamFlow to view and manage your tasks.</p>
