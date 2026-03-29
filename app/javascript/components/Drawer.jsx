@@ -83,7 +83,8 @@ const DrawerHeader = styled('div')(({ theme }) => ({
   justifyContent: 'space-between',
 }));
 
-export default function PersistentDrawerLeft( { auth, setAuth, onNavigate, onRequestOpenCreateTask, children, user, setUser}) {
+export default function PersistentDrawerLeft( { auth, setAuth, onNavigate, onRequestOpenCreateTask, children, user, setUser,
+  teamMembers, availableAssignees, selectedFilters, onFilterChange}) {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [teamName, setTeamName] = useState('');
   const theme = useTheme();
@@ -284,8 +285,13 @@ export default function PersistentDrawerLeft( { auth, setAuth, onNavigate, onReq
         </List>
         <Divider />
 
-        <Filters user={user}/>
-        
+        <Filters user={user}
+          teamMembers={teamMembers} 
+          availableAssignees={availableAssignees}
+          selectedFilters={selectedFilters}
+          onFilterChange={onFilterChange}
+        />
+          
       </Drawer>
       <Main open={open}>
         <DrawerHeader />

@@ -30,9 +30,40 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState('signin'); // 'Calendar' as default page
   const [openCreateTaskSignal, setOpenCreateTaskSignal] = useState(false);
 
+  // states for filters
+  const [teamMembers, setTeamMembers] = useState([]);
+  const [availableAssignees, setAvailableAssignees] = useState([]);
+  const [selectedFilters, setSelectedFilters] = useState({
+    teamMembers: [],
+    assignees: [],
+    skills: ['HTML', 'CSS', 'JS'] // Default skills
+  });
+
+  useEffect(() => {
+    if (!user?.team_id) return;
+
+    if (user.role === 'team_lead') {
+      fetch(`/teams/${user.team_id}/members`, { credentials: 'include' })
+        .then(res => res.json())
+        .then(data => Array.isArray(data) && setTeamMembers(data.map(m => m.name)));
+    } else {
+      fetch(`/teams/${user.team_id}`, { credentials: 'include' })
+        .then(res => res.json())
+        .then(data => data.team_leads && setAvailableAssignees(data.team_leads.map(l => l.name)));
+    }
+  }, [user]);
+
+  const handleFilterChange = (category, newValues) => {
+    setSelectedFilters(prev => ({ ...prev, [category]: newValues }));
+  };
+
   // Only logged in users can view
   const protectedPages = {
-    calendar: <Calendar openCreateTaskSignal={openCreateTaskSignal} setOpenCreateTaskSignal={setOpenCreateTaskSignal} />,
+    calendar: <Calendar 
+                openCreateTaskSignal={openCreateTaskSignal} 
+                setOpenCreateTaskSignal={setOpenCreateTaskSignal} 
+                selectedFilters={selectedFilters} 
+              />,
     taskCalendar: <CalendarForTasks />,
     validateTasks: <ValidateTasks />,
     settings: <Settings />
@@ -70,7 +101,12 @@ export default function App() {
       <ThemeProvider theme={theme}>
         {auth ? (
           <Drawer auth= {auth} setAuth= {setAuth} user = {user} setUser = {setUser} onNavigate= {setCurrentPage} 
-          onRequestOpenCreateTask={handleRequestOpenCreateTask}>
+          onRequestOpenCreateTask={handleRequestOpenCreateTask}
+          teamMembers={teamMembers}
+          availableAssignees={availableAssignees}
+          selectedFilters={selectedFilters}
+          onFilterChange={handleFilterChange}
+        >
             {protectedPages[currentPage]}
           </Drawer>
         ) : (
