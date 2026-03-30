@@ -10,6 +10,7 @@ import Settings from './components/Settings';
 import SignIn from './components/SignIn'
 import Drawer from './components/Drawer';
 import SignUp from './components/SignUp';
+import Dashboard from './components/Dashboard';
 import { SnackbarProvider } from 'notistack';
 import  { ThemeProvider, createTheme } from '@mui/material/styles';
 import './App.css';
@@ -80,7 +81,8 @@ export default function App() {
               />,
     taskCalendar: <CalendarForTasks />,
     validateTasks: <ValidateTasks />,
-    settings: <Settings />
+    settings: <Settings />,
+    dashboard: <Dashboard />
   }
 
   useEffect(() => {

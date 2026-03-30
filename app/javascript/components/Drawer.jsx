@@ -278,6 +278,11 @@ export default function PersistentDrawerLeft( { auth, setAuth, onNavigate, onReq
           </ListItemButton>
         </ListItem>
         <ListItem disablePadding>
+          <ListItemButton onClick={() => { onNavigate('dashboard')}}>
+          <ListItemText primary="Dashboard" />
+          </ListItemButton>
+        </ListItem>
+        <ListItem disablePadding>
             <ListItemButton onClick={() => { onNavigate('settings')}}>
             <ListItemText primary="Settings" />
             </ListItemButton>
