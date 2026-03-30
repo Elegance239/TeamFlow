@@ -91,7 +91,7 @@ Rails.application.configure do
   ## TODO: Configure SMTP for production email delivery
   # with heroku access, run: 
   # heroku config:set GMAIL_USERNAME=teamflow.csci3100@gmail.com --app teamflow-app-e2b02097ff94
-  # heroku config:set GMAIL_APP_PASSWORD=qufezdalagubeqga --app teamflow-app-e2b02097ff94
+  # heroku config:set GMAIL_APP_PASSWORD=[PASSWORD_HERE] --app teamflow-app-e2b02097ff94
   # config.action_mailer.delivery_method = :smtp
   # config.action_mailer.perform_deliveries = true
   # config.action_mailer.default_url_options = { host: 'teamflow-app-e2b02097ff94.herokuapp.com' }
@@ -99,7 +99,7 @@ Rails.application.configure do
   #   address: 'smtp.gmail.com',
   #   port: 587,
   #   user_name: ENV['teamflow.csci3100@gmail.com'],
-  #   password: ENV['qufezdalagubeqga'],
+  #   password: ENV['GMAIL_APP_PASSWORD'],
   #   authentication: :plain,
   #   enable_starttls_auto: true
   # }
