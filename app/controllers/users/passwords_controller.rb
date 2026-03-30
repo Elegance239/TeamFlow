@@ -2,6 +2,21 @@
 class Users::PasswordsController < Devise::PasswordsController
   respond_to :json
 
+  # PATCH /users/password/change
+  def change
+    user = current_user
+    unless user.valid_password?(params[:current_password])
+      return render json: { error: "Current password is incorrect" }, status: :unprocessable_entity
+    end
+
+    if user.update(password: params[:password], password_confirmation: params[:password_confirmation])
+      bypass_sign_in(user)
+      render json: { message: "Password updated successfully" }, status: :ok
+    else
+      render json: { errors: user.errors.full_messages }, status: :unprocessable_entity
+    end
+  end
+  
   private
 
   def respond_with(resource, _opts = {})
