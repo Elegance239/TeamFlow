@@ -1,4 +1,4 @@
 class ApplicationMailer < ActionMailer::Base
-  default from: "noreply@teamflow.dev"
+  default from: ENV["teamflow.csci3100@gmail.com"]
   layout "mailer"
 end
