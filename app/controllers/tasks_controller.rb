@@ -49,6 +49,7 @@ class TasksController < ApplicationController
     if task.save
       if task.user_id.present?
         TaskHistory.create!(user_id: task.user_id, task_id: task.id, start_date: Date.today)
+        TaskMailer.new_task(task).deliver_later
       end
       render json: task, status: :created
     else
@@ -115,6 +116,7 @@ class TasksController < ApplicationController
     task.assign_to!(assignee)
     if previous_assignee_id != assignee.id
       TaskHistory.create!(user_id: assignee.id, task_id: task.id, start_date: Date.today)
+      TaskMailer.new_task(task).deliver_later 
     end
 
     render json: task

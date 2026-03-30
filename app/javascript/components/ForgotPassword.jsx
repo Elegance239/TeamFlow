@@ -16,9 +16,32 @@ function ForgotPassword({ open, handleClose }) {
       slotProps={{
         paper: {
           component: 'form',
-          onSubmit: (event) => {
+          onSubmit: async (event) => {
             event.preventDefault();
-            handleClose();
+             const email = event.target.email.value;
+  
+              try {
+                const res = await fetch('/users/password', {
+                  method: 'POST',
+                  credentials: 'include',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content
+                  },
+                  body: JSON.stringify({ user: { email } })
+                });
+
+                const data = await res.json();
+                if (res.ok) {
+                  alert('Password reset email sent! Check your inbox.');
+                  handleClose();
+                } else {
+                  alert(data.error || 'Something went wrong.');
+                }
+              } catch (err) {
+                alert('Something went wrong.');
+              }
           },
           sx: { backgroundImage: 'none' },
         },
