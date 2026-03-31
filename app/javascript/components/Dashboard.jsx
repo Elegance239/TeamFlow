@@ -75,10 +75,6 @@ function taskVisualCategory(task, currentUserId) {
   return "takenByOthers";
 }
 
-function eventColorFromCategory(category) {
-  return COLORS[category] || COLORS.unassigned;
-}
-
 function canTakeTask(task, currentUser) {
   if (!currentUser) return false;
   if (task.user_id) return false;
@@ -149,7 +145,7 @@ const TaskCard = styled(Box)(({ color }) => ({
   boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
 }));
 
-function DashboardSection({ title, color, tasks = [], sx = {} }) {
+function DashboardSection({ title, color, tasks = [], sx = {}, onTaskClick }) {
   return (
     <SectionBox sx={{ flex: 1, minHeight: 0, ...sx }}>
       <Stack
@@ -192,7 +188,19 @@ function DashboardSection({ title, color, tasks = [], sx = {} }) {
         ) : (
           <Stack spacing={1}>
             {tasks.map((task) => (
-              <TaskCard key={task.id} color={color}>
+              <TaskCard
+                key={task.id}
+                color={color}
+                onClick={() => onTaskClick?.(task)}
+                sx={{
+                  cursor: "pointer",
+                  transition: "transform 0.15s ease, box-shadow 0.15s ease",
+                  "&:hover": {
+                    transform: "translateY(-2px)",
+                    boxShadow: "0 6px 18px rgba(0,0,0,0.10)",
+                  },
+                }}
+              >
                 <Typography variant="body1" sx={{ fontWeight: 600 }}>
                   {task.title}
                 </Typography>
@@ -349,95 +357,306 @@ export default function Dashboard() {
     };
   }, [enqueueSnackbar]);
 
+  const handleTakeTask = async () => {
+    if (!selectedTask) return;
+
+    try {
+      const response = await fetch(`/tasks/${selectedTask.id}/assign`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        let message = "Failed to take task";
+        try {
+          const data = await response.json();
+          message = data?.error || data?.errors?.join(", ") || message;
+        } catch (error) {
+          // Keep fallback message when response body is not JSON.
+        }
+        enqueueSnackbar(message, { variant: "error" });
+        return;
+      }
+
+      await refreshTasks();
+      enqueueSnackbar("Task taken successfully", { variant: "success" });
+      handleClose();
+    } catch (error) {
+      enqueueSnackbar("Network error while taking task", { variant: "error" });
+    }
+  };
+
+  const handleConfirmPatch = async ({ description, points }) => {
+    if (!selectedTask) return;
+
+    try {
+      const response = await fetch(`/tasks/${selectedTask.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ description, points }),
+      });
+
+      if (!response.ok) {
+        let message = "Failed to patch task";
+        try {
+          const data = await response.json();
+          message = data?.error || data?.errors?.join(", ") || message;
+        } catch (error) {
+          // Keep fallback message when response body is not JSON.
+        }
+        enqueueSnackbar(message, { variant: "error" });
+        return;
+      }
+
+      await refreshTasks();
+      enqueueSnackbar("Task patched successfully", { variant: "success" });
+    } catch (error) {
+      enqueueSnackbar("Network error while patching task", {
+        variant: "error",
+      });
+    }
+  };
+
+  const handleDeleteTask = async () => {
+    if (!selectedTask) return;
+
+    try {
+      const response = await fetch(`/tasks/${selectedTask.id}`, {
+        method: "DELETE",
+        headers: {
+          Accept: "application/json",
+        },
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        let message = "Failed to delete task";
+        try {
+          const data = await response.json();
+          message = data?.error || data?.errors?.join(", ") || message;
+        } catch (error) {
+          // Keep fallback message when response body is not JSON.
+        }
+        enqueueSnackbar(message, { variant: "error" });
+        return;
+      }
+
+      await refreshTasks();
+      enqueueSnackbar("Task deleted successfully", { variant: "success" });
+      handleClose();
+    } catch (error) {
+      enqueueSnackbar("Network error while deleting task", {
+        variant: "error",
+      });
+    }
+  };
+
+  const handleProgressTask = async () => {
+    if (!selectedTask) return;
+
+    try {
+      const response = await fetch(`/tasks/${selectedTask.id}/progress`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        let message = "Failed to progress task";
+        try {
+          const data = await response.json();
+          message = data?.error || data?.errors?.join(", ") || message;
+        } catch (e) {
+          // Keep fallback message when response body is not JSON.
+        }
+        enqueueSnackbar(message, { variant: "error" });
+        return;
+      }
+
+      enqueueSnackbar("Task progress requested successfully", {
+        variant: "success",
+      });
+      window.location.reload();
+    } catch (error) {
+      enqueueSnackbar("Network error while progressing task", {
+        variant: "error",
+      });
+    }
+  };
+
+  const handleCreateTask = async (newTask) => {
+    try {
+      const response = await fetch("/tasks", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(newTask),
+      });
+
+      if (!response.ok) {
+        let message = "Failed to create task";
+        try {
+          const data = await response.json();
+          message = data?.error || data?.errors?.join(", ") || message;
+        } catch (error) {
+          // Keep fallback message when response body is not JSON.
+        }
+        enqueueSnackbar(message, { variant: "error" });
+        return false;
+      }
+
+      await refreshTasks();
+      enqueueSnackbar("Task created successfully", { variant: "success" });
+      return true;
+    } catch (error) {
+      enqueueSnackbar("Network error while creating task", {
+        variant: "error",
+      });
+      return false;
+    }
+  };
+
+  const taskCanBeTaken = selectedTask
+    ? canTakeTask(selectedTask, currentUser)
+    : false;
+  const taskCanBePatched = selectedTask
+    ? canPatchTask(selectedTask, currentUser)
+    : false;
+  const taskCanProgress = selectedTask
+    ? canProgressTask(selectedTask, currentUser)
+    : false;
+  const safeCurrentUser = currentUser || {
+    id: null,
+    name: "Unknown User",
+    email: "unknown@example.com",
+    role: "team_member",
+    skills: "",
+    team_id: null,
+  };
+  const canCreateTask = isTeamLead(safeCurrentUser.role);
+
+  const handleTaskClick = (task) => {
+    setSelectedTaskId(task.id);
+  };
+
   return (
     <>
-    {isLoading && <LinearProgress sx={{ mb: 1 }} />}
-    <Grid
-      container
-      spacing={2}
-      sx={{
-        display: "flex",
-        height: "calc(100vh - 128px)",
-        boxSizing: "border-box",
-        margin: 0,
-      }}
-    >
-        
-      <Grid sx={{ flex: 1 }}>
-        <Panel sx={{ height: "100%" }}>
-          <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
-            Current Task Progression
-          </Typography>
+      {isLoading && <LinearProgress sx={{ mb: 1 }} />}
+      <Grid
+        container
+        spacing={2}
+        sx={{
+          display: "flex",
+          height: "calc(100vh - 128px)",
+          boxSizing: "border-box",
+          margin: 0,
+        }}
+      >
+        <Grid sx={{ flex: 1 }}>
+          <Panel sx={{ height: "100%" }}>
+            <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+              Current Task Progression
+            </Typography>
 
-          <Box
-            sx={{
-              display: "flex",
-              gap: 2,
-              height: "calc(100% - 40px)",
-              minHeight: 0,
-            }}
-          >
-            {/* LEFT COLUMN */}
             <Box
               sx={{
-                flex: 1,
                 display: "flex",
-                flexDirection: "column",
                 gap: 2,
+                height: "calc(100% - 40px)",
                 minHeight: 0,
               }}
             >
-              <DashboardSection
-                title="Owned by me"
-                color={COLORS.mine}
-                tasks={sortedTasks.mine}
-                sx={{ flex: 1 }}
-              />
-              <DashboardSection
-                title="Completed by me"
-                color={COLORS.completedByMe}
-                tasks={sortedTasks.completedByMe}
-                sx={{ flex: 1 }}
-              />
-            </Box>
+              {/* LEFT COLUMN */}
+              <Box
+                sx={{
+                  flex: 1,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 2,
+                  minHeight: 0,
+                }}
+              >
+                <DashboardSection
+                  title="Owned by me"
+                  color={COLORS.mine}
+                  tasks={sortedTasks.mine}
+                  sx={{ flex: 1 }}
+                  onTaskClick={handleTaskClick}
+                />
+                <DashboardSection
+                  title="Completed by me"
+                  color={COLORS.completedByMe}
+                  tasks={sortedTasks.completedByMe}
+                  sx={{ flex: 1 }}
+                  onTaskClick={handleTaskClick}
+                />
+              </Box>
 
-            {/* RIGHT COLUMN */}
-            <Box
-              sx={{
-                flex: 1,
-                display: "flex",
-                flexDirection: "column",
-                gap: 2,
-                minHeight: 0,
-              }}
-            >
-              <DashboardSection
-                title="Unassigned"
-                color={COLORS.unassigned}
-                tasks={sortedTasks.unassigned}
-                sx={{ flex: 1 }}
-              />
-              <DashboardSection
-                title="Unassigned in past"
-                color={COLORS.unassignedPast}
-                tasks={sortedTasks.unassignedPast}
-                sx={{ flex: 1 }}
-              />
-              <DashboardSection
-                title="Taken by someone else"
-                color={COLORS.takenByOthers}
-                tasks={sortedTasks.takenByOthers}
-                sx={{ flex: 1 }}
-              />
+              {/* RIGHT COLUMN */}
+              <Box
+                sx={{
+                  flex: 1,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 2,
+                  minHeight: 0,
+                }}
+              >
+                <DashboardSection
+                  title="Unassigned"
+                  color={COLORS.unassigned}
+                  tasks={sortedTasks.unassigned}
+                  sx={{ flex: 1 }}
+                  onTaskClick={handleTaskClick}
+                />
+                <DashboardSection
+                  title="Unassigned in past"
+                  color={COLORS.unassignedPast}
+                  tasks={sortedTasks.unassignedPast}
+                  sx={{ flex: 1 }}
+                  onTaskClick={handleTaskClick}
+                />
+                <DashboardSection
+                  title="Taken by someone else"
+                  color={COLORS.takenByOthers}
+                  tasks={sortedTasks.takenByOthers}
+                  sx={{ flex: 1 }}
+                  onTaskClick={handleTaskClick}
+                />
+              </Box>
             </Box>
-          </Box>
-        </Panel>
-      </Grid>
+          </Panel>
+        </Grid>
 
-      <Grid sx={{ flex: 2 }}>
-        
+        <Grid sx={{ flex: 2 }}></Grid>
       </Grid>
-    </Grid>
+      <TaskDialog
+        open={Boolean(selectedTask)}
+        onClose={handleClose}
+        task={selectedTask}
+        currentUser={safeCurrentUser}
+        canTake={taskCanBeTaken}
+        canPatch={taskCanBePatched}
+        canProgress={taskCanProgress}
+        onTake={handleTakeTask}
+        onProgress={handleProgressTask}
+        onConfirmPatch={handleConfirmPatch}
+        onDelete={handleDeleteTask}
+      />
     </>
   );
 }
