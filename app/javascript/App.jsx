@@ -126,14 +126,14 @@ export default function App() {
           currentPage === "signup" ? (
             <SignUp onNavigate={setCurrentPage} />
           ) : (
-            <SignIn onNavigate= {setCurrentPage} onSignedIn={(userData) => {setAuth(true); setUser(userData); setCurrentPage('calendar')}} />
+            <SignIn onNavigate= {setCurrentPage} onSignedIn={(userData) => {setAuth(true); setUser(userData); setCurrentPage('taskCalendar')}} />
           )
         )
           
         }
         {/*
         <div>
-          {pages[currentPage]}
+          <Dashboard />
         </div>
           */}
         

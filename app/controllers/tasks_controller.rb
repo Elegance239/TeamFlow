@@ -9,7 +9,7 @@ class TasksController < ApplicationController
     end
 
     tasks = Task.where(team_id: current_user.team_id)
-    render json: tasks.as_json(methods: [:creator_name, :assignee_name])
+    render json: tasks.as_json(methods: [ :creator_name, :assignee_name ])
   end
 
   # GET /tasks/:id
@@ -20,7 +20,7 @@ class TasksController < ApplicationController
       return render json: { error: "Not authorized" }, status: :forbidden
     end
 
-    render json: task.as_json(methods: [:creator_name, :assignee_name])
+    render json: task.as_json(methods: [ :creator_name, :assignee_name ])
   end
 
   # POST /tasks
