@@ -16,7 +16,7 @@ class Users::PasswordsController < Devise::PasswordsController
       render json: { errors: user.errors.full_messages }, status: :unprocessable_entity
     end
   end
-  
+
   private
 
   def respond_with(resource, _opts = {})

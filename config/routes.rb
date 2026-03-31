@@ -7,9 +7,9 @@ Rails.application.routes.draw do
 
 
   devise_for :users, controllers: { sessions: "users/sessions", registrations: "users/registrations", passwords: "users/passwords" }
-  
+
   devise_scope :user do
-    patch 'users/password/change', to: 'users/passwords#change'
+    patch "users/password/change", to: "users/passwords#change"
   end
 
   resources :users, only: [ :show, :update ]
