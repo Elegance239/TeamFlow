@@ -17,26 +17,14 @@ import { styled } from "@mui/material/styles";
 import { useSnackbar } from "notistack";
 import TaskDialog from "./TaskDialog";
 
-const COLORS = {
-  mine: "#1e88e5",
-  completedByMe: "#2e7d32",
-  unassigned: "#9e9e9e",
-  unassignedPast: "#d32f2f",
-  takenByOthers: "#7b1fa2",
+const STATE_COLORS = {
+  UNASSIGNED: "#757575",
+  ASSIGNED: "#1e88e5",
+  DEVELOPMENT: "#fb8c00",
+  TESTING: "#8e24aa",
+  PRODUCTION: "#00897b",
+  COMPLETED: "#2e7d32",
 };
-
-const COLOR_ORDER = [
-  "mine",
-  "completedByMe",
-  "unassigned",
-  "unassignedPast",
-  "takenByOthers",
-];
-
-const COLOR_INDEX = COLOR_ORDER.reduce((acc, key, idx) => {
-  acc[key] = idx;
-  return acc;
-}, {});
 
 function getStoredUser() {
   try {
@@ -202,12 +190,6 @@ function DashboardSection({ title, color, tasks = [], sx = {}, onTaskClick }) {
                 }}
               >
                 <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                  {task.title}
-                </Typography>
-                <Typography
-                  variant="body2"
-                  sx={{ color: "text.secondary", mt: 0.5 }}
-                >
                   {task.description || "No description"}
                 </Typography>
               </TaskCard>
@@ -217,6 +199,105 @@ function DashboardSection({ title, color, tasks = [], sx = {}, onTaskClick }) {
       </Box>
     </SectionBox>
   );
+}
+
+function RankingSection({ rankingData = [], currentUserId }) {
+  const maxScore = Math.max(...rankingData.map((u) => u.overall_score || 0), 1);
+
+  return (
+    <Panel sx={{ height: "100%" }}>
+      <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+        Ranking Statistics
+      </Typography>
+
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 2,
+          height: "calc(100% - 40px)",
+          minHeight: 0,
+          overflowY: "auto",
+        }}
+      >
+        {rankingData.length === 0 ? (
+          <Box
+            sx={{
+              flex: 1,
+              border: "1px dashed #cbd5e1",
+              borderRadius: 2,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#64748b",
+            }}
+          >
+            No ranking data yet
+          </Box>
+        ) : (
+          rankingData.map((user, index) => {
+            const score = user.overall_score || 0;
+            const width = `${(score / maxScore) * 100}%`;
+            const isMe = user.id === currentUserId;
+
+            return (
+              <Box
+                key={user.id}
+                sx={{
+                  p: 2,
+                  border: "1px solid #e5e7eb",
+                  borderRadius: 3,
+                  backgroundColor: isMe ? "#eff6ff" : "#fff",
+                }}
+              >
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    mb: 1,
+                  }}
+                >
+                  <Typography sx={{ fontWeight: 600 }}>
+                    #{index + 1} {user.name} {isMe ? "(You)" : ""}
+                  </Typography>
+                  <Typography sx={{ fontWeight: 700 }}>{score} pts</Typography>
+                </Box>
+
+                <Box
+                  sx={{
+                    height: 12,
+                    borderRadius: 999,
+                    backgroundColor: "#e5e7eb",
+                    overflow: "hidden",
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width,
+                      height: "100%",
+                      borderRadius: 999,
+                      background: "linear-gradient(90deg, #6366f1, #8b5cf6)",
+                    }}
+                  />
+                </Box>
+              </Box>
+            );
+          })
+        )}
+      </Box>
+    </Panel>
+  );
+}
+
+function groupTasksByWorkflow(tasks) {
+  return {
+    UNASSIGNED: tasks.filter((task) => task.current_state === "UNASSIGNED"),
+    ASSIGNED: tasks.filter((task) => task.current_state === "ASSIGNED"),
+    DEVELOPMENT: tasks.filter((task) => task.current_state === "DEVELOPMENT"),
+    TESTING: tasks.filter((task) => task.current_state === "TESTING"),
+    PRODUCTION: tasks.filter((task) => task.current_state === "PRODUCTION"),
+    COMPLETED: tasks.filter((task) => task.current_state === "COMPLETED"),
+  };
 }
 
 export default function Dashboard() {
@@ -229,6 +310,7 @@ export default function Dashboard() {
   const [isCreatingTeam, setIsCreatingTeam] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState(null);
   const [isCreationOpen, setIsCreationOpen] = useState(false);
+  const [teamUsers, setTeamUsers] = useState([]);
 
   const [sortedTasks, setSortedTasks] = useState({
     mine: [],
@@ -236,6 +318,15 @@ export default function Dashboard() {
     unassigned: [],
     unassignedPast: [],
     takenByOthers: [],
+  });
+
+  const [workflowTasks, setWorkflowTasks] = useState({
+    UNASSIGNED: [],
+    ASSIGNED: [],
+    DEVELOPMENT: [],
+    TESTING: [],
+    PRODUCTION: [],
+    COMPLETED: [],
   });
 
   const fetchTasks = async () => {
@@ -270,9 +361,8 @@ export default function Dashboard() {
   const refreshTasks = async () => {
     const loadedTasks = await fetchTasks();
     setTasks(loadedTasks);
-
-    const groupedTasks = groupTasksByCategory(loadedTasks, currentUser?.id);
-    setSortedTasks(groupedTasks);
+    setSortedTasks(groupTasksByCategory(loadedTasks, currentUser?.id));
+    setWorkflowTasks(groupTasksByWorkflow(loadedTasks));
   };
 
   const selectedTask = useMemo(
@@ -280,82 +370,91 @@ export default function Dashboard() {
     [selectedTaskId, tasks],
   );
 
-  const legendItems = [
-    { label: "Owned by me", color: COLORS.mine },
-    { label: "Completed by me", color: COLORS.completedByMe },
-    { label: "Unassigned", color: COLORS.unassigned },
-    { label: "Unassigned in past", color: COLORS.unassignedPast },
-    { label: "Taken by someone else", color: COLORS.takenByOthers },
-  ];
+  const rankingData = useMemo(() => {
+    return [...teamUsers].sort(
+      (a, b) => (b.overall_score || 0) - (a.overall_score || 0),
+    );
+  }, [teamUsers]);
 
-  const handleEventClick = (arg) => {
-    setSelectedTaskId(Number(arg.event.id));
+  const fetchTeamDetails = async (teamId) => {
+    const response = await fetch(`/teams/${teamId}`, {
+      method: "GET",
+      headers: { Accept: "application/json" },
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to load team details");
+    }
+
+    return await response.json();
   };
 
   const handleClose = () => setSelectedTaskId(null);
 
-  useEffect(() => {
-    let alive = true;
+ useEffect(() => {
+  let alive = true;
 
-    const loadData = async () => {
-      setIsLoading(true);
-      try {
-        const storedUser = getStoredUser();
-        if (storedUser?.id) {
-          const userResponse = await fetch(`/users/${storedUser.id}`, {
-            method: "GET",
-            headers: { Accept: "application/json" },
-            credentials: "include",
-          });
+  const loadData = async () => {
+    setIsLoading(true);
+    try {
+      const storedUser = getStoredUser();
+      if (storedUser?.id) {
+        const userResponse = await fetch(`/users/${storedUser.id}`, {
+          method: "GET",
+          headers: { Accept: "application/json" },
+          credentials: "include",
+        });
 
-          if (userResponse.ok) {
-            const resolvedUser = await userResponse.json();
-            const mergedUser = {
-              ...storedUser,
-              ...resolvedUser,
-              team_id:
-                resolvedUser.team_id ??
-                resolvedUser.team?.id ??
-                storedUser.team_id,
-            };
-            localStorage.setItem(
-              "teamflowCurrentUser",
-              JSON.stringify(mergedUser),
-            );
-            if (alive) setCurrentUser(mergedUser);
-          } else if (alive) {
-            setCurrentUser(storedUser);
-          }
+        if (userResponse.ok) {
+          const resolvedUser = await userResponse.json();
+          const mergedUser = {
+            ...storedUser,
+            ...resolvedUser,
+            team_id:
+              resolvedUser.team_id ??
+              resolvedUser.team?.id ??
+              storedUser.team_id,
+          };
+          localStorage.setItem(
+            "teamflowCurrentUser",
+            JSON.stringify(mergedUser),
+          );
+          if (alive) setCurrentUser(mergedUser);
+        } else if (alive) {
+          setCurrentUser(storedUser);
         }
-
-        const loadedTasks = await fetchTasks();
-        if (alive) {
-          setTasks(loadedTasks);
-          setSortedTasks(groupTasksByCategory(loadedTasks, currentUser?.id));
-          setNoTeam(false);
-        }
-      } catch (error) {
-        if (alive) {
-          if (error.code === "no_team") {
-            setTasks([]);
-            setNoTeam(true);
-          } else {
-            setTasks([]);
-            enqueueSnackbar(error.message || "Failed to load task data", {
-              variant: "error",
-            });
-          }
-        }
-      } finally {
-        if (alive) setIsLoading(false);
       }
-    };
 
-    loadData();
-    return () => {
-      alive = false;
-    };
-  }, [enqueueSnackbar]);
+      const loadedTasks = await fetchTasks();
+      if (alive) {
+        setTasks(loadedTasks);
+        setSortedTasks(groupTasksByCategory(loadedTasks, currentUser?.id));
+        setWorkflowTasks(groupTasksByWorkflow(loadedTasks));
+        setNoTeam(false);
+      }
+    } catch (error) {
+      if (alive) {
+        if (error.code === "no_team") {
+          setTasks([]);
+          setNoTeam(true);
+        } else {
+          setTasks([]);
+          enqueueSnackbar(error.message || "Failed to load task data", {
+            variant: "error",
+          });
+        }
+      }
+    } finally {
+      if (alive) setIsLoading(false);
+    }
+  };
+
+  loadData();
+  return () => {
+    alive = false;
+  };
+}, [enqueueSnackbar]);
 
   const handleTakeTask = async () => {
     if (!selectedTask) return;
@@ -495,41 +594,6 @@ export default function Dashboard() {
     }
   };
 
-  const handleCreateTask = async (newTask) => {
-    try {
-      const response = await fetch("/tasks", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify(newTask),
-      });
-
-      if (!response.ok) {
-        let message = "Failed to create task";
-        try {
-          const data = await response.json();
-          message = data?.error || data?.errors?.join(", ") || message;
-        } catch (error) {
-          // Keep fallback message when response body is not JSON.
-        }
-        enqueueSnackbar(message, { variant: "error" });
-        return false;
-      }
-
-      await refreshTasks();
-      enqueueSnackbar("Task created successfully", { variant: "success" });
-      return true;
-    } catch (error) {
-      enqueueSnackbar("Network error while creating task", {
-        variant: "error",
-      });
-      return false;
-    }
-  };
-
   const taskCanBeTaken = selectedTask
     ? canTakeTask(selectedTask, currentUser)
     : false;
@@ -547,7 +611,6 @@ export default function Dashboard() {
     skills: "",
     team_id: null,
   };
-  const canCreateTask = isTeamLead(safeCurrentUser.role);
 
   const handleTaskClick = (task) => {
     setSelectedTaskId(task.id);
@@ -580,33 +643,6 @@ export default function Dashboard() {
                 minHeight: 0,
               }}
             >
-              {/* LEFT COLUMN */}
-              <Box
-                sx={{
-                  flex: 1,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 2,
-                  minHeight: 0,
-                }}
-              >
-                <DashboardSection
-                  title="Owned by me"
-                  color={COLORS.mine}
-                  tasks={sortedTasks.mine}
-                  sx={{ flex: 1 }}
-                  onTaskClick={handleTaskClick}
-                />
-                <DashboardSection
-                  title="Completed by me"
-                  color={COLORS.completedByMe}
-                  tasks={sortedTasks.completedByMe}
-                  sx={{ flex: 1 }}
-                  onTaskClick={handleTaskClick}
-                />
-              </Box>
-
-              {/* RIGHT COLUMN */}
               <Box
                 sx={{
                   flex: 1,
@@ -618,31 +654,82 @@ export default function Dashboard() {
               >
                 <DashboardSection
                   title="Unassigned"
-                  color={COLORS.unassigned}
-                  tasks={sortedTasks.unassigned}
+                  color= {STATE_COLORS.UNASSIGNED}
+                  tasks={workflowTasks.UNASSIGNED}
                   sx={{ flex: 1 }}
                   onTaskClick={handleTaskClick}
                 />
                 <DashboardSection
-                  title="Unassigned in past"
-                  color={COLORS.unassignedPast}
-                  tasks={sortedTasks.unassignedPast}
+                  title="Development"
+                  color={STATE_COLORS.DEVELOPMENT}
+                  tasks={workflowTasks.DEVELOPMENT}
+                  sx={{ flex: 1 }}
+                  onTaskClick={handleTaskClick}
+                />
+
+              </Box>
+
+              <Box
+                sx={{
+                  flex: 1,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 2,
+                  minHeight: 0,
+                }}
+              >
+                <DashboardSection
+                  title="Assigned"
+                  color={STATE_COLORS.ASSIGNED}
+                  tasks={workflowTasks.ASSIGNED}
                   sx={{ flex: 1 }}
                   onTaskClick={handleTaskClick}
                 />
                 <DashboardSection
-                  title="Taken by someone else"
-                  color={COLORS.takenByOthers}
-                  tasks={sortedTasks.takenByOthers}
+                  title="Testing"
+                  color={STATE_COLORS.TESTING}
+                  tasks={workflowTasks.TESTING}
                   sx={{ flex: 1 }}
                   onTaskClick={handleTaskClick}
                 />
               </Box>
+
+              <Box
+                sx={{
+                  flex: 1,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 2,
+                  minHeight: 0,
+                }}
+              >
+                <DashboardSection
+                  title="Completed"
+                  color={STATE_COLORS.COMPLETED}
+                  tasks={workflowTasks.COMPLETED}
+                  sx={{ flex: 1 }}
+                  onTaskClick={handleTaskClick}
+                />
+                <DashboardSection
+                  title="Production"
+                  color={STATE_COLORS.PRODUCTION}
+                  tasks={workflowTasks.PRODUCTION}
+                  sx={{ flex: 1 }}
+                  onTaskClick={handleTaskClick}
+                />
+
+              </Box>
+
             </Box>
           </Panel>
         </Grid>
 
-        <Grid sx={{ flex: 2 }}></Grid>
+        <Grid sx={{ flex: 1 }}>
+          <RankingSection
+            rankingData={rankingData}
+            currentUserId={currentUser?.id}
+          />
+        </Grid>
       </Grid>
       <TaskDialog
         open={Boolean(selectedTask)}
