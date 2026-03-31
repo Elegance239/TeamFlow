@@ -89,7 +89,7 @@ Rails.application.configure do
   # config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
 
   ## TODO: Configure SMTP for production email delivery
-  # with heroku access, run: 
+  # with heroku access, run:
   # heroku config:set GMAIL_USERNAME=teamflow.csci3100@gmail.com --app teamflow-app-e2b02097ff94
   # heroku config:set GMAIL_APP_PASSWORD=[PASSWORD_HERE] --app teamflow-app-e2b02097ff94
   # config.action_mailer.delivery_method = :smtp
@@ -103,5 +103,4 @@ Rails.application.configure do
   #   authentication: :plain,
   #   enable_starttls_auto: true
   # }
-
 end

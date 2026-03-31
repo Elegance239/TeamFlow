@@ -6,7 +6,7 @@ class DeadlineReminderJob < ApplicationJob
 
     tasks_due_tomorrow = Task.where(
       due_date: tomorrow,
-      current_state: Task::WORKFLOW_ORDER - [Task::COMPLETED]
+      current_state: Task::WORKFLOW_ORDER - [ Task::COMPLETED ]
     ).where.not(user_id: nil)
 
     tasks_due_tomorrow.each do |task|

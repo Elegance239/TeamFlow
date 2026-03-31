@@ -157,7 +157,7 @@ class Task < ApplicationRecord
       .uniq
       .select { |state_name| WORKFLOW_ORDER.include?(state_name) }
   end
-  
+
   def creator_name
     creator&.name || "Unknown"
   end
