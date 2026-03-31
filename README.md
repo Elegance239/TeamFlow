@@ -9,7 +9,7 @@
 |--------|------|--------|-----------|-------------------------|----------------------|
 | `POST` | `/users/sign_in` | `email`, `password` | Log in existing user | `{ "message": "Logged in successfully", "user": { "id": 1, "name": "Riley", "email": "riley@team.dev", "role": "team_member" } }` | `{ "error": "Invalid email or password" }` |
 | `DELETE` | `/users/sign_out` | — | Log out current user | `{ "message": "Logged out successfully" }` | Devise auth error |
-| `POST` | `/users` | `user[name]`, `user[email]`, `user[password]`, `user[password_confirmation]`, `user[role]?` | Create account | `{ "message": "Account created successfully", "user": { "id": 1, "name": "Riley", "email": "riley@team.dev", "role": "team_member" } }` | `{ "errors": ["Email has already been taken"] }` |
+| `POST` | `/users` | `user[name]`, `user[email]`, `user[password]`, `user[password_confirmation]`, `user[role]` | Create account | `{ "message": "Account created successfully", "user": { "id": 1, "name": "Riley", "email": "riley@team.dev", "role": "team_member" } }` | `{ "errors": ["Email has already been taken"] }` |
 | `PATCH` / `PUT` | `/users` | Devise account fields | Update current account | Devise default JSON/response for update | Devise validation errors |
 | `DELETE` | `/users` | — | Delete current account | `{ "message": "Account deleted successfully" }` | `{ "errors": ["..."] }` |
 | `POST` | `/users/password` | `user[email]` | Send password reset email | `{ "message": "Password reset email sent" }` | `{ "error": "Email not found" }` |
