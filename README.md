@@ -18,14 +18,16 @@
 | `GET` | `/users/sign_up` | — | Devise sign-up page route | HTML page (not JSON API) | — |
 | `GET` | `/users/password/new` | — | Devise forgot-password page route | HTML page (not JSON API) | — |
 | `GET` | `/users/password/edit` | — | Devise reset-password page route | HTML page (not JSON API) | — |
+| `PATCH` | `/users/password/change` | `current_password`, `password`, `password_confirmation` | Change password while logged in | `{ "message": "Password updated successfully" }` | `{ "error": "Current password is incorrect" }` |
 | `GET` | `/users/cancel` | — | Devise registration cancel route | HTML response | — |
 | `GET` | `/users/edit` | — | Devise account edit page route | HTML page (not JSON API) | — |
+
 
 #### Users
 | Method | Path | Params | Behaviour | Success JSON (example) | Error JSON (example) |
 |--------|------|--------|-----------|-------------------------|----------------------|
 | `GET` | `/users/:id` | — | Return own user info including team and overall score | `{ "id": 2, "name": "Riley", "email": "member@teamflow.dev", "team_id": 1, "team": { "id": 1, "name": "Platform" }, "overall_score": 13 }` | `{ "error": "Unauthorized" }` |
-| `PATCH` / `PUT` | `/users/:id` | `name` | Update own name | User JSON object | `{ "error": "Unauthorized" }` or `{ "errors": ["Name can't be blank"] }` |
+| `PATCH` / `PUT` | `/users/:id` | `name`, `skills` | Update own name or skills | User JSON object | `{ "error": "Unauthorized" }` or `{ "errors": ["Name can't be blank"] }` |
 
 #### Teams
 | Method | Path | Params | Behaviour | Success JSON (example) | Error JSON (example) |

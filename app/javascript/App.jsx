@@ -47,11 +47,10 @@ export default function App() {
       .then(res => res.json())
       .then(data => setTasks(Array.isArray(data) ? data : []));
 
-    // Fetch full member objects (ID and Name)
     if (user.role === 'team_lead' || Number(user.role) === 0) {
       fetch(`/teams/${user.team_id}/members`, { credentials: 'include' })
         .then(res => res.json())
-        .then(data => Array.isArray(data) && setTeamMembers(data));
+        .then(data => Array.isArray(data) && setTeamMembers(data)); // Keep full objects
     } else {
       fetch(`/teams/${user.team_id}`, { credentials: 'include' })
         .then(res => res.json())
@@ -80,7 +79,7 @@ export default function App() {
               />,
     taskCalendar: <CalendarForTasks />,
     validateTasks: <ValidateTasks />,
-    settings: <Settings />
+    settings: <Settings user={user} setUser={setUser} setAuth={setAuth} />
   }
 
   useEffect(() => {
