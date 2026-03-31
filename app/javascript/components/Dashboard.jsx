@@ -2,16 +2,12 @@ import React, { useEffect, useMemo, useState } from "react";
 import dayjs from "dayjs";
 import {
   Box,
-  Button,
   Chip,
-  Fab,
   LinearProgress,
   Stack,
-  TextField,
   Typography,
   Grid,
   Paper,
-  autocompleteClasses,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { useSnackbar } from "notistack";
@@ -55,14 +51,6 @@ function isPastDate(dateString) {
   return dayjs(dateString).isBefore(dayjs(), "day");
 }
 
-function taskVisualCategory(task, currentUserId) {
-  if (task.completed_by_id === currentUserId) return "completedByMe";
-  if (task.user_id === currentUserId) return "mine";
-  if (!task.user_id && isPastDate(task.due_date)) return "unassignedPast";
-  if (!task.user_id) return "unassigned";
-  return "takenByOthers";
-}
-
 function canTakeTask(task, currentUser) {
   if (!currentUser) return false;
   if (task.user_id) return false;
@@ -84,23 +72,6 @@ function canPatchTask(task, currentUser) {
 function canProgressTask(task, currentUser) {
   if (!currentUser) return false;
   return task.user_id === currentUser.id && task.current_state !== "COMPLETED";
-}
-
-function groupTasksByCategory(tasks, currentUserId) {
-  const grouped = {
-    mine: [],
-    completedByMe: [],
-    unassigned: [],
-    unassignedPast: [],
-    takenByOthers: [],
-  };
-
-  tasks.forEach((task) => {
-    const category = taskVisualCategory(task, currentUserId);
-    grouped[category].push(task);
-  });
-
-  return grouped;
 }
 
 const Panel = styled(Paper)(({ theme }) => ({
@@ -201,13 +172,13 @@ function DashboardSection({ title, color, tasks = [], sx = {}, onTaskClick }) {
   );
 }
 
-function RankingSection({ rankingData = [], currentUserId }) {
+function RankingSection({ rankingData = [], currentUserId, teamName }) {
   const maxScore = Math.max(...rankingData.map((u) => u.overall_score || 0), 1);
 
   return (
     <Panel sx={{ height: "100%" }}>
       <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
-        Ranking Statistics
+        {teamName ? `${teamName} Scoreboard` : "Scoreboard"}
       </Typography>
 
       <Box
@@ -307,18 +278,8 @@ export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [noTeam, setNoTeam] = useState(false);
   const [teamName, setTeamName] = useState("");
-  const [isCreatingTeam, setIsCreatingTeam] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState(null);
-  const [isCreationOpen, setIsCreationOpen] = useState(false);
   const [teamUsers, setTeamUsers] = useState([]);
-
-  const [sortedTasks, setSortedTasks] = useState({
-    mine: [],
-    completedByMe: [],
-    unassigned: [],
-    unassignedPast: [],
-    takenByOthers: [],
-  });
 
   const [workflowTasks, setWorkflowTasks] = useState({
     UNASSIGNED: [],
@@ -361,7 +322,6 @@ export default function Dashboard() {
   const refreshTasks = async () => {
     const loadedTasks = await fetchTasks();
     setTasks(loadedTasks);
-    setSortedTasks(groupTasksByCategory(loadedTasks, currentUser?.id));
     setWorkflowTasks(groupTasksByWorkflow(loadedTasks));
   };
 
@@ -371,12 +331,18 @@ export default function Dashboard() {
   );
 
   const rankingData = useMemo(() => {
-    return [...teamUsers].sort(
-      (a, b) => (b.overall_score || 0) - (a.overall_score || 0),
-    );
-  }, [teamUsers]);
+    return teamUsers
+      .map((user) => {
+        const overall_score = tasks
+          .filter((task) => task.completed_by_id === user.id)
+          .reduce((sum, task) => sum + (task.points || 0), 0);
 
-  const fetchTeamDetails = async (teamId) => {
+        return { ...user, overall_score };
+      })
+      .sort((a, b) => b.overall_score - a.overall_score);
+  }, [teamUsers, tasks]);
+
+  const fetchTeamInfo = async (teamId) => {
     const response = await fetch(`/teams/${teamId}`, {
       method: "GET",
       headers: { Accept: "application/json" },
@@ -384,7 +350,26 @@ export default function Dashboard() {
     });
 
     if (!response.ok) {
-      throw new Error("Failed to load team details");
+      let message = "Failed to load team info";
+      try {
+        const data = await response.json();
+        message = data?.error || data?.errors?.join(", ") || message;
+      } catch (error) {}
+      throw new Error(message);
+    }
+
+    return await response.json();
+  };
+
+  const fetchTeamMembers = async (teamId) => {
+    const response = await fetch(`/teams/${teamId}/members`, {
+      method: "GET",
+      headers: { Accept: "application/json" },
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to load team members");
     }
 
     return await response.json();
@@ -392,69 +377,96 @@ export default function Dashboard() {
 
   const handleClose = () => setSelectedTaskId(null);
 
- useEffect(() => {
-  let alive = true;
+  useEffect(() => {
+    let alive = true;
 
-  const loadData = async () => {
-    setIsLoading(true);
-    try {
-      const storedUser = getStoredUser();
-      if (storedUser?.id) {
-        const userResponse = await fetch(`/users/${storedUser.id}`, {
-          method: "GET",
-          headers: { Accept: "application/json" },
-          credentials: "include",
-        });
+    const loadData = async () => {
+      setIsLoading(true);
 
-        if (userResponse.ok) {
-          const resolvedUser = await userResponse.json();
-          const mergedUser = {
-            ...storedUser,
-            ...resolvedUser,
-            team_id:
-              resolvedUser.team_id ??
-              resolvedUser.team?.id ??
-              storedUser.team_id,
-          };
-          localStorage.setItem(
-            "teamflowCurrentUser",
-            JSON.stringify(mergedUser),
-          );
-          if (alive) setCurrentUser(mergedUser);
-        } else if (alive) {
-          setCurrentUser(storedUser);
-        }
-      }
+      try {
+        let activeUser = getStoredUser();
 
-      const loadedTasks = await fetchTasks();
-      if (alive) {
-        setTasks(loadedTasks);
-        setSortedTasks(groupTasksByCategory(loadedTasks, currentUser?.id));
-        setWorkflowTasks(groupTasksByWorkflow(loadedTasks));
-        setNoTeam(false);
-      }
-    } catch (error) {
-      if (alive) {
-        if (error.code === "no_team") {
-          setTasks([]);
-          setNoTeam(true);
-        } else {
-          setTasks([]);
-          enqueueSnackbar(error.message || "Failed to load task data", {
-            variant: "error",
+        if (activeUser?.id) {
+          const userResponse = await fetch(`/users/${activeUser.id}`, {
+            method: "GET",
+            headers: { Accept: "application/json" },
+            credentials: "include",
           });
-        }
-      }
-    } finally {
-      if (alive) setIsLoading(false);
-    }
-  };
 
-  loadData();
-  return () => {
-    alive = false;
-  };
-}, [enqueueSnackbar]);
+          if (userResponse.ok) {
+            const resolvedUser = await userResponse.json();
+
+            activeUser = {
+              ...activeUser,
+              ...resolvedUser,
+              team_id:
+                resolvedUser.team_id ??
+                resolvedUser.team?.id ??
+                activeUser.team_id,
+            };
+
+            localStorage.setItem(
+              "teamflowCurrentUser",
+              JSON.stringify(activeUser),
+            );
+
+            if (alive) setCurrentUser(activeUser);
+          }
+        }
+
+        const loadedTasks = await fetchTasks();
+
+        if (alive) {
+          setTasks(loadedTasks);
+          setWorkflowTasks(groupTasksByWorkflow(loadedTasks));
+          setNoTeam(false);
+        }
+
+        if (activeUser?.team_id) {
+          const teamInfo = await fetchTeamInfo(activeUser.team_id);
+
+          if (alive) {
+            setTeamName(teamInfo.name || "");
+          }
+
+          if (isTeamLead(activeUser.role)) {
+            const members = await fetchTeamMembers(activeUser.team_id);
+
+            if (alive) {
+              setTeamUsers(Array.isArray(members) ? members : []);
+            }
+          } else if (alive) {
+            setTeamUsers([]);
+          }
+        } else if (alive) {
+          setTeamName("");
+          setTeamUsers([]);
+        }
+      } catch (error) {
+        if (alive) {
+          if (error.code === "no_team") {
+            setTasks([]);
+            setTeamUsers([]);
+            setNoTeam(true);
+          } else {
+            setTasks([]);
+            setTeamUsers([]);
+            enqueueSnackbar(error.message || "Failed to load task data", {
+              variant: "error",
+            });
+          }
+        }
+      } finally {
+        if (alive) setIsLoading(false);
+      }
+    };
+
+    loadData();
+
+    return () => {
+      alive = false;
+    };
+  }, [enqueueSnackbar]);
 
   const handleTakeTask = async () => {
     if (!selectedTask) return;
@@ -586,7 +598,9 @@ export default function Dashboard() {
       enqueueSnackbar("Task progress requested successfully", {
         variant: "success",
       });
-      window.location.reload();
+      await refreshTasks();
+      enqueueSnackbar("Task progressed successfully", { variant: "success" });
+      handleClose();
     } catch (error) {
       enqueueSnackbar("Network error while progressing task", {
         variant: "error",
@@ -654,7 +668,7 @@ export default function Dashboard() {
               >
                 <DashboardSection
                   title="Unassigned"
-                  color= {STATE_COLORS.UNASSIGNED}
+                  color={STATE_COLORS.UNASSIGNED}
                   tasks={workflowTasks.UNASSIGNED}
                   sx={{ flex: 1 }}
                   onTaskClick={handleTaskClick}
@@ -666,7 +680,6 @@ export default function Dashboard() {
                   sx={{ flex: 1 }}
                   onTaskClick={handleTaskClick}
                 />
-
               </Box>
 
               <Box
@@ -717,9 +730,7 @@ export default function Dashboard() {
                   sx={{ flex: 1 }}
                   onTaskClick={handleTaskClick}
                 />
-
               </Box>
-
             </Box>
           </Panel>
         </Grid>
@@ -728,6 +739,7 @@ export default function Dashboard() {
           <RankingSection
             rankingData={rankingData}
             currentUserId={currentUser?.id}
+            teamName={teamName}
           />
         </Grid>
       </Grid>
