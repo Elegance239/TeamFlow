@@ -1,17 +1,94 @@
-import React, { useState } from "react";
-import { Avatar, Divider, Switch, TextField, Button, Box, Typography } from "@mui/material";
+import React, { useEffect, useState } from "react";
+import {
+  Avatar,
+  Divider,
+  Switch,
+  TextField,
+  Button,
+  Box,
+  Typography,
+  LinearProgress,
+} from "@mui/material";
 import AddIcon from '@mui/icons-material/Add';
+import { useSnackbar } from "notistack";
+
+function getStoredUser() {
+  try {
+    const raw = localStorage.getItem("teamflowCurrentUser");
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch (error) {
+    return null;
+  }
+}
 
 export default function Settings() {
-  const [user, setUser] = useState({
-    // Mock Data (Eventually this comes from GET /users/:id)
-    name: "Chris Wong",
-    role: "Developer",
-    skills: ["React", "JavaScript", "CSS", "UI Design"],
-  });
   const [emailAlerts, setEmailAlerts] = useState(false);
+
+  const { enqueueSnackbar } = useSnackbar();
+  const [currentUser, setCurrentUser] = useState(getStoredUser());
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let alive = true;
+
+    const loadData = async () => {
+      setIsLoading(true);
+      try {
+        const storedUser = getStoredUser();
+        if (storedUser?.id) {
+          const userResponse = await fetch(`/users/${storedUser.id}`, {
+            method: "GET",
+            headers: { Accept: "application/json" },
+            credentials: "include",
+          });
+
+          if (userResponse.ok) {
+            const resolvedUser = await userResponse.json();
+            const mergedUser = {
+              ...storedUser,
+              ...resolvedUser,
+              team_id: resolvedUser.team_id ?? resolvedUser.team?.id ?? storedUser.team_id,
+            };
+            localStorage.setItem("teamflowCurrentUser", JSON.stringify(mergedUser));
+            if (alive) setCurrentUser(mergedUser);
+          } else if (alive) {
+            setCurrentUser(storedUser);
+          }
+        }
+
+      } catch (error) {
+      } finally {
+        if (alive) setIsLoading(false);
+      }
+    };
+
+    loadData();
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const safeCurrentUser = currentUser || {
+    id: null,
+    name: "Unknown User",
+    email: "unknown@example.com",
+    role: "team_member",
+    skills: "",
+    team_id: null,
+  };
+
+  const skillList = String(safeCurrentUser.skills || "")
+  .split(",")
+  .map((skill) => skill.trim())
+  .filter(Boolean);
+
+  const displaySkills = skillList.length > 0 ? skillList : ["unknown"];
+  const displayRole = safeCurrentUser.role === "team_lead" ? "Team Lead" : "Team Member";
+
   return (
     <div className="settings-container" style={{ padding: '0 20px' }}>
+      {isLoading && <LinearProgress sx={{ mb: 1 }} />}
       <h1 style={{ marginTop: 0, paddingTop: '0px' }}>Account Settings</h1>
       <Divider sx={{ my: 2 }} /> 
 
@@ -83,7 +160,7 @@ export default function Settings() {
           <TextField 
             fullWidth
             variant="outlined"
-            value={user.name}
+            value={safeCurrentUser.name}
             size="small"
             /* Changing 'disabled' to true will make it read-only (we can discuss abt that later)*/
             disabled={true} 
@@ -107,7 +184,7 @@ export default function Settings() {
           <TextField 
             fullWidth
             variant="outlined"
-            value={user.role}
+            value={displayRole}
             size="small"
             disabled={true} 
             sx={{ 
@@ -137,7 +214,7 @@ export default function Settings() {
           </Typography>
           <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
             <TextField 
-              value="chris.wong@example.com" // eventually be {user.email}
+              value={safeCurrentUser.email}
               fullWidth
               size="small"
               slotProps={{
@@ -254,7 +331,7 @@ export default function Settings() {
       <section className="skills-section">
         <h2>My Skills</h2>
         <div className="tag-container">
-          {user.skills.map((skill, index) => (
+          {displaySkills.map((skill, index) => (
             <span key={index} className="skill-tag">
               {skill}
             </span>
