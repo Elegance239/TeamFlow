@@ -8,6 +8,11 @@ import {
   Box,
   Typography,
   LinearProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
 } from "@mui/material";
 import AddIcon from '@mui/icons-material/Add';
 import { useSnackbar } from "notistack";
@@ -22,12 +27,177 @@ function getStoredUser() {
   }
 }
 
+function ChangeDialog({ open, setOpen, target, currentUser, setCurrentUser }) {
+  const handleClose = () => {
+    setOpen(false);
+  };
+
+  const makeChange = {
+    email: { text: "Email Address", type: "email", reminder:"" },
+    password: { text: "Password", type: "password", reminder: "At least 6 characters" },
+    skills: { text: "Skills", type: "text" , reminder: " Use commas to sperate your skills (example: css,react,javascript)"},
+  };
+
+  const config = makeChange[target];
+  if (!config) return null;
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    const formData = new FormData(event.currentTarget);
+    const formJson = Object.fromEntries(formData.entries());
+
+    let payload = {};
+
+    if (target === "email") {
+      payload = {
+        email: formJson.email,
+      };
+    } else if (target === "skills") {
+      payload = {
+        skills: formJson.skills,
+      };
+    } else if (target === "password") {
+      if (formJson.password !== formJson.password_confirmation) {
+        alert("Passwords do not match");
+        return;
+      }
+
+      payload = {
+        password: formJson.password,
+        password_confirmation: formJson.password_confirmation,
+      };
+    }
+
+    try {
+      const response = await fetch(`/users/${currentUser.id}`, {
+        method: "PATCH",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data?.errors?.join(", ") || "Update failed");
+        return;
+      }
+
+      const updatedUser = {
+        ...currentUser,
+        ...data,
+      };
+
+      localStorage.setItem("teamflowCurrentUser", JSON.stringify(updatedUser));
+      setCurrentUser(updatedUser);
+      handleClose();
+    } catch (error) {
+      console.error(error);
+      alert("Network error while updating");
+    }
+  };
+
+  return (
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      sx={{
+        "& .MuiDialog-paper": {
+          minWidth: 420,
+        },
+      }}
+    >
+      <DialogTitle>Change {config.text}</DialogTitle>
+      <DialogContent>
+      <DialogContentText>
+        {config.reminder}
+      </DialogContentText>
+        <Box
+          component="form"
+          onSubmit={handleSubmit}
+          id="change-form"
+          sx={{ mt: 1 }}
+        >
+          {target === "password" ? (
+            <>
+              <TextField
+                autoFocus
+                required
+                margin="dense"
+                name="password"
+                label="New Password"
+                type="password"
+                fullWidth
+                variant="standard"
+              />
+              <TextField
+                required
+                margin="dense"
+                name="password_confirmation"
+                label="Confirm Password"
+                type="password"
+                fullWidth
+                variant="standard"
+              />
+            </>
+          ) : (
+            <TextField
+              autoFocus
+              required
+              margin="dense"
+              name={target}
+              label={config.text}
+              type={config.type}
+              fullWidth
+              variant="standard"
+              defaultValue={
+                target === "email"
+                  ? currentUser.email || ""
+                  : target === "skills"
+                  ? currentUser.skills || ""
+                  : ""
+              }
+            />
+          )}
+        </Box>
+      </DialogContent>
+
+      <DialogActions>
+        <Button onClick={handleClose}>Cancel</Button>
+        <Button type="submit" form="change-form">
+          Confirm
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+}
+
 export default function Settings() {
   const [emailAlerts, setEmailAlerts] = useState(false);
-
-  const { enqueueSnackbar } = useSnackbar();
   const [currentUser, setCurrentUser] = useState(getStoredUser());
   const [isLoading, setIsLoading] = useState(true);
+
+  const handleLogoutClick = async () => {
+    try {
+      await fetch('/users/sign_out', {
+        method: 'DELETE',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+    } catch (error) {
+      // Local logout still proceeds if network call fails.
+    }
+
+    localStorage.removeItem('teamflowCurrentUser');
+    window.location.href = '/';
+  }
 
   useEffect(() => {
     let alive = true;
@@ -86,8 +256,15 @@ export default function Settings() {
   const displaySkills = skillList.length > 0 ? skillList : ["unknown"];
   const displayRole = safeCurrentUser.role === "team_lead" ? "Team Lead" : "Team Member";
 
+  const [open,setOpen] = useState(false);
+  const handleClickOpen = (t) => {
+    setChangeTarget(t);
+    setOpen(true);
+  };
+  const [changeTarget, setChangeTarget] = useState("email");
+
   return (
-    <div className="settings-container" style={{ padding: '0 20px' }}>
+    <div className="settings-container" style={{ padding: '0 20px'}}>
       {isLoading && <LinearProgress sx={{ mb: 1 }} />}
       <h1 style={{ marginTop: 0, paddingTop: '0px' }}>Account Settings</h1>
       <Divider sx={{ my: 2 }} /> 
@@ -243,7 +420,7 @@ export default function Settings() {
                 minWidth: '150px',
                 '&:hover': { bgcolor: '#d5d5d5' }
               }}
-              onClick={() => alert("Change Email logic coming soon!")}
+              onClick={() => handleClickOpen("email")}
             >
               Change Email
             </Button>
@@ -287,7 +464,7 @@ export default function Settings() {
                 '&:hover': { bgcolor: '#d5d5d5' },
                 minWidth: '150px'
               }}
-              onClick={() => alert("Change Password logic coming soon!")}
+              onClick={() => handleClickOpen("password")}
             >
               Change Password
             </Button>
@@ -330,6 +507,12 @@ export default function Settings() {
       {/* Skill Tags */}
       <section className="skills-section">
         <h2>My Skills</h2>
+        <Box sx={{
+        display: 'flex',
+        flexDirection: 'row',
+        gap: 2,               
+        p: 1,                 
+      }}>
         <div className="tag-container">
           {displaySkills.map((skill, index) => (
             <span key={index} className="skill-tag">
@@ -337,6 +520,19 @@ export default function Settings() {
             </span>
           ))}
         </div>
+        <Button
+          variant="contained"
+          sx={{
+            bgcolor: "#e0e0e0",
+            color: "#424242",
+            textTransform: "none",
+            "&:hover": { bgcolor: "#d5d5d5" }
+          }}
+          onClick={() => handleClickOpen("skills")}
+          >
+          Change Skills
+        </Button>
+        </Box>
       </section>
 
       {/* Logout */}
@@ -350,11 +546,18 @@ export default function Settings() {
                 textTransform: 'none',
                 '&:hover': { bgcolor: '#e60000' }
               }}
-          onClick={() => alert("Logout logic coming soon!")}
+          onClick={handleLogoutClick}
         >
           Log Out
         </Button>
       </section>
+      <ChangeDialog
+        open={open}
+        setOpen={setOpen}
+        target={changeTarget}
+        currentUser={safeCurrentUser}
+        setCurrentUser={setCurrentUser}
+      />
     </div>
   );
 }

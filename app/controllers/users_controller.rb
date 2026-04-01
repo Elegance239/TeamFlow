@@ -10,12 +10,20 @@ class UsersController < ApplicationController
   end
 
   # PATCH /users/:id
-  # Allows a user to update their own name
+  # Allows a user to update their own name, email, skills, password
   def update
     return render json: { error: "Unauthorized" }, status: :forbidden unless current_user.id == params[:id].to_i
+
     user = User.find(params[:id])
-    if user.update(name: params[:name])
-      render json: user
+    update_attrs = params.permit(:name, :email, :skills, :password, :password_confirmation).to_h
+
+    if update_attrs["password"].blank?
+      update_attrs.delete("password")
+      update_attrs.delete("password_confirmation")
+    end
+
+    if user.update(update_attrs)
+      render json: user.as_json(include: :team).merge(overall_score: user.overall_score)
     else
       render json: { errors: user.errors.full_messages }, status: :unprocessable_content
     end
