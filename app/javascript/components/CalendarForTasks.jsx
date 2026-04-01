@@ -104,7 +104,7 @@ function canProgressTask(task, currentUser) {
   return task.user_id === currentUser.id && task.current_state !== "COMPLETED";
 }
 
-export default function CalendarForTasks() {
+export default function CalendarForTasks({isCreationOpen, setIsCreationOpen}) {
   const { enqueueSnackbar } = useSnackbar();
   const [tasks, setTasks] = useState([]);
   const [currentUser, setCurrentUser] = useState(getStoredUser());
@@ -113,7 +113,7 @@ export default function CalendarForTasks() {
   const [teamName, setTeamName] = useState("");
   const [isCreatingTeam, setIsCreatingTeam] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState(null);
-  const [isCreationOpen, setIsCreationOpen] = useState(false);
+
 
   const fetchTasks = async () => {
     const response = await fetch("/tasks", {
@@ -150,6 +150,7 @@ export default function CalendarForTasks() {
   };
 
   useEffect(() => {
+    
     let alive = true;
 
     const loadData = async () => {

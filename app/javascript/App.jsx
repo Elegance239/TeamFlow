@@ -68,7 +68,7 @@ export default function App() {
 
   const handleRequestOpenCreateTask = () => {
     setOpenCreateTaskSignal(true);
-    setCurrentPage('calendar');
+    setCurrentPage('taskCalendar');
   };
 
   // Only logged in users can view
@@ -79,7 +79,10 @@ export default function App() {
                 setOpenCreateTaskSignal={setOpenCreateTaskSignal} 
                 selectedFilters={selectedFilters} 
               />,
-    taskCalendar: <CalendarForTasks />,
+    taskCalendar: <CalendarForTasks
+                    isCreationOpen={openCreateTaskSignal} 
+                    setIsCreationOpen={setOpenCreateTaskSignal} 
+                    />,
     validateTasks: <ValidateTasks />,
     settings: <Settings />,
     dashboard: <Dashboard />
@@ -90,7 +93,7 @@ export default function App() {
     if (storedUser) {
       setUser(JSON.parse(storedUser));
       setAuth(true);
-      setCurrentPage('calendar');
+      setCurrentPage('taskCalendar');
     } else {
       setAuth(false);
       setCurrentPage('signin');
