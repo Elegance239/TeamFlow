@@ -12,6 +12,8 @@ import {
   Switch,
   TextField,
   Typography,
+  Chip,
+  MenuItem,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 
@@ -25,13 +27,17 @@ function normalizeSkills(raw) {
     .join(",");
 }
 
+const EXTRASTATES = [
+ "DEVELOPMENT", "TESTING", "PRODUCTION"
+];
+
 export default function TaskCreationDialog({ open, onClose, currentUser, onCreate }) {
   const [description, setDescription] = useState("");
-  const [dueDate, setDueDate] = useState("");
+  const [dueDate, setDueDate] = useState(new Date().toISOString().split("T")[0]);
   const [points, setPoints] = useState(1);
   const [requiredSkills, setRequiredSkills] = useState("");
   const [needsValidation, setNeedsValidation] = useState(false);
-  const [allStates, setAllStates] = useState("UNASSIGNED,ASSIGNED,COMPLETED");
+  const [allStates, setAllStates] = useState(["UNASSIGNED", "ASSIGNED", "COMPLETED"]);
   const [userId, setUserId] = useState("");
 
   const isTeamLead = currentUser.role === 0 || currentUser.role === "team_lead";
@@ -47,11 +53,11 @@ export default function TaskCreationDialog({ open, onClose, currentUser, onCreat
 
   const resetForm = () => {
     setDescription("");
-    setDueDate("");
+    setDueDate(new Date().toISOString().split("T")[0]);
     setPoints(1);
     setRequiredSkills("");
     setNeedsValidation(false);
-    setAllStates("UNASSIGNED,ASSIGNED,COMPLETED");
+    setAllStates(["UNASSIGNED", "ASSIGNED", "COMPLETED"]);
     setUserId("");
   };
 
@@ -70,7 +76,7 @@ export default function TaskCreationDialog({ open, onClose, currentUser, onCreat
       points: parsedPoints,
       required_skills: normalizeSkills(requiredSkills),
       needs_validation: needsValidation,
-      all_states: allStates.trim() || "UNASSIGNED,ASSIGNED,COMPLETED",
+      all_states: allStates.length > 0 ? allStates.join(",") : "UNASSIGNED,ASSIGNED,COMPLETED",
       user_id: Number.isFinite(parsedUserId) ? parsedUserId : null,
     };
 
@@ -78,6 +84,15 @@ export default function TaskCreationDialog({ open, onClose, currentUser, onCreat
     if (created) {
       handleClose();
     }
+  };
+
+  const handleStatesSelectionChange = (event) => {
+    const {
+      target: { value },
+    } = event;
+    const REQUIRED_STATES = ["UNASSIGNED", "ASSIGNED", "COMPLETED"];
+    const selected = typeof value === "string" ? value.split(",") : value;
+    setAllStates(Array.from(new Set([...REQUIRED_STATES, ...selected])));
   };
 
   return (
@@ -137,11 +152,28 @@ export default function TaskCreationDialog({ open, onClose, currentUser, onCreat
             fullWidth
           />
           <TextField
-            label="all_states (comma-separated)"
-            value={allStates}
-            onChange={(e) => setAllStates(e.target.value)}
+            label="all_states"
+            select
             fullWidth
-          />
+            SelectProps={{
+              multiple: true,
+              value: allStates,
+              onChange: handleStatesSelectionChange,
+              renderValue: (selected) => (
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                  {(selected||[]).map((option) => (
+                    <Chip key={option} label={option} />
+                  ))}
+                </Box>
+              ),
+            }}
+          >
+            {EXTRASTATES.map((option) => (
+              <MenuItem key={option} value={option}>
+                {option}
+              </MenuItem>
+            ))}
+          </TextField>
           <TextField
             label="user_id (optional assignee)"
             type="number"
