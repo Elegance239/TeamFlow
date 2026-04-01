@@ -74,3 +74,6 @@ group :test do
 end
 
 gem "jsbundling-rails", "~> 1.3", ">= 1.3.1"
+# Mailer
+gem "letter_opener_web", group: :development
+gem "whenever", require: false

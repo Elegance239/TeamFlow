@@ -136,7 +136,7 @@ RSpec.describe Task, type: :model do
       expect(score_map[incomplete.id]).to eq(0)
     end
   end
-  
+
   describe "assignment names" do
     let(:member) { create(:user, name: "Alice", team: team, skills: "ruby") }
 

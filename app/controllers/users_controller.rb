@@ -14,10 +14,16 @@ class UsersController < ApplicationController
   def update
     return render json: { error: "Unauthorized" }, status: :forbidden unless current_user.id == params[:id].to_i
     user = User.find(params[:id])
-    if user.update(name: params[:name])
+    if user.update(user_update_params)
       render json: user
     else
       render json: { errors: user.errors.full_messages }, status: :unprocessable_content
     end
+  end
+
+  private
+
+  def user_update_params
+    params.permit(:name, :skills)
   end
 end
