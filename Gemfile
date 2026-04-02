@@ -56,7 +56,7 @@ group :development, :test do
   gem "rubocop-rails-omakase", require: false
 
   # Rspec for Rails
-  gem "rspec-rails", "~> 8.0", ">= 8.0.3"
+  gem "rspec-rails", "~> 8.0"
 end
 
 group :development do
