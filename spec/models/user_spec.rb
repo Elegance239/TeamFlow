@@ -13,17 +13,20 @@ RSpec.describe User, type: :model do
       expect(user.errors[:name]).to be_present
     end
 
-    it "can store a list of skills" do
-      user = build(:user, skills: [ "React", "CSS" ])
-      expect(user.skills).to include("React")
+    it "normalizes skills into a lowercased comma-separated string" do
+      user = build(:user, skills: " React, CSS,react ")
+      user.valid?
+
+      expect(user.skills).to eq("react,css")
+      expect(user.skills_list).to eq([ "react", "css" ])
     end
   end
 
-  describe "guest mode" do
-    it "can be created without a team (guest)" do
-      user = create(:user, :guest, name: "Guest User")
-      expect(user.team).to be_nil
-      expect(user.role).to be_nil
+  describe "team membership" do
+    it "is invalid without a team" do
+      user = build(:user, team: nil)
+      expect(user).not_to be_valid
+      expect(user.errors[:team]).to be_present
     end
   end
 

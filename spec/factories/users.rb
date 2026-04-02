@@ -5,13 +5,10 @@ FactoryBot.define do
     password { "password123" }
     password_confirmation { "password123" }
     role { :team_member }
+    association :team
 
     trait :team_lead do
       role { :team_lead }
-    end
-
-    trait :guest do
-      role { nil }
     end
   end
 end

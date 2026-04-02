@@ -36,12 +36,13 @@ RSpec.describe Team, type: :model do
       expect(team.users.count).to eq(2)
     end
 
-    it "nullifies user team_id when team is destroyed" do
+    it "prevents team destroy when users exist" do
       team = create(:team, name: "Temp")
       user = create(:user, name: "Alice", team: team)
 
-      team.destroy
-      expect(user.reload.team_id).to be_nil
+      expect(team.destroy).to be false
+      expect(team.errors[:base]).to be_present
+      expect(user.reload.team_id).to eq(team.id)
     end
   end
 end

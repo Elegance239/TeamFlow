@@ -28,7 +28,8 @@ class TeamMembersController < ApplicationController
       return render json: { error: "Team lead cannot remove themselves" }, status: :unprocessable_content
     end
 
-    member.update!(team: nil, role: nil)
+    fallback_team = Team.find_or_create_by!(name: "Unassigned Team")
+    member.update!(team: fallback_team, role: :team_member)
     render json: { message: "User removed from team" }
   end
 
