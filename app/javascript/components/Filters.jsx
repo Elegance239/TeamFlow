@@ -33,87 +33,110 @@ import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 
 
-export default function Filters() {
+export default function Filters( { user, tasks, teamMembers, availableAssignees, selectedFilters, onFilterChange } ) {
 
   const [teamOpen, setTeamOpen] = React.useState(true);
   const [assigneeOpen, setAssigneeOpen] = React.useState(true);
   const [skillOpen, setSkillOpen] = React.useState(true);
 
+  const isLead = user?.role === "team_lead" || Number(user?.role) === 0;
+  const isMember = user?.role === "team_member" || Number(user?.role) === 1;
+
+  const availableSkills = [...new Set(
+  (tasks || []).flatMap(t =>
+    t.required_skills ? t.required_skills.split(',').map(s => s.trim()).filter(Boolean) : []
+  )
+  )];
+
+  const getNameById = (id, list) => {
+    const found = list.find(m => m.id === id);
+    return found ? found.name : `User ${id}`;
+  };
+
+  const assignedToNames = [...new Set(
+    (tasks || [])
+      .filter(t => t.created_by === user?.id) //&& t.user_id !== null
+      .map(t => t.assignee_name || `User ${t.user_id}`) 
+  )];
+
+  const assignedByNames = [...new Set(
+    (tasks || [])
+      .filter(t => t.user_id === user?.id)
+      .map(t => t.creator_name || `User ${t.created_by}`) 
+  )];
+
+  const handleToggle = (category, value) => {
+    const current = selectedFilters[category] || [];
+    const newFilters = current.includes(value)
+      ? current.filter((i) => i !== value)
+      : [...current, value];
+    onFilterChange(category, newFilters);
+  };
+
+  const renderFilterList = (category, items) => (
+    <List component="div" disablePadding>
+      {items.map((item, index) => (
+        <ListItem key={index} disablePadding>
+          <ListItemButton sx={{ pl: 4, py: 0, minHeight: 'auto' }}>
+            <FormControlLabel
+              control={
+                <Checkbox 
+                  size="small"
+                  checked={selectedFilters[category]?.includes(item)}
+                  onChange={() => handleToggle(category, item)}
+                />
+              }
+              label={item}
+              sx={{ width: '100%' }}
+            />
+          </ListItemButton>
+        </ListItem>
+      ))}
+    </List>
+  );
+  
   return (
     // Todo: Enclose this with a check for Admin soon
     <div className='filters'>
-      <List disablePadding>
-        <ListItemButton onClick={() => setTeamOpen(!teamOpen)}>
-          <ListItemText primary="Assigned To" />
-          {teamOpen ? <ExpandLess /> : <ExpandMore />}
-        </ListItemButton>
+      {isLead && (
+        <List disablePadding>
+          <ListItemButton onClick={() => setTeamOpen(!teamOpen)}>
+            <ListItemText primary="Assigned To" /> 
+            {teamOpen ? <ExpandLess /> : <ExpandMore />}
+          </ListItemButton>
+          <Collapse in={teamOpen} timeout="auto">
+          {/* Placeholder only, replace with the actual members in the database */}
+            {renderFilterList('teamMembers', assignedToNames)}
+          </Collapse>
+        </List>
+      )}
 
-        <Collapse in={teamOpen} timeout="auto">
-          <List component="div" disablePadding>
-            {/* Placeholder only, replace with the actual members in the database */}
-            {['Team Member 1', 'Team Member 2', 'Team Member 3'].map((member, index) => (
-              <ListItem key={index} disablePadding>
-                <ListItemButton sx={{ paddingLeft: 4, paddingTop: 0, paddingBottom: 0, minHeight: 'auto' }}>
-                  <FormControlLabel
-                    control={<Checkbox defaultChecked size="small"/>}
-                    label={member}
-                    sx={{ width: '100%' }}
-                  />
-                </ListItemButton>
-              </ListItem>
-            ))}
-          </List>
-        </Collapse>
-      </List>
-
-      {/* Todo: Enclose this with a check for User soon */}
-      <List disablePadding>
-        <ListItemButton onClick={() => setAssigneeOpen(!assigneeOpen)}>
-          <ListItemText primary="Assigned By" />
-          {assigneeOpen ? <ExpandLess /> : <ExpandMore />}
-        </ListItemButton>
-
-        <Collapse in={assigneeOpen} timeout="auto">
-          <List component="div" disablePadding>
-            {/* Placeholder only, replace with the actual members in the database */}
-            {['Admin 1', 'Admin 2', 'Admin 3'].map((admin, index) => (
-              <ListItem key={index} disablePadding>
-                <ListItemButton sx={{ paddingLeft: 4, paddingTop: 0, paddingBottom: 0, minHeight: 'auto' }}>
-                  <FormControlLabel
-                    control={<Checkbox defaultChecked size="small"/>}
-                    label={admin}
-                    sx={{ width: '100%' }}
-                  />
-                </ListItemButton>
-              </ListItem>
-            ))}
-          </List>
-        </Collapse>
-      </List>
+      {isMember && (
+        <List disablePadding>
+          <ListItemButton onClick={() => setAssigneeOpen(!assigneeOpen)}>
+            <ListItemText primary="Assigned By" />
+            {assigneeOpen ? <ExpandLess /> : <ExpandMore />}
+          </ListItemButton>
+          <Collapse in={assigneeOpen} timeout="auto">
+          {/* Placeholder only, replace with the actual members in the database */}
+            {renderFilterList('assignees', assignedByNames)}
+          </Collapse>
+        </List>
+      )}
       
-      <List disablePadding>
+      {(isMember || isLead) && (
+        <List disablePadding>
         <ListItemButton onClick={() => setSkillOpen(!skillOpen)}>
           <ListItemText primary="Skills" />
           {skillOpen ? <ExpandLess /> : <ExpandMore />}
         </ListItemButton>
-
         <Collapse in={skillOpen} timeout="auto">
-          <List component="div" disablePadding>
-            {/* Placeholder only, replace with the actual members in the database */}
-            {['HTML', 'CSS', 'JS'].map((skill, index) => (
-              <ListItem key={index} disablePadding>
-                <ListItemButton sx={{ paddingLeft: 4, paddingTop: 0, paddingBottom: 0, minHeight: 'auto' }}>
-                  <FormControlLabel
-                    control={<Checkbox defaultChecked size="small"/>}
-                    label={skill}
-                    sx={{ width: '100%' }}
-                  />
-                </ListItemButton>
-              </ListItem>
-            ))}
-          </List>
+        {/* Placeholder only, replace with the actual members in the database */}
+          {renderFilterList('skills', availableSkills)}
         </Collapse>
       </List>
+      )}
+      
 
     </div>
   )

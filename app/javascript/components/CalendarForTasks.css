@@ -1,0 +1,36 @@
+.calendar-for-tasks-root {
+  padding: 12px;
+  position: relative;
+}
+
+.calendar-for-tasks-legend {
+  margin-bottom: 10px;
+}
+
+.calendar-for-tasks-root .fc .fc-daygrid-day-frame {
+  min-height: 120px;
+}
+
+.calendar-for-tasks-root .fc .fc-daygrid-event {
+  border-radius: 6px;
+  border-width: 0;
+  padding: 20px 20px;
+  font-size: 0.78rem;
+}
+
+.calendar-for-tasks-root .fc .fc-toolbar-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.calendar-for-tasks-add-fab {
+  position: absolute !important;
+  right: 24px;
+  bottom: 24px;
+  z-index: 10;
+  background-color: #d32f2f !important;
+}
+
+.calendar-for-tasks-add-fab:hover {
+  background-color: #b71c1c !important;
+}

@@ -61,6 +61,7 @@ const SignInContainer = styled(Stack)(({ theme }) => ({
 
 export default function SignIn(props) {
   const onNavigate = props.onNavigate;
+  const onSignedIn = props.onSignedIn;
   const [emailError, setEmailError] = React.useState(false);
   const [emailErrorMessage, setEmailErrorMessage] = React.useState('');
   const [passwordError, setPasswordError] = React.useState(false);
@@ -75,16 +76,57 @@ export default function SignIn(props) {
     setOpen(false);
   };
 
-  const handleSubmit = (event) => {
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [submitError, setSubmitError] = React.useState('');
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    
     if (emailError || passwordError) {
-      event.preventDefault();
       return;
     }
+
+    setIsLoading(true);
+    setSubmitError('');
+
     const data = new FormData(event.currentTarget);
-    console.log({
-      email: data.get('email'),
-      password: data.get('password'),
-    });
+    const email = data.get('email');
+    const password = data.get('password');
+
+    try {
+      const response = await fetch('/users/sign_in', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        credentials: 'include', // Send cookies with request
+        body: JSON.stringify({
+          user: {
+            email,
+            password,
+          },
+        }),
+      });
+
+      if (response.ok) {
+        const payload = await response.json();
+        if (payload?.user) {
+          localStorage.setItem('teamflowCurrentUser', JSON.stringify(payload.user));
+        }
+        // Force full page reload to get new CSRF token for the authenticated session
+        window.location.href = '/';
+        return;
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        setSubmitError(errorData.error || 'Login failed. Please check your credentials.');
+      }
+    } catch (error) {
+      setSubmitError('An error occurred. Please try again.');
+      console.error('Login error:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const validateInputs = () => {
@@ -102,9 +144,9 @@ export default function SignIn(props) {
       setEmailErrorMessage('');
     }
 
-    if (!password.value || password.value.length < 6) {
+    if (!password.value) {
       setPasswordError(true);
-      setPasswordErrorMessage('Password must be at least 6 characters long.');
+      setPasswordErrorMessage('Please enter your password.');
       isValid = false;
     } else {
       setPasswordError(false);
@@ -138,7 +180,7 @@ export default function SignIn(props) {
             }}
           >
             <FormControl>
-              <FormLabel htmlFor="email">Email</FormLabel>
+              <FormLabel htmlFor="email">Email (For testing: User: user@testing.com, Admin: testing@testing.com)</FormLabel>
               <TextField
                 error={emailError}
                 helperText={emailErrorMessage}
@@ -155,7 +197,7 @@ export default function SignIn(props) {
               />
             </FormControl>
             <FormControl>
-              <FormLabel htmlFor="password">Password</FormLabel>
+              <FormLabel htmlFor="password">Password (For testing (both belong to same team): User and Admin: testing)</FormLabel>
               <TextField
                 error={passwordError}
                 helperText={passwordErrorMessage}
@@ -175,14 +217,20 @@ export default function SignIn(props) {
               control={<Checkbox value="remember" color="primary" />}
               label="Remember me"
             />
+            {submitError && (
+              <Typography color="error" variant="body2" sx={{ mt: 1, mb: 1 }}>
+                {submitError}
+              </Typography>
+            )}
             <ForgotPassword open={open} handleClose={handleClose} />
             <Button
               type="submit"
               fullWidth
               variant="contained"
               onClick={validateInputs}
+              disabled={isLoading}
             >
-              Sign in
+              {isLoading ? 'Signing in...' : 'Sign in'}
             </Button>
             <Link
               component="button"

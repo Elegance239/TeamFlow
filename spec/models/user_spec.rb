@@ -3,46 +3,51 @@ require 'rails_helper'
 RSpec.describe User, type: :model do
   describe "validations" do
     it "is valid with a name" do
-      user = User.new(name: "Alice")
+      user = build(:user, name: "Alice")
       expect(user).to be_valid
     end
 
     it "is invalid without a name" do
-      user = User.new(name: nil)
+      user = build(:user, name: nil)
       expect(user).not_to be_valid
       expect(user.errors[:name]).to be_present
     end
 
-    it "can store a list of skills" do
-    user = User.new(skills: [ "React", "CSS" ])
-    expect(user.skills).to include("React")
-  end
+    it "normalizes skills into a lowercased comma-separated string" do
+      user = build(:user, skills: " React, CSS,react ")
+      user.valid?
+
+      expect(user.skills).to eq("react,css")
+      expect(user.skills_list).to eq([ "react", "css" ])
+    end
   end
 
-  describe "guest mode" do
-    it "can be created without a team (guest)" do
-      user = User.create!(name: "Guest User")
-      expect(user.team).to be_nil
-      expect(user.role).to be_nil
+  describe "team membership" do
+    it "is invalid without a team" do
+      user = build(:user, team: nil)
+      expect(user).not_to be_valid
+      expect(user.errors[:team]).to be_present
     end
   end
 
   describe "associations" do
     it "belongs to a team" do
-      team = Team.create!(name: "Dev Team")
-      user = User.create!(name: "Bob", team: team, role: :team_member)
+      team = create(:team)
+      user = create(:user, name: "Bob", team: team)
       expect(user.team).to eq(team)
     end
   end
 
   describe "role enum" do
     it "can be team_lead or team_member only" do
-      lead_user = User.create!(name: "Lead", role: :team_lead)
+      lead_user = create(:user, :team_lead, name: "Lead")
       expect(lead_user.team_lead?).to be true
-      non_lead_user = User.create!(name: "Member", role: :team_member)
+
+      non_lead_user = create(:user, name: "Member")
       expect(non_lead_user.team_member?).to be true
+
       expect {
-        non_lead_user = User.create!(name: "Member", role: :non_lead_user)
+        create(:user, role: :non_lead_user)
       }.to raise_error(ArgumentError)
     end
   end

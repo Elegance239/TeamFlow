@@ -1,11 +1,12 @@
 class TeamMembersController < ApplicationController
+  before_action :authenticate_user!
+
   # GET /teams/:team_id/members
   # Lists all members of the team. Only accessible by the team_lead.
   def index
     team = Team.find(params[:team_id])
-    requester = User.find(params[:user_id])
 
-    unless requester.team_lead? && requester.team_id == team.id
+    unless current_user.team_lead? && current_user.team_id == team.id
       return render json: { error: "Only the team lead can view all members" }, status: :forbidden
     end
 
@@ -16,19 +17,19 @@ class TeamMembersController < ApplicationController
   # Removes a user from the team (sets team to nil, clears role). Only the team_lead can do this.
   def destroy
     team = Team.find(params[:team_id])
-    requester = User.find(params[:user_id])
 
-    unless requester.team_lead? && requester.team_id == team.id
+    unless current_user.team_lead? && current_user.team_id == team.id
       return render json: { error: "Only the team lead can remove members" }, status: :forbidden
     end
 
     member = team.users.find(params[:id])
 
-    if member.id == requester.id
+    if member.id == current_user.id
       return render json: { error: "Team lead cannot remove themselves" }, status: :unprocessable_content
     end
 
-    member.update!(team: nil, role: nil)
+    fallback_team = Team.find_or_create_by!(name: "Unassigned Team")
+    member.update!(team: fallback_team, role: :team_member)
     render json: { message: "User removed from team" }
   end
 
@@ -38,9 +39,8 @@ class TeamMembersController < ApplicationController
   # Otherwise a new user is created and added to the team.
   def create
     team = Team.find(params[:team_id])
-    requester = User.find(params[:user_id])
 
-    unless requester.team_lead? && requester.team_id == team.id
+    unless current_user.team_lead? && current_user.team_id == team.id
       return render json: { error: "Only the team lead can add members" }, status: :forbidden
     end
 
@@ -49,7 +49,7 @@ class TeamMembersController < ApplicationController
       member.update!(team: team, role: :team_member)
       render json: member
     else
-      member = User.new(name: params[:name], team: team, role: :team_member)
+      member = User.new(name: params[:name], email: params[:email], password: params[:password], password_confirmation: params[:password_confirmation], team: team, role: :team_member)
       if member.save
         render json: member, status: :created
       else

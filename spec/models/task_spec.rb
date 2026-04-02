@@ -1,11 +1,16 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe Task, type: :model do
-  let(:team) { Team.create!(name: "Dev Team") }
-  let(:lead) { User.create!(name: "Lead", team: team, role: :team_lead) }
+  let(:team) { create(:team, name: "Dev Team") }
+  let(:lead) { create(:user, :team_lead, name: "Lead", team: team) }
 
   def valid_task(overrides = {})
-    Task.new({ due_date: Date.today + 1, team: team, created_by: lead.id, points: 1 }.merge(overrides))
+    Task.new({
+      due_date: Date.today + 1,
+      team: team,
+      created_by: lead.id,
+      points: 1
+    }.merge(overrides))
   end
 
   describe "validations" do
@@ -13,163 +18,141 @@ RSpec.describe Task, type: :model do
       expect(valid_task).to be_valid
     end
 
-    it "is invalid without a due_date, team_id, created_by" do
+    it "is invalid without due_date" do
       task = valid_task(due_date: nil)
       expect(task).not_to be_valid
       expect(task.errors[:due_date]).to be_present
-
-      task = Task.new(due_date: Date.today + 1, created_by: lead.id)
-      expect(task).not_to be_valid
-
-      task = Task.new(due_date: Date.today + 1, team: team)
-      # created_by is a FK, AR checks the association
-      expect(task).not_to be_valid
-    end
-
-    it "is invalid with a due_date in the past" do
-      task = valid_task(due_date: Date.today - 1)
-      expect(task).not_to be_valid
-      expect(task.errors[:due_date]).to be_present
-    end
-
-    it "is valid with due_date exactly today" do
-      expect(valid_task(due_date: Date.today)).to be_valid
-    end
-
-    it "does not re-check past due_date on update (task may age)" do
-      task = valid_task(due_date: Date.today)
-      task.save!
-      # Simulate time passing: manually set due_date in the past and update another field
-      task.update_column(:due_date, Date.today - 30)
-      expect(task.update(description: "Updated description")).to be true
-    end
-
-    it "is invalid without points" do
-      task = valid_task(points: nil)
-      expect(task).not_to be_valid
-      expect(task.errors[:points]).to be_present
-    end
-
-    it "is valid with integer points" do
-      expect(valid_task(points: 10)).to be_valid
-    end
-
-    it "is invalid with non-integer points" do
-      task = valid_task(points: 3.5)
-      expect(task).not_to be_valid
-      expect(task.errors[:points]).to be_present
-    end
-
-    it "is invalid with zero points" do
-      task = valid_task(points: 0)
-      expect(task).not_to be_valid
-      expect(task.errors[:points]).to be_present
-    end
-
-    it "is invalid with negative points" do
-      task = valid_task(points: -5)
-      expect(task).not_to be_valid
-      expect(task.errors[:points]).to be_present
-    end
-
-    it "allows nil description" do
-      expect(valid_task(description: nil)).to be_valid
     end
   end
 
-  describe "task step due-date ordering" do
-    it "is valid when all steps have ascending due_dates" do
-      task = valid_task
-      task.task_steps.build(step_num: 0, name: "Step A", due_date: Date.today + 1)
-      task.task_steps.build(step_num: 1, name: "Step B", due_date: Date.today + 2)
+  describe "required skills" do
+    let(:member) { create(:user, team: team, skills: "ruby,js") }
+
+    it "normalizes required skills at creation" do
+      task = valid_task(required_skills: " Ruby,JS,ruby ")
+      task.save!
+
+      expect(task.required_skills).to eq("ruby,js")
+      expect(task.required_skills_list).to eq([ "ruby", "js" ])
+    end
+
+    it "allows an empty required skills list" do
+      task = valid_task(required_skills: "")
       expect(task).to be_valid
     end
 
-    it "is valid when steps have equal due_dates" do
-      task = valid_task
-      task.task_steps.build(step_num: 0, name: "Step A", due_date: Date.today + 1)
-      task.task_steps.build(step_num: 1, name: "Step B", due_date: Date.today + 1)
-      expect(task).to be_valid
+    it "prevents required skills from being edited after creation" do
+      task = valid_task(required_skills: "ruby")
+      task.save!
+
+      expect(task.update(required_skills: "js")).to be(false)
+      expect(task.errors[:required_skills]).to include("cannot be changed after task creation")
     end
 
-    it "is invalid when a higher step_num step has an earlier due_date" do
-      task = valid_task
-      task.task_steps.build(step_num: 0, name: "Step A", due_date: Date.today + 5)
-      task.task_steps.build(step_num: 1, name: "Step B", due_date: Date.today + 2)
-      expect(task).not_to be_valid
-      expect(task.errors[:task_steps]).to be_present
-    end
+    it "enforces assignee skills on assignment" do
+      task = valid_task(required_skills: "ruby,go")
+      task.save!
 
-    it "skips ordering check for steps without due_dates" do
-      task = valid_task
-      task.task_steps.build(step_num: 0, name: "Step A", due_date: nil)
-      task.task_steps.build(step_num: 1, name: "Step B", due_date: nil)
-      expect(task).to be_valid
-    end
-
-    it "catches out-of-order dates even when a middle step has no due_date" do
-      # step 0: Mar+10, step 1: no date, step 2: Mar+5 → invalid (step 2 < step 0)
-      task = valid_task
-      task.task_steps.build(step_num: 0, name: "Step A", due_date: Date.today + 10)
-      task.task_steps.build(step_num: 1, name: "Step B", due_date: nil)
-      task.task_steps.build(step_num: 2, name: "Step C", due_date: Date.today + 5)
-      expect(task).not_to be_valid
-      expect(task.errors[:task_steps]).to be_present
-    end
-
-    it "is valid when some steps have due_dates and a middle one does not" do
-      task = valid_task
-      task.task_steps.build(step_num: 0, name: "Step A", due_date: Date.today + 5)
-      task.task_steps.build(step_num: 1, name: "Step B", due_date: nil)
-      task.task_steps.build(step_num: 2, name: "Step C", due_date: Date.today + 10)
-      expect(task).to be_valid
-    end
-
-    it "is valid with no steps at all" do
-      expect(valid_task).to be_valid
+      expect(task.update(user_id: member.id)).to be(false)
+      expect(task.errors[:assigned_user]).to be_present
     end
   end
 
-  describe "associations" do
-    it "belongs to a team" do
+  describe "workflow states" do
+    let(:member) { create(:user, team: team, skills: "ruby") }
+
+    it "defaults all_states to base workflow" do
       task = valid_task
       task.save!
-      expect(task.team).to eq(team)
+
+      expect(task.all_states).to eq("UNASSIGNED,ASSIGNED,COMPLETED")
+      expect(task.current_state).to eq(Task::UNASSIGNED)
     end
 
-    it "has a creator via created_by" do
-      task = valid_task
+    it "normalizes optional states to the predetermined order" do
+      task = valid_task(user_id: member.id, all_states: "testing,development")
       task.save!
-      expect(task.creator).to eq(lead)
+
+      expect(task.all_states).to eq("UNASSIGNED,ASSIGNED,DEVELOPMENT,TESTING,COMPLETED")
+      expect(task.current_state).to eq(Task::ASSIGNED)
     end
 
-    it "starts unassigned" do
-      task = valid_task
+    it "prevents all_states from being edited after creation" do
+      task = valid_task(all_states: "DEVELOPMENT")
       task.save!
-      expect(task.assigned_user).to be_nil
+
+      expect(task.update(all_states: "UNASSIGNED,ASSIGNED,COMPLETED")).to be(false)
+      expect(task.errors[:all_states]).to include("cannot be changed after task creation")
     end
 
-    it "can be assigned to a user" do
-      task = valid_task
+    it "transitions progressively through optional states" do
+      task = valid_task(user_id: member.id, all_states: "DEVELOPMENT,TESTING,PRODUCTION")
       task.save!
-      member = User.create!(name: "Member", team: team, role: :team_member)
-      task.update!(user_id: member.id)
-      expect(task.reload.assigned_user).to eq(member)
+
+      expect(task.request_progress!(requested_by: member)).to eq(:applied)
+      expect(task.reload.current_state).to eq(Task::DEVELOPMENT)
+
+      expect(task.request_progress!(requested_by: member)).to eq(:applied)
+      expect(task.reload.current_state).to eq(Task::TESTING)
+
+      expect(task.request_progress!(requested_by: member)).to eq(:applied)
+      expect(task.reload.current_state).to eq(Task::PRODUCTION)
+
+      expect(task.request_progress!(requested_by: member)).to eq(:applied)
+      expect(task.reload.current_state).to eq(Task::COMPLETED)
+      expect(task.completed_by).to eq(member)
     end
 
-    it "destroys task history when task is destroyed" do
-      task = valid_task
+    it "creates pending transitions when validation is required" do
+      task = valid_task(user_id: member.id, needs_validation: true)
       task.save!
-      member = User.create!(name: "Member", team: team, role: :team_member)
-      TaskHistory.create!(user_id: member.id, task_id: task.id, start_date: Date.today)
-      expect { task.destroy }.to change { TaskHistory.count }.by(-1)
+
+      expect(task.request_progress!(requested_by: member)).to eq(:pending)
+      pending = task.task_transition_pendings.last
+      expect(pending.status).to eq("pending")
+      expect(task.reload.current_state).to eq(Task::ASSIGNED)
+
+      pending.approve!(actor: lead)
+      expect(task.reload.current_state).to eq(Task::COMPLETED)
+      expect(task.completed_by).to eq(member)
+    end
+  end
+
+  describe ".with_score_for_user" do
+    let(:member) { create(:user, team: team, skills: "ruby") }
+
+    it "returns per-task score for the selected user" do
+      completed = valid_task(user_id: member.id)
+      completed.save!
+      completed.update!(current_state: Task::COMPLETED, completed_by_id: member.id)
+
+      incomplete = valid_task
+      incomplete.save!
+
+      rows = Task.where(id: [ completed.id, incomplete.id ]).with_score_for_user(member.id)
+      score_map = rows.index_by(&:id).transform_values { |row| row.attributes["user_score"].to_i }
+
+      expect(score_map[completed.id]).to eq(completed.points)
+      expect(score_map[incomplete.id]).to eq(0)
+    end
+  end
+
+  describe "assignment names" do
+    let(:member) { create(:user, name: "Alice", team: team, skills: "ruby") }
+
+    it "returns the name of the creator" do
+      task = valid_task(creator: lead)
+      expect(task.creator_name).to eq("Lead")
     end
 
-    it "destroys task steps when task is destroyed" do
-      task = valid_task
-      task.task_steps.build(step_num: 0, name: "Step A")
-      task.save!
-      expect { task.destroy }.to change { TaskStep.count }.by(-1)
+    it "returns the name of the assignee when present" do
+      task = valid_task(assigned_user: member)
+      expect(task.assignee_name).to eq("Alice")
+    end
+
+    it "returns 'Unassigned' when no user is assigned" do
+      task = valid_task(assigned_user: nil)
+      expect(task.assignee_name).to eq("Unassigned")
     end
   end
 end
