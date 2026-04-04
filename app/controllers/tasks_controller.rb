@@ -203,4 +203,24 @@ class TasksController < ApplicationController
 
     User.find_by(id: params[:user_id])
   end
+
+
+  #ai
+  def ai_generate
+    prompt=params[:prompt].to_s.strip
+
+    if prompt.length<5
+      render json: {error: "Prompt too short"}, status: :unprocessable_entity
+      return
+    end
+
+    result=Ai.generate_task(prompt)
+
+    if result[:error]||result["error"]
+      render json:result, status: :bad_request
+    else
+      render json: result, status: :ok
+    end
+  end
+
 end
