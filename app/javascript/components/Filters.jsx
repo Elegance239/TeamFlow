@@ -65,6 +65,33 @@ export default function Filters( { user, tasks, teamMembers, availableAssignees,
       .map(t => t.creator_name || `User ${t.created_by}`) 
   )];
 
+  const seenFiltersRef = React.useRef({ teamMembers: new Set(), assignees: new Set(), skills: new Set() });
+
+  React.useEffect(() => {
+    const checkAndAdd = (category, currentItems) => {
+      const seen = seenFiltersRef.current[category];
+      const selected = selectedFilters[category] || [];
+      const newSelected = [...selected];
+      let updatedCat = false;
+
+      currentItems.forEach(item => {
+        if (!seen.has(item)) {
+          seen.add(item);
+          newSelected.push(item);
+          updatedCat = true;
+        }
+      });
+
+      if (updatedCat) {
+        onFilterChange(category, newSelected);
+      }
+    };
+
+    checkAndAdd('teamMembers', assignedToNames);
+    checkAndAdd('assignees', assignedByNames);
+    checkAndAdd('skills', availableSkills);
+  }, [assignedToNames.join(','), assignedByNames.join(','), availableSkills.join(',')]);
+
   const handleToggle = (category, value) => {
     const current = selectedFilters[category] || [];
     const newFilters = current.includes(value)
