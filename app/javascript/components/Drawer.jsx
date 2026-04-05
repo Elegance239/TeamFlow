@@ -152,11 +152,6 @@ export default function PersistentDrawerLeft( { auth, setAuth, onNavigate, onReq
       onClick: onRequestOpenCreateTask,
     },
     {
-      text: "Delete Task",
-      icon: <DeleteIcon />,
-      onClick: () => {},
-    },
-    {
       text: "Validate Tasks",
       icon: <CheckIcon />,
       onClick: () => {onNavigate('validateTasks')}
@@ -268,13 +263,8 @@ export default function PersistentDrawerLeft( { auth, setAuth, onNavigate, onReq
         <Divider />
         <List>
         <ListItem disablePadding>
-            <ListItemButton onClick={() => { onNavigate('calendar')}}>
-            <ListItemText primary="Calendar" />
-            </ListItemButton>
-        </ListItem>
-        <ListItem disablePadding>
           <ListItemButton onClick={() => { onNavigate('taskCalendar')}}>
-          <ListItemText primary="Task Self-Election" />
+          <ListItemText primary="Calendar" />
           </ListItemButton>
         </ListItem>
         <ListItem disablePadding>
