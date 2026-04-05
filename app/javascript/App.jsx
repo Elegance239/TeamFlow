@@ -77,7 +77,7 @@ export default function App() {
     //             setOpenCreateTaskSignal={setOpenCreateTaskSignal} 
     //             selectedFilters={selectedFilters} 
     //           />,
-    taskCalendar: <CalendarForTasks />,
+    taskCalendar: <CalendarForTasks openCreateTaskSignal={openCreateTaskSignal} setOpenCreateTaskSignal={setOpenCreateTaskSignal} />,
     validateTasks: <ValidateTasks />,
     settings: <Settings user={user} setUser={setUser} setAuth={setAuth} />
   }
