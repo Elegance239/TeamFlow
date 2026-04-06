@@ -66,18 +66,25 @@ export default function App() {
 
   const handleRequestOpenCreateTask = () => {
     setOpenCreateTaskSignal(true);
-    setCurrentPage('calendar');
+    setCurrentPage('taskCalendar');
   };
 
   // Only logged in users can view
   const protectedPages = {
-    calendar: <Calendar 
-                tasks={tasks}
-                openCreateTaskSignal={openCreateTaskSignal} 
-                setOpenCreateTaskSignal={setOpenCreateTaskSignal} 
-                selectedFilters={selectedFilters} 
-              />,
-    taskCalendar: <CalendarForTasks />,
+    // calendar: <Calendar 
+    //             tasks={tasks}
+    //             openCreateTaskSignal={openCreateTaskSignal} 
+    //             setOpenCreateTaskSignal={setOpenCreateTaskSignal} 
+    //             selectedFilters={selectedFilters} 
+    //           />,
+    taskCalendar: <CalendarForTasks 
+      openCreateTaskSignal={openCreateTaskSignal} 
+      setOpenCreateTaskSignal={setOpenCreateTaskSignal} 
+      tasks={tasks}
+      setTasks={setTasks}
+      selectedFilters={selectedFilters}
+      setSelectedFilters={setSelectedFilters}
+    />,
     validateTasks: <ValidateTasks />,
     settings: <Settings user={user} setUser={setUser} setAuth={setAuth} />
   }
@@ -87,7 +94,7 @@ export default function App() {
     if (storedUser) {
       setUser(JSON.parse(storedUser));
       setAuth(true);
-      setCurrentPage('calendar');
+      setCurrentPage('taskCalendar');
     } else {
       setAuth(false);
       setCurrentPage('signin');

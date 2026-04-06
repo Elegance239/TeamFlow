@@ -104,9 +104,14 @@ function canProgressTask(task, currentUser) {
   return task.user_id === currentUser.id && task.current_state !== "COMPLETED";
 }
 
-export default function CalendarForTasks() {
+export default function CalendarForTasks({ 
+  openCreateTaskSignal, 
+  setOpenCreateTaskSignal,
+  tasks = [],
+  setTasks,
+  selectedFilters = {},
+}) {
   const { enqueueSnackbar } = useSnackbar();
-  const [tasks, setTasks] = useState([]);
   const [currentUser, setCurrentUser] = useState(getStoredUser());
   const [isLoading, setIsLoading] = useState(true);
   const [noTeam, setNoTeam] = useState(false);
@@ -114,6 +119,13 @@ export default function CalendarForTasks() {
   const [isCreatingTeam, setIsCreatingTeam] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState(null);
   const [isCreationOpen, setIsCreationOpen] = useState(false);
+
+  useEffect(() => {
+    if (openCreateTaskSignal) {
+      setIsCreationOpen(true);
+      if (setOpenCreateTaskSignal) setOpenCreateTaskSignal(false);
+    }
+  }, [openCreateTaskSignal, setOpenCreateTaskSignal]);
 
   const fetchTasks = async () => {
     const response = await fetch("/tasks", {
@@ -259,9 +271,26 @@ export default function CalendarForTasks() {
     [selectedTaskId, tasks],
   );
 
-  const calendarEvents = useMemo(
-    () =>
-      [ ...tasks ]
+  const calendarEvents = useMemo(() => {
+    const isLead = currentUser?.role === "team_lead" || Number(currentUser?.role) === 0;
+    const isMember = currentUser?.role === "team_member" || Number(currentUser?.role) === 1;
+
+    return [...tasks]
+      .filter(t => {
+        // "Assigned To" filter applies when currentUser is lead, and the task was created by them.
+        const assigneeLabel = t.assignee_name || `User ${t.user_id}`;
+        const passTeamMembers = !isLead || (t.created_by !== currentUser?.id) || (selectedFilters?.teamMembers || []).includes(assigneeLabel);
+
+        // "Assigned By" filter applies when currentUser is member, and the task is assigned to them.
+        const creatorLabel = t.creator_name || `User ${t.created_by}`;
+        const passAssignees = !isMember || (t.user_id !== currentUser?.id) || (selectedFilters?.assignees || []).includes(creatorLabel);
+
+        // Skills filter
+        const taskSkills = t.required_skills ? t.required_skills.split(',').map(s => s.trim()).filter(Boolean) : [];
+        const passSkills = taskSkills.length === 0 || taskSkills.some(s => (selectedFilters?.skills || []).includes(s));
+
+        return passTeamMembers && passAssignees && passSkills;
+      })
       .sort((a, b) => {
         const viewerId = currentUser?.id ?? -1;
         const aCategory = taskVisualCategory(a, viewerId);
@@ -288,9 +317,8 @@ export default function CalendarForTasks() {
             all_day: true,
           },
         };
-      }),
-    [currentUser, tasks],
-  );
+      });
+  }, [currentUser, tasks, selectedFilters]);
 
   const legendItems = [
     { label: "Owned by me", color: COLORS.mine },
