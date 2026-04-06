@@ -1,0 +1,10 @@
+Hi <%= @assignee.name %>,
+
+A new task has been assigned to you by <%= @creator.name %>.
+
+Task: <%= @task.description %>
+Due Date: <%= @task.due_date.strftime("%B %d, %Y") %>
+Points: <%= @task.points %>
+Required Skills: <%= @task.required_skills_list.join(", ") %>
+
+Please log in to TeamFlow to view and manage your tasks.

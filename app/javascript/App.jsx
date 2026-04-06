@@ -48,11 +48,10 @@ export default function App() {
       .then(res => res.json())
       .then(data => setTasks(Array.isArray(data) ? data : []));
 
-    // Fetch full member objects (ID and Name)
     if (user.role === 'team_lead' || Number(user.role) === 0) {
       fetch(`/teams/${user.team_id}/members`, { credentials: 'include' })
         .then(res => res.json())
-        .then(data => Array.isArray(data) && setTeamMembers(data));
+        .then(data => Array.isArray(data) && setTeamMembers(data)); // Keep full objects
     } else {
       fetch(`/teams/${user.team_id}`, { credentials: 'include' })
         .then(res => res.json())
@@ -73,18 +72,22 @@ export default function App() {
 
   // Only logged in users can view
   const protectedPages = {
-    calendar: <Calendar 
-                tasks={tasks}
-                openCreateTaskSignal={openCreateTaskSignal} 
-                setOpenCreateTaskSignal={setOpenCreateTaskSignal} 
-                selectedFilters={selectedFilters} 
-              />,
-    taskCalendar: <CalendarForTasks
-                    isCreationOpen={openCreateTaskSignal} 
-                    setIsCreationOpen={setOpenCreateTaskSignal} 
-                    />,
+    // calendar: <Calendar 
+    //             tasks={tasks}
+    //             openCreateTaskSignal={openCreateTaskSignal} 
+    //             setOpenCreateTaskSignal={setOpenCreateTaskSignal} 
+    //             selectedFilters={selectedFilters} 
+    //           />,
+    taskCalendar: <CalendarForTasks 
+      openCreateTaskSignal={openCreateTaskSignal} 
+      setOpenCreateTaskSignal={setOpenCreateTaskSignal} 
+      tasks={tasks}
+      setTasks={setTasks}
+      selectedFilters={selectedFilters}
+      setSelectedFilters={setSelectedFilters}
+    />,
     validateTasks: <ValidateTasks />,
-    settings: <Settings />,
+    settings: <Settings user={user} setUser={setUser} setAuth={setAuth} />,
     dashboard: <Dashboard />
   }
 
