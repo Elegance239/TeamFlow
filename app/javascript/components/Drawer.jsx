@@ -25,6 +25,7 @@ import MenuItem from '@mui/material/MenuItem';
 import Menu from '@mui/material/Menu';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import DeleteIcon from '@mui/icons-material/Delete';
+import DashboardIcon from '@mui/icons-material/Dashboard';
 import Filters from './Filters';
 
 const drawerWidth = 240;
@@ -155,6 +156,11 @@ export default function PersistentDrawerLeft( { auth, setAuth, onNavigate, onReq
       text: "Validate Tasks",
       icon: <CheckIcon />,
       onClick: () => {onNavigate('validateTasks')}
+    },
+    {
+      text: "Dashboard",
+      icon: <DashboardIcon />,
+      onClick: () => {onNavigate('dashboard')}
     }
   ];
 
@@ -185,7 +191,7 @@ export default function PersistentDrawerLeft( { auth, setAuth, onNavigate, onReq
           >
             <MenuIcon />
           </IconButton>
-          <Link component="button" variant="h6" underline='none' color='inherit' sx={{ alignSelf: 'center' }} onClick={() => onNavigate('calendar')}>
+          <Link component="button" variant="h6" underline='none' color='inherit' sx={{ alignSelf: 'center' }} onClick={() => onNavigate('taskCalendar')}>
             TeamFlow
           </Link>
           <Box sx={{ flexGrow: 1 }} />

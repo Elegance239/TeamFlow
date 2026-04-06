@@ -53,7 +53,7 @@ function stateChipSx(state) {
 
 export default function TaskCreationDialog({ open, onClose, currentUser, onCreate }) {
   const [description, setDescription] = useState("");
-  const [dueDate, setDueDate] = useState("");
+  const [dueDate, setDueDate] = useState(new Date().toISOString().split("T")[0]);
   const [points, setPoints] = useState(1);
   const [requiredSkills, setRequiredSkills] = useState("");
   const [needsValidation, setNeedsValidation] = useState(false);
@@ -85,7 +85,7 @@ export default function TaskCreationDialog({ open, onClose, currentUser, onCreat
 
   const resetForm = () => {
     setDescription("");
-    setDueDate("");
+    setDueDate(new Date().toISOString().split("T")[0]);
     setPoints(1);
     setRequiredSkills("");
     setNeedsValidation(false);
@@ -116,6 +116,15 @@ export default function TaskCreationDialog({ open, onClose, currentUser, onCreat
     if (created) {
       handleClose();
     }
+  };
+
+  const handleStatesSelectionChange = (event) => {
+    const {
+      target: { value },
+    } = event;
+    const REQUIRED_STATES = ["UNASSIGNED", "ASSIGNED", "COMPLETED"];
+    const selected = typeof value === "string" ? value.split(",") : value;
+    setAllStates(Array.from(new Set([...REQUIRED_STATES, ...selected])));
   };
 
   return (

@@ -10,6 +10,7 @@ import Settings from './components/Settings';
 import SignIn from './components/SignIn'
 import Drawer from './components/Drawer';
 import SignUp from './components/SignUp';
+import Dashboard from './components/Dashboard';
 import { SnackbarProvider } from 'notistack';
 import  { ThemeProvider, createTheme } from '@mui/material/styles';
 import './App.css';
@@ -86,7 +87,8 @@ export default function App() {
       setSelectedFilters={setSelectedFilters}
     />,
     validateTasks: <ValidateTasks />,
-    settings: <Settings user={user} setUser={setUser} setAuth={setAuth} />
+    settings: <Settings user={user} setUser={setUser} setAuth={setAuth} />,
+    dashboard: <Dashboard />
   }
 
   useEffect(() => {
@@ -130,14 +132,14 @@ export default function App() {
           currentPage === "signup" ? (
             <SignUp onNavigate={setCurrentPage} />
           ) : (
-            <SignIn onNavigate= {setCurrentPage} onSignedIn={(userData) => {setAuth(true); setUser(userData); setCurrentPage('calendar')}} />
+            <SignIn onNavigate= {setCurrentPage} onSignedIn={(userData) => {setAuth(true); setUser(userData); setCurrentPage('taskCalendar')}} />
           )
         )
           
         }
         {/*
         <div>
-          {pages[currentPage]}
+          <Dashboard />
         </div>
           */}
         
