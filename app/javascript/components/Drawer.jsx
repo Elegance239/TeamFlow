@@ -270,7 +270,7 @@ export default function PersistentDrawerLeft( { auth, setAuth, onNavigate, onReq
         <List>
         <ListItem disablePadding>
           <ListItemButton onClick={() => { onNavigate('taskCalendar')}}>
-          <ListItemText primary="Task Self-Election" />
+          <ListItemText primary="Calendar" />
           </ListItemButton>
         </ListItem>
         <ListItem disablePadding>

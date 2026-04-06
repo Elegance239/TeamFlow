@@ -2,18 +2,21 @@ import React, { useMemo, useState } from "react";
 import {
   Box,
   Button,
+  Chip,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControl,
   FormControlLabel,
   IconButton,
+  InputLabel,
+  MenuItem,
+  Select,
   Stack,
   Switch,
   TextField,
   Typography,
-  Chip,
-  MenuItem,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 
@@ -27,9 +30,26 @@ function normalizeSkills(raw) {
     .join(",");
 }
 
-const EXTRASTATES = [
- "DEVELOPMENT", "TESTING", "PRODUCTION"
-];
+const STATE_COLORS = {
+  UNASSIGNED: "#757575",
+  ASSIGNED: "#1e88e5",
+  DEVELOPMENT: "#fb8c00",
+  TESTING: "#8e24aa",
+  PRODUCTION: "#00897b",
+  COMPLETED: "#2e7d32",
+};
+
+const FIXED_STATES = ["UNASSIGNED", "ASSIGNED", "COMPLETED"];
+const OPTIONAL_STATES = ["DEVELOPMENT", "TESTING", "PRODUCTION"];
+const STANDARD_ORDER = ["UNASSIGNED", "ASSIGNED", "DEVELOPMENT", "TESTING", "PRODUCTION", "COMPLETED"];
+
+function stateChipSx(state) {
+  return {
+    bgcolor: STATE_COLORS[state] || "#9e9e9e",
+    color: "#fff",
+    fontWeight: 700,
+  };
+}
 
 export default function TaskCreationDialog({ open, onClose, currentUser, onCreate }) {
   const [description, setDescription] = useState("");
@@ -37,7 +57,7 @@ export default function TaskCreationDialog({ open, onClose, currentUser, onCreat
   const [points, setPoints] = useState(1);
   const [requiredSkills, setRequiredSkills] = useState("");
   const [needsValidation, setNeedsValidation] = useState(false);
-  const [allStates, setAllStates] = useState(["UNASSIGNED", "ASSIGNED", "COMPLETED"]);
+  const [allStates, setAllStates] = useState(FIXED_STATES);
   const [userId, setUserId] = useState("");
 
   const isTeamLead = currentUser.role === 0 || currentUser.role === "team_lead";
@@ -51,13 +71,25 @@ export default function TaskCreationDialog({ open, onClose, currentUser, onCreat
 
   const canCreate = isTeamLead && Boolean(dueDate) && parsedPoints !== null;
 
+  const handleAddState = (stateToAdd) => {
+    const newStates = [...allStates, stateToAdd];
+    newStates.sort((a, b) => STANDARD_ORDER.indexOf(a) - STANDARD_ORDER.indexOf(b));
+    setAllStates(newStates);
+  };
+
+  const handleRemoveState = (stateToRemove) => {
+    setAllStates(allStates.filter((s) => s !== stateToRemove));
+  };
+
+  const availableStatesToAdd = OPTIONAL_STATES.filter(s => !allStates.includes(s));
+
   const resetForm = () => {
     setDescription("");
     setDueDate(new Date().toISOString().split("T")[0]);
     setPoints(1);
     setRequiredSkills("");
     setNeedsValidation(false);
-    setAllStates(["UNASSIGNED", "ASSIGNED", "COMPLETED"]);
+    setAllStates(FIXED_STATES);
     setUserId("");
   };
 
@@ -76,7 +108,7 @@ export default function TaskCreationDialog({ open, onClose, currentUser, onCreat
       points: parsedPoints,
       required_skills: normalizeSkills(requiredSkills),
       needs_validation: needsValidation,
-      all_states: allStates.length > 0 ? allStates.join(",") : "UNASSIGNED,ASSIGNED,COMPLETED",
+      all_states: allStates.join(","),
       user_id: Number.isFinite(parsedUserId) ? parsedUserId : null,
     };
 
@@ -151,29 +183,39 @@ export default function TaskCreationDialog({ open, onClose, currentUser, onCreat
             onChange={(e) => setRequiredSkills(e.target.value)}
             fullWidth
           />
-          <TextField
-            label="all_states"
-            select
-            fullWidth
-            SelectProps={{
-              multiple: true,
-              value: allStates,
-              onChange: handleStatesSelectionChange,
-              renderValue: (selected) => (
-                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                  {(selected||[]).map((option) => (
-                    <Chip key={option} label={option} />
-                  ))}
-                </Box>
-              ),
-            }}
-          >
-            {EXTRASTATES.map((option) => (
-              <MenuItem key={option} value={option}>
-                {option}
-              </MenuItem>
-            ))}
-          </TextField>
+          
+          <Box sx={{ p: 1.5, border: "1px solid #dcdcdc", borderRadius: 1 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+              Workflow States
+            </Typography>
+            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mb: 1.5 }}>
+              {allStates.map((state) => (
+                <Chip
+                  key={state}
+                  label={state}
+                  size="small"
+                  sx={{ ...stateChipSx(state), mb: 1 }}
+                  onDelete={FIXED_STATES.includes(state) ? undefined : () => handleRemoveState(state)}
+                />
+              ))}
+            </Stack>
+            <FormControl fullWidth size="small">
+              <InputLabel>Add Workflow State</InputLabel>
+              <Select
+                label="Add Workflow State"
+                value=""
+                onChange={(e) => handleAddState(e.target.value)}
+                disabled={availableStatesToAdd.length === 0}
+              >
+                {availableStatesToAdd.map((state) => (
+                  <MenuItem key={state} value={state}>
+                    {state}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
+
           <TextField
             label="user_id (optional assignee)"
             type="number"

@@ -5,7 +5,12 @@ Rails.application.routes.draw do
   # devise_for :users, controllers: { sessions: "users/sessions" },
   # https://www.rubydoc.info/github/plataformatec/devise/ActionDispatch%2FRouting%2FMapper:devise_for
 
+
   devise_for :users, controllers: { sessions: "users/sessions", registrations: "users/registrations", passwords: "users/passwords" }
+
+  devise_scope :user do
+    patch "users/password/change", to: "users/passwords#change"
+  end
 
   resources :users, only: [ :show, :update ]
 
@@ -35,4 +40,6 @@ Rails.application.routes.draw do
   get "up" => "rails/health#show", as: :rails_health_check
 
   root "welcome#index"
+
+  mount LetterOpenerWeb::Engine, at: "/letter_opener" if Rails.env.development?
 end
