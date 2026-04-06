@@ -29,9 +29,12 @@ RSpec.describe TasksController, type: :controller do
             expect(JSON.parse(response.body)["title"]).to eq("AI Task")
         end
 
+        end
+
         context 'not logged in' do
             it 'redirects to login' do
-                post :ai_generate, params {prompt:"Build login page"}
+                post :ai_generate, params: {prompt:"Build login page"}
+            end
         end
     end
 end
