@@ -4,10 +4,13 @@ RSpec.describe TasksController, type: :controller do
 
     include Devise::Test::ControllerHelpers
     
+    let(:team) { Team.create!(name: "Test Team") }
+
     let(:user) { User.create!(
         email: "a@cuhk.com",
         password:"password1",
         name: "A",
+        team: team
         ) }
 
     describe 'POST #ai_generate' do

@@ -92,3 +92,25 @@ Rules:
 - Optional states are `DEVELOPMENT`, `TESTING`, `PRODUCTION` and are selected at task creation time.
 - Optional states are normalized to the predetermined order, regardless of input order.
 - Progression must be sequential; skipping states is not allowed.
+
+### AI Task Assistance Setup
+Our platform includes an AI-powered task generator, which defaults to **Gemini 2.5 Flash**. To enable this feature, follow these steps:
+
+1. **Get an API Key**  
+   Visit [Google AI Studio](https://aistudio.google.com/app/apikey) and create a free API key.
+
+2. **Configure Environment**  
+   Copy the template to create your own environment file:
+   ```bash
+   cp .env.example .env
+   ```
+
+3. **VPN Requirement**  
+   If you are accessing from Hong Kong, the Google API will return a 403/404 error.
+   Please use a VPN and ensure your terminal traffic goes through the proxy.
+
+4. **Test the Feature**  
+   Run the following command to test:
+   ```bash
+   bundle exec rails runner "puts Ai.generate_task('Build a login page').inspect"
+   ```

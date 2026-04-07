@@ -187,24 +187,6 @@ class TasksController < ApplicationController
     }
   end
 
-  private
-
-  def task_create_params
-    params.permit(:description, :due_date, :points, :user_id, :required_skills, :needs_validation, :all_states)
-  end
-
-  def task_update_params
-    params.permit(:description, :points)
-  end
-
-  def determine_assignee
-    return current_user unless params[:user_id].present?
-    return nil unless current_user.team_lead?
-
-    User.find_by(id: params[:user_id])
-  end
-
-
   #ai
   def ai_generate
     prompt=params[:prompt].to_s.strip
@@ -222,5 +204,23 @@ class TasksController < ApplicationController
       render json: result, status: :ok
     end
   end
+
+  private
+
+  def task_create_params
+    params.permit(:description, :due_date, :points, :user_id, :required_skills, :needs_validation, :all_states)
+  end
+
+  def task_update_params
+    params.permit(:description, :points)
+  end
+
+  def determine_assignee
+    return current_user unless params[:user_id].present?
+    return nil unless current_user.team_lead?
+
+    User.find_by(id: params[:user_id])
+  end
+
 
 end

@@ -29,10 +29,8 @@ RSpec.describe Ai do
         #api failure
 
         it 'returns error when API returns 400/500' do
-            fake_response=instance_double(Net::HTTPBadRequest, code:"400"
-            ,body: "Bad Request")
-            allow(fake_response).to
-            receive(:is_a?).with(Net::HTTPSuccess).and_return(false)
+            fake_response=instance_double(Net::HTTPBadRequest, code:"400",body: "Bad Request")
+            allow(fake_response).to receive(:is_a?).with(Net::HTTPSuccess).and_return(false)
 
             allow(Net::HTTP).to receive(:post).and_return(fake_response)
 

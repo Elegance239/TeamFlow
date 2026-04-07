@@ -1,19 +1,10 @@
-require 'net/http'
-require 'uri'
-require 'json'
+require "net/http"
+require "uri"
+require "json"
 
-class Ai
-    def self.generate_task(prompt)
-        MODEL="gemini-1.5-flash"
-        api_key=ENV['API_KEY']
-        API_URL="https://generativelanguage.googleapis.com/v1beta/models/#{MODEL}:generateContent?key=#{api_key}"
-
-        
-        if api_key.nil? || api_key.empty?
-            return{error: "Missing API Key"}
-          end
-        
-        SYSTEM_PROMPT="You are an expert project manager.Your job:
+MODEL="gemini-2.5-flash"
+SYSTEM_PROMPT=<<~PROMPT
+    You are an expert project manager.Your job:
         - Break down a user request into actionable tasks
         - Ensure tasks are realistic and prioritized
         - Return ONLY valid JSON
@@ -22,37 +13,51 @@ class Ai
         - title (short)
          - description (clear)
          - points (1-100)
-        - due_days_from_now 
-Avoid vague tasks."
+        - due_days_from_now#{' '}
+Avoid vague tasks.
+PROMPT
 
+class Ai
     def self.generate_task(prompt)
-        api_key = ENV['API_KEY']
-        
+        api_key = ENV["GEMINI_API_KEY"]
+
         if api_key.nil? || api_key.empty?
-            return {error: "Missing API Key"}
+            return { error: "Missing API Key" }
         end
 
-        api_url = "https://generativelanguage.googleapis.com/v1beta/models/#{MODEL}:generateContent?key=#{api_key}"
+        api_url = "https://generativelanguage.googleapis.com/v1/models/#{MODEL}:generateContent"
 
         uri = URI(api_url)
+        uri.query = URI.encode_www_form({ key: api_key })
+
         payload = {
-            contents: [{parts: [{text: "#{SYSTEM_PROMPT} for: #{prompt}"}]}],
-            generationConfig: {responseMimeType: "application/json"}
+            contents: [ { parts: [ { text: SYSTEM_PROMPT.gsub("{{PROMPT}}", prompt)} ] } ]
         }.to_json
 
-        begin 
+        begin
             response = Net::HTTP.post(uri, payload,
-            {"Content-Type" => "application/json"})
+            { "Content-Type" => "application/json" })
 
             if response.is_a?(Net::HTTPSuccess)
                 raw_data = JSON.parse(response.body)
                 ai_text = raw_data.dig("candidates", 0, "content", "parts", 0, "text")
-                JSON.parse(ai_text)
+            
+                clean_json = ai_text.to_s.gsub(/```json|```/, '').strip
+              
+                begin
+                    JSON.parse(clean_json)
+                rescue
+                    { error: "AI returned invalid JSON", raw: ai_text }
+                end
             else
-                {error: "API Request Failed"}
+            return{ 
+                error: "API Request Failed", 
+                status_code: response.code, 
+                google_response: (JSON.parse(response.body) rescue response.body) 
+            }
             end
         rescue => e
-            {error: "system error: #{e.message}"}
+            { error: "system error: #{e.message}" }
         end
     end
 end
