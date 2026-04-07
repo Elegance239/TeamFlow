@@ -28,3 +28,7 @@ end
 Then('I should see {string} as my role') do |role_text|
   expect(page).to have_content(role_text)
 end
+
+Given('a team exists named {string}') do |team_name|
+  Team.find_or_create_by!(name: team_name)
+end
