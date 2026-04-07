@@ -46,6 +46,7 @@ export default function TaskDialog({
   canProgress,
   onTake,
   onProgress,
+  onUnclaim,
   onConfirmPatch,
   onDelete,
 }) {
@@ -272,6 +273,21 @@ export default function TaskDialog({
           }}
         >
           Take
+        </Button>
+
+        <Button
+          variant="contained"
+          onClick={onUnclaim}
+          disabled={!canProgress || isPatching}
+          sx={{
+            bgcolor: canProgress && !isPatching ? "#ed6c02" : "#9e9e9e",
+            color: "#fff",
+            "&:hover": {
+              bgcolor: canProgress && !isPatching ? "#e65100" : "#9e9e9e",
+            },
+          }}
+        >
+          Unclaim Task
         </Button>
 
         <Button

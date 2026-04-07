@@ -23,3 +23,12 @@ Feature: Task Management
     When I click on the task with description "Finish UI Design"
     And I click the "PROGRESS" button
     Then I should see the text "Task progressed successfully"
+  
+  Scenario: User unclaims a task
+    Given I am logged in as a normal team member
+    And a task exists with description "Fix bug" and state "ASSIGNED" assigned to me
+    When I click on the task with description "Fix bug"
+    And I click the "Unclaim Task" button
+    Then I should see the text "Task unclaimed successfully"
+    And the task "Fix bug" should be in the "Unassigned" section
+
