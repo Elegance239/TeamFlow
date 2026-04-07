@@ -156,11 +156,6 @@ export default function PersistentDrawerLeft( { auth, setAuth, onNavigate, onReq
       text: "Validate Tasks",
       icon: <CheckIcon />,
       onClick: () => {onNavigate('validateTasks')}
-    },
-    {
-      text: "Dashboard",
-      icon: <DashboardIcon />,
-      onClick: () => {onNavigate('dashboard')}
     }
   ];
 
@@ -269,8 +264,15 @@ export default function PersistentDrawerLeft( { auth, setAuth, onNavigate, onReq
         <Divider />
         <List>
         <ListItem disablePadding>
+          <ListItemButton onClick={() => { onNavigate('dashboard')}}>
+            <ListItemIcon><DashboardIcon /></ListItemIcon>
+            <ListItemText primary="Dashboard" />
+          </ListItemButton>
+        </ListItem>
+        <ListItem disablePadding>
           <ListItemButton onClick={() => { onNavigate('taskCalendar')}}>
-          <ListItemText primary="Calendar" />
+            <ListItemIcon><AssignmentIcon /></ListItemIcon>
+            <ListItemText primary="Calendar" />
           </ListItemButton>
         </ListItem>
         <ListItem disablePadding>

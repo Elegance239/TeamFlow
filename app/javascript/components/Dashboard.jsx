@@ -149,6 +149,7 @@ function DashboardSection({ title, color, tasks = [], sx = {}, onTaskClick }) {
             {tasks.map((task) => (
               <TaskCard
                 key={task.id}
+                className="task-card"
                 color={color}
                 onClick={() => onTaskClick?.(task)}
                 sx={{
@@ -660,6 +661,9 @@ export default function Dashboard() {
   return (
     <>
       {isLoading && <LinearProgress sx={{ mb: 1 }} />}
+      <Typography variant="h4" id="dashboard-title" sx={{ fontWeight: 700, p: 2, pb: 0 }}>
+        Dashboard
+      </Typography>
       <Grid
         container
         spacing={2}

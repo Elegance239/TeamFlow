@@ -261,6 +261,7 @@ export default function TaskDialog({
         )}
 
         <Button
+          id="take-button"
           variant="contained"
           onClick={onTake}
           disabled={!canTake || isPatching}
@@ -275,22 +276,23 @@ export default function TaskDialog({
           Take
         </Button>
 
-        <Button
-          variant="contained"
-          onClick={onUnclaim}
-          disabled={!canProgress || isPatching}
-          sx={{
-            bgcolor: canProgress && !isPatching ? "#ed6c02" : "#9e9e9e",
-            color: "#fff",
-            "&:hover": {
-              bgcolor: canProgress && !isPatching ? "#e65100" : "#9e9e9e",
-            },
-          }}
-        >
-          Unclaim Task
-        </Button>
+        {!isPatching && task && Number(task.user_id) === Number(currentUser?.id) && task.current_state !== "COMPLETED" && (
+          <Button
+            id="unclaim-task-button"
+            variant="contained"
+            onClick={onUnclaim}
+            sx={{
+              bgcolor: "#757575",
+              color: "#fff",
+              "&:hover": { bgcolor: "#616161" },
+            }}
+          >
+            Unclaim Task
+          </Button>
+        )}
 
         <Button
+          id="progress-button"
           variant="contained"
           onClick={onProgress}
           disabled={!canProgress || isPatching || !nextState}

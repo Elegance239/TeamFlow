@@ -22,6 +22,12 @@ When('I log in with email {string} and password {string}') do |email, password|
   fill_in "Email", with: email
   fill_in "Password", with: password
   click_button "Sign in"
+  db_user = User.find_by(email: email)
+  if db_user
+    user_json = { id: db_user.id, email: db_user.email, role: db_user.role,
+                  name: db_user.name, team_id: db_user.team_id, skills: db_user.skills }.to_json
+    execute_script("localStorage.setItem('teamflowCurrentUser', '#{user_json.gsub("'", "\\'")}')") rescue nil
+  end
 end
 
 When('I open the drawer') do

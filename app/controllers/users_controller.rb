@@ -9,6 +9,11 @@ class UsersController < ApplicationController
     render json: user.as_json(include: :team).merge(overall_score: user.overall_score)
   end
 
+  # GET /users/me
+  def me
+    render json: current_user.as_json(include: :team).merge(overall_score: current_user.overall_score)
+  end
+
   # PATCH /users/:id
   # Allows a user to update their own name, email, skills, password
   def update

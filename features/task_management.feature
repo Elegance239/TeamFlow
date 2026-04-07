@@ -10,12 +10,14 @@ Feature: Task Management
     When I click the "Create Task" link
     And I fill in "description" with "Finish UI Design"
     And I fill in "points" with "5"
+    And I fill in "due_date" with "2026-05-08"
     And I click the "CONFIRM" button
     Then I should see the text "Task created successfully"
     And I log out
 
-    #users
+    Given a user exists with email "member@example.com" and password "password123"
     When I log in with email "member@example.com" and password "password123"
+    And I refresh the page
     And I click on the task with description "Finish UI Design"
     And I click the "Take" button
     Then I should see the text "Task taken successfully"
@@ -27,8 +29,8 @@ Feature: Task Management
   Scenario: User unclaims a task
     Given I am logged in as a normal team member
     And a task exists with description "Fix bug" and state "ASSIGNED" assigned to me
+    And I refresh the page
     When I click on the task with description "Fix bug"
     And I click the "Unclaim Task" button
     Then I should see the text "Task unclaimed successfully"
     And the task "Fix bug" should be in the "Unassigned" section
-
