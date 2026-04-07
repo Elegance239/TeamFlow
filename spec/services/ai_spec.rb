@@ -8,7 +8,7 @@ RSpec.describe Ai do
 
         before do
             allow(ENV).to receive(:[]).and_call_original
-            allow(ENV).to receive(:[]).with('API_KEY').and_return(api_key)
+            allow(ENV).to receive(:[]).with('GEMINI_API_KEY').and_return(api_key)
     end
 
         it 'returns a task  when API succeeds' do
@@ -39,8 +39,8 @@ RSpec.describe Ai do
         end
 
         #api not set
-        it 'returns error if API_KEY is not set' do
-            allow(ENV).to receive(:[]).with('API_KEY').and_return(
+        it 'returns error if GEMINI_API_KEY is not set' do
+            allow(ENV).to receive(:[]).with('GEMINI_API_KEY').and_return(
                 nil)
 
             result=Ai.generate_task(prompt)
