@@ -2,6 +2,10 @@
 
 Given('I am on the signup page') do
   visit "/"
+  find('#email', wait: 10)
+  puts "=== FULL PAGE TEXT ==="
+  puts page.text
+  puts "=== END FULL PAGE TEXT ==="
   expect(page).to have_content("Sign in")
   click_button "Sign up"
 end

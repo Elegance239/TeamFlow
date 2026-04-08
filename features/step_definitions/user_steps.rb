@@ -12,6 +12,10 @@ Given('I am logged in as {string}') do |name|
     team: team
     )
   visit "/"
+  find('#email', wait: 10)
+  puts "=== FULL PAGE TEXT ==="
+  puts page.text
+  puts "=== END FULL PAGE TEXT ==="
   fill_in "email", with: "chris@example.com"
   fill_in "password", with: "password123"
   click_button "Sign in"
