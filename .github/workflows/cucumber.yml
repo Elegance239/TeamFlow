@@ -32,6 +32,19 @@ jobs:
           RAILS_ENV: test
           DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/TeamFlow_test
         run: bin/rails db:prepare
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Install JS dependencies
+        run: npm install
+
+      - name: Precompile assets
+        run: bundle exec rails assets:precompile
+        env:
+          RAILS_ENV: test
       - name: Run tests
         env:
           RAILS_ENV: test
