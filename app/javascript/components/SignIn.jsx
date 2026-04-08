@@ -255,10 +255,6 @@ export default function SignIn(props) {
                 Sign up
               </Link>
             </Typography>
-            {/* Debug text - remove later */}
-            <Typography data-testid="debug-signup" color="error">
-              DEBUG: Signup link should be here
-            </Typography>
           </Box>
         </Card>
       </SignInContainer>

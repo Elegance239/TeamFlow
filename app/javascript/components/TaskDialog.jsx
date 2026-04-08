@@ -278,7 +278,7 @@ export default function TaskDialog({
 
         {!isPatching && task && Number(task.user_id) === Number(currentUser?.id) && task.current_state !== "COMPLETED" && (
           <Button
-            id="unclaim-task-button"
+            id="unclaim-button"
             variant="contained"
             onClick={onUnclaim}
             sx={{
@@ -287,7 +287,7 @@ export default function TaskDialog({
               "&:hover": { bgcolor: "#616161" },
             }}
           >
-            Unclaim Task
+            Unclaim
           </Button>
         )}
 
