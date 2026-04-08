@@ -141,61 +141,9 @@ export default function Settings({ user: currentUser, setUser, setAuth }) {
       <section className="profile-section">
       <h2>My Profile</h2>
       
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mb: 3 }}>
-        {/* Avatar */}
-        {/* Using Random avartar for testing */}
-        <Avatar 
-          src="https://i.pravatar.cc/" 
-          sx={{ width: 100, height: 100, border: '1px solid #ddd' }}
-        />
-
-        {/* Button & Note Column */}
-        <Box sx={{ 
-          display: 'flex', 
-          flexDirection: 'column', 
-          justifyContent: 'center',
-          height: 100
-        }}>
-          
-          {/* Buttons Row */}
-          <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
-            <Button 
-              variant="contained" 
-              startIcon={<AddIcon />}
-              sx={{ 
-                bgcolor: '#e0e0e0', 
-                color: '#424242', 
-                textTransform: 'none',
-                '&:hover': { bgcolor: '#d5d5d5' }
-              }}
-              onClick={() => alert("Upload Logic coming soon!")}
-            >
-              Change Avatar
-            </Button>
-
-            <Button 
-              variant="contained" 
-              sx={{ 
-                bgcolor: '#ff4d4d', 
-                color: 'white', 
-                textTransform: 'none',
-                '&:hover': { bgcolor: '#e60000' }
-              }}
-              onClick={() => alert("Remove Logic coming soon!")}
-            >
-              Remove Avatar
-            </Button>
-          </Box>
-
-          {/* Note */}
-          <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
-            Supports PNGs and JPEGs under 2MB
-          </Typography>
-        </Box>
-      </Box>
 
       {/* Name and Role Boxes */}
-      <Box sx={{ display: 'flex', gap: 4, mt: 4, maxWidth: '600px' }}>
+      <Box sx={{ display: 'flex', gap: 4, mt: 4, maxWidth: '900px' }}>
         
         {/* Left Column: Name */}
         <Box sx={{ flex: 1 }}>
@@ -259,7 +207,36 @@ export default function Settings({ user: currentUser, setUser, setAuth }) {
             }}
           />
         </Box>
+
+        {/* Right Column: User ID (new) */}
+          <Box sx={{ flex: 1 }}>
+            <Typography variant="body1" sx={{ fontWeight: 'bold', mb: 1 }}>
+              User ID
+            </Typography>
+            <TextField
+              fullWidth
+              variant="outlined"
+              value={user.id}
+              size="small"
+              slotProps={{
+                input: {
+                  readOnly: true,
+                },
+              }}
+              sx={{
+                bgcolor: 'inherit',
+                borderRadius: '4px',
+                '& .MuiInputBase-input.Mui-disabled': {
+                  WebkitTextFillColor: 'inherit',
+                },
+                '& .MuiOutlinedInput-notchedOutline': {
+                  borderColor: '#555',
+                }
+              }}
+            />
+          </Box>
       </Box>
+
     </section>
 
       <Divider sx={{ my: 2 }} />

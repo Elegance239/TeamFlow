@@ -1,10 +1,9 @@
 require 'rails_helper'
 
 RSpec.describe Ai do
-
     describe '.generate_task' do
-        let(:prompt){"Finish tests for dashboard ui"}
-        let(:api_key){"fake_key"}
+        let(:prompt) { "Finish tests for dashboard ui" }
+        let(:api_key) { "fake_key" }
 
         before do
             allow(ENV).to receive(:[]).and_call_original
@@ -14,9 +13,9 @@ RSpec.describe Ai do
         it 'returns a task  when API succeeds' do
             fake_response=instance_double(Net::HTTPOK)
             allow(fake_response).to receive(:body).and_return({
-            candidates: [{content: {parts:[{text:'{"title":"Finish tests for dashboard ui", "points": 10}' }] } }]
+            candidates: [ { content: { parts: [ { text: '{"title":"Finish tests for dashboard ui", "points": 10}' } ] } } ]
             }.to_json)
-            
+
             allow(fake_response).to receive(:is_a?).with(Net::HTTPSuccess).and_return(true)
 
             allow(Net::HTTP).to receive(:post).and_return(fake_response)
@@ -26,10 +25,10 @@ RSpec.describe Ai do
             expect(result["points"]).to eq(10)
         end
 
-        #api failure
+        # api failure
 
         it 'returns error when API returns 400/500' do
-            fake_response=instance_double(Net::HTTPBadRequest, code:"400",body: "Bad Request")
+            fake_response=instance_double(Net::HTTPBadRequest, code: "400", body: "Bad Request")
             allow(fake_response).to receive(:is_a?).with(Net::HTTPSuccess).and_return(false)
 
             allow(Net::HTTP).to receive(:post).and_return(fake_response)
@@ -38,7 +37,7 @@ RSpec.describe Ai do
             expect(result[:error]).to eq("API Request Failed")
         end
 
-        #api not set
+        # api not set
         it 'returns error if GEMINI_API_KEY is not set' do
             allow(ENV).to receive(:[]).with('GEMINI_API_KEY').and_return(
                 nil)
@@ -48,6 +47,3 @@ RSpec.describe Ai do
         end
     end
 end
-
-
-
