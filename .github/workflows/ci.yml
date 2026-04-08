@@ -64,7 +64,29 @@ jobs:
 
       - name: Lint code for consistent style
         run: bin/rubocop -f github
+  
+  run_js:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
 
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Install JS dependencies
+        run: npm install
+
+      - name: Precompile assets
+        run: bundle exec rails assets:precompile
+        env:
+          RAILS_ENV: test
   # test:
   #   runs-on: ubuntu-latest
 

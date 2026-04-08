@@ -12,9 +12,15 @@ Given('I am logged in as {string}') do |name|
     team: team
     )
   visit "/"
+  puts "=== HTML SOURCE ==="
+  puts page.html
+  puts "=== END HTML SOURCE ==="
   puts "=== FULL PAGE TEXT ==="
   puts page.text
   puts "=== END FULL PAGE TEXT ==="
+  puts "=== BROWSER CONSOLE LOGS ==="
+  puts page.driver.browser.logs(:browser).collect(&:message).join("\n")
+  puts "=== END CONSOLE LOGS ==="
   find('input[name="email"]', wait: 50)
   puts "=== FULL PAGE TEXT ==="
   puts page.text
@@ -61,6 +67,7 @@ Given('I am logged in as a team lead') do
   puts "=== FULL PAGE TEXT ==="
   puts page.text
   puts "=== END FULL PAGE TEXT ==="
+  page.driver.browser.logs(:browser)
   find('input[name="email"]', wait: 50)
   fill_in "Email", with: "lead@example.com"
   fill_in "Password", with: "password123"
