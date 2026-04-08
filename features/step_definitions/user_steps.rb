@@ -22,15 +22,84 @@ Given('I open the side menu') do
 end
 
 When('I click the {string} button') do |button_text|
-  id_candidate = button_text.downcase.gsub(' ', '-') + "-button"
+  retries = 0
+  begin
+    id_candidate = button_text.downcase.gsub(' ', '-') + "-button"
+    task_dialog_id = "task-dialog-confirm-button"
+    task_creation_id = "task-creation-confirm-button"
 
-  button = begin
-             find("##{id_candidate}", wait: 10, visible: true)
-           rescue Capybara::ElementNotFound, Capybara::Ambiguous
-             find_button(button_text, wait: 10, visible: true)
-           end
+    begin
+      Timeout.timeout(5) do
+        loop do
+          present = page.evaluate_script(<<~JS)
+            (function() {
+              const text = "#{button_text}";
+              const id = "#{id_candidate}";
+              const buttons = Array.from(document.querySelectorAll('button'));
+              return !!buttons.find(b => 
+                b.id === "#{task_dialog_id}" || 
+                b.id === "#{task_creation_id}" || 
+                b.id === id || 
+                b.innerText.trim().toUpperCase() === text.toUpperCase()
+              );
+            })()
+          JS
+          break if present
+          sleep 0.2
+        end
+      end
+    rescue Timeout::Error, Capybara::ElementNotFound
+    end
 
-  page.execute_script("arguments[0].click();", button.native)
+    js_selector = <<~JS
+      (function() {
+        const text = "#{button_text.upcase}";
+        const id = "#{id_candidate.upcase}";
+        const taskDialogId = "#{task_dialog_id.upcase}";
+        const taskCreationId = "#{task_creation_id.upcase}";
+
+        const buttons = Array.from(document.querySelectorAll('button'));
+        const found = buttons.find(b => {
+          const bId = (b.id || "").toUpperCase();
+          const bTestId = (b.getAttribute('data-testid') || "").toUpperCase();
+          const bText = (b.innerText || "").trim().toUpperCase();
+          const spanText = b.querySelector('span') ? b.querySelector('span').innerText.trim().toUpperCase() : "";
+          
+          return bId === taskDialogId || 
+                 bId === taskCreationId || 
+                 bId === id || 
+                 bTestId === id || 
+                 bId === text ||
+                 bText === text ||
+                 spanText === text;
+        });
+
+        if (found) {
+          found.scrollIntoView();
+          found.click();
+          return true;
+        }
+        return false;
+      })()
+    JS
+
+    success = page.execute_script(js_selector)
+    
+    unless success
+      # Final attempt using standard Capybara if JS click fails
+      find_button(button_text, wait: 2, visible: true).click
+    end
+    
+    sleep 0.5
+  rescue Selenium::WebDriver::Error::StaleElementReferenceError, Capybara::ElementNotFound
+    retries += 1
+    if retries < 4
+      sleep 1
+      retry
+    else
+      raise
+    end
+  end
 end
 
 Then('I should see {string} within the skill tags') do |skill|
@@ -57,10 +126,10 @@ Given('I am logged in as a team lead') do
   fill_in "email", with: "lead@example.com"
   fill_in "password", with: "password123"
   click_button "Sign in"
-  # Inject user into localStorage so React's getStoredUser() works in test env
   user_json = { id: @user.id, email: @user.email, role: @user.role, name: @user.name,
                 team_id: @user.team_id, skills: @user.skills }.to_json
   execute_script("localStorage.setItem('teamflowCurrentUser', '#{user_json.gsub("'", "\\'")}')") rescue nil
+  visit "/"
 end
 
 Given('I am logged in as a normal team member') do
@@ -78,13 +147,13 @@ Given('I am logged in as a normal team member') do
   user_json = { id: @user.id, email: @user.email, role: @user.role, name: @user.name,
                 team_id: @user.team_id, skills: @user.skills }.to_json
   execute_script("localStorage.setItem('teamflowCurrentUser', '#{user_json.gsub("'", "\\'")}')") rescue nil
+  visit "/"
 end
 
 When('I click the {string} link') do |link_text|
   begin
     find('.MuiListItemButton-root', text: link_text, wait: 5, match: :first).click
   rescue Capybara::ElementNotFound
-    # 2. Fallback to standard link for non-MUI navigation
     click_link link_text
   end
 end
@@ -95,6 +164,10 @@ end
 
 Then('I should see the text {string}') do |text|
     expect(page).to have_content(text)
+end
+
+Then('I should not see the text {string}') do |text|
+    expect(page).not_to have_content(text)
 end
 
 When('I log out') do

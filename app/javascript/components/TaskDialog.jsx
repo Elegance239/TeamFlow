@@ -24,8 +24,18 @@ const STATE_COLORS = {
   COMPLETED: "#2e7d32",
 };
 
+const isTeamLead = (role) => {
+  const r = String(role);
+  return r === "0" || r === "team_lead";
+};
+
+const isTeamMember = (role) => {
+  const r = String(role);
+  return r === "1" || r === "team_member";
+};
+
 function roleText(role) {
-  return role === 0 || role === "team_lead" ? "team_lead" : "team_member";
+  return isTeamLead(role) ? "team_lead" : "team_member";
 }
 
 function stateChipSx(state) {
@@ -41,9 +51,9 @@ export default function TaskDialog({
   onClose,
   task,
   currentUser,
-  canTake,
+  canTake: propCanTake,
   canPatch,
-  canProgress,
+  canProgress: propCanProgress,
   onTake,
   onProgress,
   onUnclaim,
@@ -51,18 +61,21 @@ export default function TaskDialog({
   onDelete,
 }) {
   const [isPatching, setIsPatching] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [description, setDescription] = useState("");
   const [points, setPoints] = useState("");
 
   useEffect(() => {
     if (!task) {
       setIsPatching(false);
+      setIsDeleting(false);
       setDescription("");
       setPoints("");
       return;
     }
 
     setIsPatching(false);
+    setIsDeleting(false);
     setDescription(task.description || "");
     setPoints(task.points ?? "");
   }, [task]);
@@ -93,6 +106,26 @@ export default function TaskDialog({
     if (task.current_state) return [task.current_state];
     return [];
   }, [task]);
+
+  const canTake = isTeamMember(currentUser?.role) && task?.current_state === "UNASSIGNED";
+  const canUnclaim = isTeamMember(currentUser?.role) && 
+                     task?.user_id &&
+                     Number(task.user_id) === Number(currentUser?.id) && 
+                     task.current_state !== "COMPLETED";
+  const canProgress = task?.user_id &&
+                      Number(task.user_id) === Number(currentUser?.id) && 
+                      task.current_state !== "COMPLETED";
+
+  if (window.Cypress || window.isCucumber) {
+    console.log("TaskDialog State:", {
+      role: currentUser?.role,
+      isLead: isTeamLead(currentUser?.role),
+      isMember: isTeamMember(currentUser?.role),
+      taskUser: task?.user_id,
+      currentUserId: currentUser?.id,
+      canTake, canUnclaim, canProgress
+    });
+  }
 
   const nextState = useMemo(() => {
     if (!task?.current_state || workflowStates.length === 0) return null;
@@ -211,8 +244,24 @@ export default function TaskDialog({
 
       <DialogActions>
         <Button onClick={onClose}>Close</Button>
-        {isPatching ? (
+        {isDeleting ? (
+          canPatch && (
+            <Button
+              id="task-dialog-confirm-button"
+              variant="contained"
+              onClick={onDelete}
+              sx={{
+                bgcolor: "#d32f2f",
+                color: "#fff",
+                "&:hover": { bgcolor: "#b71c1c" },
+              }}
+            >
+              CONFIRM
+            </Button>
+          )
+        ) : isPatching ? (
           <Button
+            id="task-dialog-confirm-button"
             variant="contained"
             disabled={!canConfirmPatch}
             onClick={handleConfirmPatch}
@@ -243,16 +292,15 @@ export default function TaskDialog({
           </Button>
         )}
 
-        {!isPatching && (
+        {!isPatching && !isDeleting && canPatch && (
           <Button
             variant="contained"
-            disabled={!canPatch}
-            onClick={onDelete}
+            onClick={() => setIsDeleting(true)}
             sx={{
-              bgcolor: canPatch ? "#d32f2f" : "#9e9e9e",
+              bgcolor: "#d32f2f",
               color: "#fff",
               "&:hover": {
-                bgcolor: canPatch ? "#b71c1c" : "#9e9e9e",
+                bgcolor: "#b71c1c",
               },
             }}
           >
@@ -260,23 +308,25 @@ export default function TaskDialog({
           </Button>
         )}
 
-        <Button
-          id="take-button"
-          variant="contained"
-          onClick={onTake}
-          disabled={!canTake || isPatching}
-          sx={{
-            bgcolor: canTake && !isPatching ? "#d32f2f" : "#9e9e9e",
-            color: "#fff",
-            "&:hover": {
-              bgcolor: canTake && !isPatching ? "#b71c1c" : "#9e9e9e",
-            },
-          }}
-        >
-          Take
-        </Button>
+        {canTake && (
+          <Button
+            id="take-button"
+            data-testid="take-button"
+            variant="contained"
+            onClick={onTake}
+            sx={{
+              bgcolor: "#d32f2f",
+              color: "#fff",
+              "&:hover": {
+                bgcolor: "#b71c1c",
+              },
+            }}
+          >
+            Take
+          </Button>
+        )}
 
-        {!isPatching && task && Number(task.user_id) === Number(currentUser?.id) && task.current_state !== "COMPLETED" && (
+        {!isPatching && canUnclaim && (
           <Button
             id="unclaim-button"
             variant="contained"
@@ -291,21 +341,22 @@ export default function TaskDialog({
           </Button>
         )}
 
-        <Button
-          id="progress-button"
-          variant="contained"
-          onClick={onProgress}
-          disabled={!canProgress || isPatching || !nextState}
-          sx={{
-            bgcolor: canProgress && !isPatching && nextState ? "#d32f2f" : "#9e9e9e",
-            color: "#fff",
-            "&:hover": {
-              bgcolor: canProgress && !isPatching && nextState ? "#b71c1c" : "#9e9e9e",
-            },
-          }}
-        >
-          PROGRESS
-        </Button>
+        {canProgress && !isPatching && nextState && (
+          <Button
+            id="progress-button"
+            variant="contained"
+            onClick={onProgress}
+            sx={{
+              bgcolor: "#d32f2f",
+              color: "#fff",
+              "&:hover": {
+                bgcolor: "#b71c1c",
+              },
+            }}
+          >
+            PROGRESS
+          </Button>
+        )}
       </DialogActions>
     </Dialog>
   );

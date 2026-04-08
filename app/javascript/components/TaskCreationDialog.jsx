@@ -240,7 +240,7 @@ export default function TaskCreationDialog({ open, onClose, currentUser, onCreat
       <DialogActions>
         <Button onClick={handleClose}>Cancel</Button>
         <Button
-          id="confirm-button"
+          id="task-creation-confirm-button"
           variant="contained"
           onClick={handleConfirm}
           disabled={!canCreate}

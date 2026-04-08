@@ -8,14 +8,15 @@ When('I click on the task with description {string}') do |description|
   sleep 1
 end
 
-Given('a task exists with description {string} and state {string} assigned to me') do |desc, state|
-  team = @user.team || Team.first || Team.create!(name: "Testing Team")
+Given(/^a task exists with description "([^"]*)" and state "([^"]*)"( assigned to me)?$/) do |desc, state, assigned|
+  team = @user&.team || Team.first || Team.create!(name: "Testing Team")
+  user_id = assigned ? @user.id : nil
 
   Task.create!(
     description: desc,
     current_state: state,
-    user_id: @user.id.to_i,
-    created_by: @user.id,
+    user_id: user_id,
+    created_by: @user&.id || User.first&.id,
     team: team,
     points: 1,
     due_date: Date.today + 1.day,

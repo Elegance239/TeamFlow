@@ -34,3 +34,13 @@ Feature: Task Management
     And I click the "Unclaim" button
     Then I should see the text "Task unclaimed successfully"
     And the task "Fix bug" should be in the "Unassigned" section
+
+  Scenario: Team Lead deletes a task
+    Given I am logged in as a team lead
+    And a task exists with description "Old Task" and state "UNASSIGNED"
+    And I refresh the page
+    When I click on the task with description "Old Task"
+    And I click the "DELETE" button
+    And I click the "CONFIRM" button
+    Then I should see the text "Task deleted successfully"
+    And I should not see the text "Old Task"

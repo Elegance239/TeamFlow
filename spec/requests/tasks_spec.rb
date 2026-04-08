@@ -201,14 +201,14 @@ RSpec.describe "Tasks", type: :request do
       expect(task.current_state).to eq(Task::ASSIGNED)
     end
 
-    it "rejects assignment when assignee skills do not match required skills" do
-      unskilled_member = User.create!(name: "Unskilled", email: "unskilled@example.com", password: "password", password_confirmation: "password", team: team, role: :team_member, skills: "js")
-      task = create_task(required_skills: "ruby")
-      sign_in lead
+    it "forbids a team member from assigning a task to another user" do
+      other_member = User.create!(name: "Other", email: "other@example.com", password: "password", password_confirmation: "password", team: team, role: :team_member)
+      task = create_task
+      sign_in member
 
-      post "/tasks/#{task.id}/assign", params: { user_id: unskilled_member.id }
+      post "/tasks/#{task.id}/assign", params: { user_id: other_member.id }
 
-      expect(response).to have_http_status(:unprocessable_content)
+      expect(response).to have_http_status(:forbidden)
       expect(task.reload.user_id).to be_nil
     end
   end

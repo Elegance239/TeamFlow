@@ -25,8 +25,6 @@ RSpec.describe Ai do
             expect(result["points"]).to eq(10)
         end
 
-        # api failure
-
         it 'returns error when API returns 400/500' do
             fake_response=instance_double(Net::HTTPBadRequest, code: "400", body: "Bad Request")
             allow(fake_response).to receive(:is_a?).with(Net::HTTPSuccess).and_return(false)
@@ -35,6 +33,20 @@ RSpec.describe Ai do
 
             result=Ai.generate_task(prompt)
             expect(result[:error]).to eq("API Request Failed")
+        end
+
+        it 'returns error when AI returns invalid JSON' do
+            fake_response=instance_double(Net::HTTPOK)
+            allow(fake_response).to receive(:is_a?).with(Net::HTTPSuccess).and_return(true)
+            allow(fake_response).to receive(:body).and_return({
+                candidates: [ { content: { parts: [ { text: 'Not a JSON string' } ] } } ]
+            }.to_json)
+
+            allow(Net::HTTP).to receive(:post).and_return(fake_response)
+
+            result = Ai.generate_task(prompt)
+            expect(result[:error]).to eq("AI returned invalid JSON")
+            expect(result[:raw]).to eq("Not a JSON string")
         end
 
         # api not set
