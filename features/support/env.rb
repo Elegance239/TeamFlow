@@ -58,7 +58,7 @@ Cucumber::Rails::Database.javascript_strategy = :truncation
 #   options.add_argument('--no-sandbox')
 #   options.add_argument('--disable-dev-shm-usage')
 #   options.binary = '/usr/bin/chromium-browser'
-  
+
 #   service = Selenium::WebDriver::Service.chrome(path: '/usr/bin/chromedriver')
 #   Capybara::Selenium::Driver.new(app, browser: :chrome, options: options, service: service)
 # end

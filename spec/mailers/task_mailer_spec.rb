@@ -23,11 +23,11 @@ RSpec.describe TaskMailer, type: :mailer do
     end
 
     it "sends to the assignee" do
-      expect(mail.to).to eq([member.email])
+      expect(mail.to).to eq([ member.email ])
     end
 
     it "sends from the default mailer address" do
-      expect(mail.from).to eq(["from@example.com"])
+      expect(mail.from).to eq([ "from@example.com" ])
     end
 
     it "includes the assignee name in the body" do
@@ -51,11 +51,11 @@ RSpec.describe TaskMailer, type: :mailer do
     end
 
     it "sends to the assignee" do
-      expect(mail.to).to eq([member.email])
+      expect(mail.to).to eq([ member.email ])
     end
 
     it "sends from the default mailer address" do
-      expect(mail.from).to eq(["from@example.com"])
+      expect(mail.from).to eq([ "from@example.com" ])
     end
 
     it "includes the assignee name in the body" do

@@ -9,7 +9,7 @@ class Users::PasswordsController < Devise::PasswordsController
     unless user
     return render json: { error: "You need to sign in first" }, status: :unauthorized
     end
-    
+
     unless user.valid_password?(params[:current_password])
       return render json: { error: "Current password is incorrect" }, status: :unprocessable_entity
     end
