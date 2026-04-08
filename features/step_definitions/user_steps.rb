@@ -12,8 +12,8 @@ Given('I am logged in as {string}') do |name|
     team: team
     )
   visit "/"
-  fill_in "Email", with: "chris@example.com"
-  fill_in "Password", with: "password123"
+  fill_in "email", with: "chris@example.com"
+  fill_in "password", with: "password123"
   click_button "Sign in"
 end
 

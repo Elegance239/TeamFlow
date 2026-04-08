@@ -46,9 +46,19 @@ end
 #     DatabaseCleaner.strategy = :transaction
 #   end
 #
+Capybara.register_driver :headless_chrome do |app|
+  options = Selenium::WebDriver::Chrome::Options.new
 
+  # The essential flags for running Chrome in GitHub Actions/CI
+  options.add_argument('--headless=new')          # Run without a UI
+  options.add_argument('--no-sandbox')            # Bypass OS security model (required in Docker/CI)
+  options.add_argument('--disable-dev-shm-usage') # Overcome limited resource problems
+  options.add_argument('--disable-gpu')           # Applicable for Windows/older Linux setups
+  options.add_argument('--window-size=1920,1080')
+  Capybara::Selenium::Driver.new(app, browser: :chrome, options: options)
+end
 # Possible values are :truncation and :transaction
 # The :transaction strategy is faster, but might give you threading problems.
 # See https://github.com/cucumber/cucumber-rails/blob/master/features/choose_javascript_database_strategy.feature
 Cucumber::Rails::Database.javascript_strategy = :truncation
-Capybara.javascript_driver = :selenium_chrome_headless
+Capybara.javascript_driver = :headless_chrome

@@ -2,7 +2,6 @@
 
 Given('I am on the signup page') do
   visit "/"
-
   expect(page).to have_content("Sign in")
   click_button "Sign up"
 end
