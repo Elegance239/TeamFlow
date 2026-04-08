@@ -51,7 +51,7 @@ end
 # The :transaction strategy is faster, but might give you threading problems.
 # See https://github.com/cucumber/cucumber-rails/blob/master/features/choose_javascript_database_strategy.feature
 Cucumber::Rails::Database.javascript_strategy = :truncation
-# my testing
+# my test
 # Capybara.register_driver :headless_chrome do |app|
 #   options = Selenium::WebDriver::Chrome::Options.new
 #   options.add_argument('--headless')
@@ -63,4 +63,4 @@ Cucumber::Rails::Database.javascript_strategy = :truncation
 #   Capybara::Selenium::Driver.new(app, browser: :chrome, options: options, service: service)
 # end
 
-Capybara.javascript_driver = :headless_chrome
+Capybara.javascript_driver = :selenium_chrome_headless
