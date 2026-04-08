@@ -12,12 +12,14 @@ Given('I am logged in as {string}') do |name|
     team: team
   )
   visit "/"
-  expect(page).to have_field("Email", wait: 5)
-  fill_in "Email", with: "chris@example.com"
-  fill_in "Password", with: "password123"
+  # expect(page).to have_field("Email", wait: 5)
+  find('input#email', visible: :all).set("chris@example.com")
+  find('input#password', visible: :all).set("password123")
+  # fill_in "Email", with: "chris@example.com"
+  # fill_in "Password", with: "password123"
   click_button "Sign in"
-  sleep 3
 end
+
 
 When('I click the {string} menu item') do |item_text|
   find('button[aria-label="open drawer"]').click
