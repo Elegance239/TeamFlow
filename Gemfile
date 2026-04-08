@@ -78,5 +78,5 @@ gem "jsbundling-rails", "~> 1.3", ">= 1.3.1"
 gem "letter_opener_web", group: :development
 gem "whenever", require: false
 
-#ai
-gem 'dotenv-rails', groups:[:development, :test]
+# ai
+gem "dotenv-rails", groups: [ :development, :test ]

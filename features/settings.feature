@@ -6,6 +6,7 @@ Feature: User Profile Settings
 
   Scenario: Viewing skills on the settings page
     Given I am logged in as "Chris Wong"
-    When I click the "Show Settings" button
-    Then I should see "React" within the skill tags
-    And I should see "Team Member" as my role
+    When I open the drawer
+    And I click the "Settings" link
+    Then I should see "react" within the skill tags
+    And I should see "team_member" as my role

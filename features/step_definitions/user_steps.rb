@@ -14,7 +14,11 @@ Given('I am logged in as {string}') do |name|
   visit "/"
   fill_in "Email", with: "chris@example.com"
   fill_in "Password", with: "password123"
-  click_button "Log in"
+  click_button "Sign in"
+end
+
+Given('I open the side menu') do
+  click_button 'open drawer'
 end
 
 When('I click the {string} button') do |button_text|
@@ -31,7 +35,7 @@ Then('I should see {string} within the skill tags') do |skill|
 end
 
 Then('I should see {string} as my role') do |role_text|
-  expect(page).to have_content(role_text)
+  expect(page).to have_selector("input[value='#{role_text}']", visible: true)
 end
 
 Given('a team exists named {string}') do |team_name|
@@ -106,11 +110,12 @@ end
 
 Given('a user exists with email {string} and password {string}') do |email, password|
   User.where(email: email).destroy_all
-  User.create!(
-    name: email.split('@').first.capitalize,
+  @user = User.create!(
     email: email,
     password: password,
-    team: @user.team,
-    role: :team_member
+    password_confirmation: password,
+    name: "Member",
+    role: "team_member",
+    team: Team.first
   )
 end

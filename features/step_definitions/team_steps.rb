@@ -2,7 +2,9 @@
 
 Given('I am on the signup page') do
   visit "/"
-  find('button', text: 'Sign up').click
+
+  expect(page).to have_content("Sign in")
+  click_button "Sign up"
 end
 
 Then('I should be on the signin page') do
@@ -18,9 +20,8 @@ When('I choose {string}') do |option|
 end
 
 When('I log in with email {string} and password {string}') do |email, password|
-  visit "/"
-  fill_in "Email", with: email
-  fill_in "Password", with: password
+  fill_in "email", with: email
+  fill_in "password", with: password
   click_button "Sign in"
   db_user = User.find_by(email: email)
   if db_user
@@ -37,6 +38,5 @@ end
 Then('I should see {string} as the team name in the drawer') do |team_name|
   within('.MuiDrawer-paper') do
     expect(page).to have_content(team_name)
-  
   end
 end
