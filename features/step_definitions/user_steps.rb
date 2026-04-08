@@ -12,19 +12,6 @@ Given('I am logged in as {string}') do |name|
     team: team
     )
   visit "/"
-  puts "=== HTML SOURCE ==="
-  puts page.html
-  puts "=== END HTML SOURCE ==="
-  puts "=== FULL PAGE TEXT ==="
-  puts page.text
-  puts "=== END FULL PAGE TEXT ==="
-  puts "=== BROWSER CONSOLE LOGS ==="
-  puts page.driver.browser.logs(:browser).collect(&:message).join("\n")
-  puts "=== END CONSOLE LOGS ==="
-  find('input[name="email"]', wait: 50)
-  puts "=== FULL PAGE TEXT ==="
-  puts page.text
-  puts "=== END FULL PAGE TEXT ==="
   fill_in "email", with: "chris@example.com"
   fill_in "password", with: "password123"
   click_button "Sign in"
@@ -64,13 +51,8 @@ Given('I am logged in as a team lead') do
     u.team = team
   end
   visit "/"
-  puts "=== FULL PAGE TEXT ==="
-  puts page.text
-  puts "=== END FULL PAGE TEXT ==="
-  page.driver.browser.logs(:browser)
-  find('input[name="email"]', wait: 50)
-  fill_in "Email", with: "lead@example.com"
-  fill_in "Password", with: "password123"
+  fill_in "email", with: "lead@example.com"
+  fill_in "password", with: "password123"
   click_button "Sign in"
   # Inject user into localStorage so React's getStoredUser() works in test env
   user_json = { id: @user.id, email: @user.email, role: @user.role, name: @user.name,
