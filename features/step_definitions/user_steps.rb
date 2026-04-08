@@ -6,25 +6,28 @@ Given('I am logged in as {string}') do |name|
     name: name,
     email: "chris@example.com",
     role: "team_member",
-    skills: [ "React", "CSS" ],
+    skills: "React,CSS",
     password: "password123",
     password_confirmation: "password123",
     team: team
-    )
+  )
   visit "/"
   fill_in "Email", with: "chris@example.com"
   fill_in "Password", with: "password123"
-  click_button "Log in"
+  click_button "Sign in"
+  sleep 3
 end
 
-When('I click the {string} button') do |button_text|
-  click_button button_text
+When('I click the {string} menu item') do |item_text|
+  find('button[aria-label="open drawer"]').click
+  sleep 1
+  find('span.MuiListItemText-primary', text: item_text).click
 end
 
 Then('I should see {string} within the skill tags') do |skill|
   expect(page).to have_css('.skill-tag', text: skill)
 end
 
-Then('I should see {string} as my role') do |role_text|
-  expect(page).to have_content(role_text)
+Then("I should see {string} as my role") do |role|
+  expect(page).to have_field(with: role)
 end
