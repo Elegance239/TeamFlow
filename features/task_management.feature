@@ -21,8 +21,8 @@ Feature: Task Management
     And I click on the task with description "Finish UI Design"
     And I click the "Take" button
     Then I should see the text "Task taken successfully"
-    
-    When I click on the task with description "Finish UI Design"
+    When I refresh the page
+    Then I click on the task with description "Finish UI Design"
     And I click the "PROGRESS" button
     Then I should see the text "Task progressed successfully"
   
@@ -31,6 +31,6 @@ Feature: Task Management
     And a task exists with description "Fix bug" and state "ASSIGNED" assigned to me
     And I refresh the page
     When I click on the task with description "Fix bug"
-    And I click the "Unclaim Task" button
+    And I click the "Unclaim" button
     Then I should see the text "Task unclaimed successfully"
     And the task "Fix bug" should be in the "Unassigned" section

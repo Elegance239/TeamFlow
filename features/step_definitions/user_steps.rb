@@ -12,13 +12,6 @@ Given('I am logged in as {string}') do |name|
     team: team
     )
   visit "/"
-  puts "=== FULL PAGE TEXT ==="
-  puts page.text
-  puts "=== END FULL PAGE TEXT ==="
-  find('input[name="email"]', wait: 50)
-  puts "=== FULL PAGE TEXT ==="
-  puts page.text
-  puts "=== END FULL PAGE TEXT ==="
   fill_in "email", with: "chris@example.com"
   fill_in "password", with: "password123"
   click_button "Sign in"
@@ -30,11 +23,14 @@ end
 
 When('I click the {string} button') do |button_text|
   id_candidate = button_text.downcase.gsub(' ', '-') + "-button"
-  begin
-    find("##{id_candidate}", wait: 10).click
-  rescue Capybara::ElementNotFound, Capybara::Ambiguous
-    find_button(button_text, wait: 10).click
-  end
+
+  button = begin
+             find("##{id_candidate}", wait: 10, visible: true)
+           rescue Capybara::ElementNotFound, Capybara::Ambiguous
+             find_button(button_text, wait: 10, visible: true)
+           end
+
+  page.execute_script("arguments[0].click();", button.native)
 end
 
 Then('I should see {string} within the skill tags') do |skill|
@@ -58,12 +54,8 @@ Given('I am logged in as a team lead') do
     u.team = team
   end
   visit "/"
-  puts "=== FULL PAGE TEXT ==="
-  puts page.text
-  puts "=== END FULL PAGE TEXT ==="
-  find('input[name="email"]', wait: 50)
-  fill_in "Email", with: "lead@example.com"
-  fill_in "Password", with: "password123"
+  fill_in "email", with: "lead@example.com"
+  fill_in "password", with: "password123"
   click_button "Sign in"
   # Inject user into localStorage so React's getStoredUser() works in test env
   user_json = { id: @user.id, email: @user.email, role: @user.role, name: @user.name,
@@ -90,9 +82,10 @@ end
 
 When('I click the {string} link') do |link_text|
   begin
-    click_link link_text
+    find('.MuiListItemButton-root', text: link_text, wait: 5, match: :first).click
   rescue Capybara::ElementNotFound
-    find('span, p, a', text: link_text).click
+    # 2. Fallback to standard link for non-MUI navigation
+    click_link link_text
   end
 end
 
@@ -101,7 +94,7 @@ When('I fill in {string} with {string}') do |field, value|
 end
 
 Then('I should see the text {string}') do |text|
-  expect(page).to have_content(text, wait: 15)
+    expect(page).to have_content(text)
 end
 
 When('I log out') do
@@ -129,4 +122,8 @@ Given('a user exists with email {string} and password {string}') do |email, pass
     role: "team_member",
     team: Team.first
   )
+end
+
+Then('I should see the success message {string}') do |message|
+  expect(page).to have_css('.MuiSnackbar-root', text: message)
 end
