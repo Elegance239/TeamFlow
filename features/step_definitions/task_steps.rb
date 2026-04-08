@@ -1,25 +1,47 @@
 # features/step_definitions/task_steps.rb
 
-When('I click on the task with description {string}') do |description|
-  task_card = find('.task-card', text: description, wait: 5, match: :first)
-  page.execute_script("arguments[0].click();", task_card.native)
-  find('.MuiDialog-root', wait: 5)
-  # find('div, p, span, h6', text: description, wait: 5, visible: true, match: :prefer_exact).click
-  sleep 1
+When(/^I click on the task with description "([^"]*)"$/) do |desc|
+  card = find('.task-card', text: desc, wait: 10)
+
+  begin
+    retries ||= 0
+    card.click
+    find('.MuiDialog-root', wait: 2)
+  rescue => e
+    retries += 1
+    if retries < 3
+      page.execute_script("document.querySelectorAll('.task-card').forEach(c => { if(c.innerText.includes('#{desc}')) c.click(); })")
+      begin
+        find('[data-testid="task-dialog"]', wait: 2)
+      rescue => log_err
+        puts "Could not fetch console logs: #{log_err}"
+      end
+      raise e
+    end
+  end
 end
 
 Given(/^a task exists with description "([^"]*)" and state "([^"]*)"( assigned to me)?$/) do |desc, state, assigned|
   team = @user&.team || Team.first || Team.create!(name: "Testing Team")
+
+  creator = User.find_by(role: :team_lead) || User.create!(
+    email: "creator_lead@example.com",
+    password: "password123",
+    name: "Creator Lead",
+    role: :team_lead,
+    team: team
+  )
+
   user_id = assigned ? @user.id : nil
 
   Task.create!(
     description: desc,
     current_state: state,
-    user_id: user_id,
-    created_by: @user&.id || User.first&.id,
     team: team,
-    points: 1,
-    due_date: Date.today + 1.day,
+    user_id: user_id,
+    creator: creator,
+    points: 5,
+    due_date: Date.today + 7.days,
     all_states: "UNASSIGNED,ASSIGNED,COMPLETED"
   )
 end

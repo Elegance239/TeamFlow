@@ -91,14 +91,26 @@ When('I click the {string} button') do |button_text|
     end
     
     sleep 0.5
-  rescue Selenium::WebDriver::Error::StaleElementReferenceError, Capybara::ElementNotFound
+  rescue Selenium::WebDriver::Error::StaleElementReferenceError, Capybara::ElementNotFound => e
     retries += 1
     if retries < 4
       sleep 1
       retry
     else
-      raise
+      begin
+        raw_logs = page.driver.browser.logs.get(:browser)
+        if raw_logs
+          logs = raw_logs.map(&:message).join("\n")
+          puts "\n--- BROWSER CONSOLE LOGS ---\n#{logs}\n---------------------------\n"
+        else
+          puts "No browser logs available."
+        end
+      rescue => log_err
+        puts "Could not fetch console logs: #{log_err}"
+      end
+      raise e
     end
+    find('[data-testid="task-dialog"]', wait: 5)
   end
 end
 
@@ -116,38 +128,43 @@ end
 
 Given('I am logged in as a team lead') do
   team = Team.find_or_create_by!(name: "Testing Team")
-  @user = User.find_or_create_by!(email: "lead@example.com") do |u|
-    u.name = "Lead User"
-    u.password = "password123"
-    u.role = :team_lead
-    u.team = team
-  end
+  @user = User.find_or_initialize_by(email: "lead@example.com")
+  @user.update!(
+    name: "Lead User",
+    password: "password123",
+    role: :team_lead,
+    team: team
+  )
+  execute_script("localStorage.clear()") rescue nil
   visit "/"
   fill_in "email", with: "lead@example.com"
   fill_in "password", with: "password123"
   click_button "Sign in"
-  user_json = { id: @user.id, email: @user.email, role: @user.role, name: @user.name,
-                team_id: @user.team_id, skills: @user.skills }.to_json
-  execute_script("localStorage.setItem('teamflowCurrentUser', '#{user_json.gsub("'", "\\'")}')") rescue nil
-  visit "/"
+  
+  find("#dashboard-title", wait: 10)
+  visit "/" 
+  sleep 1
 end
 
 Given('I am logged in as a normal team member') do
   team = Team.find_or_create_by!(name: "Testing Team")
-  @user = User.find_or_create_by!(email: "member@example.com") do |u|
-    u.name = "Member User"
-    u.password = "password123"
-    u.role = :team_member
-    u.team = team
-  end
+  @user = User.find_or_initialize_by(email: "member@example.com")
+  @user.update!(
+    name: "Member User",
+    password: "password123",
+    role: :team_member,
+    team: team
+  )
+  execute_script("localStorage.clear()") rescue nil
   visit "/"
-  fill_in "Email", with: "member@example.com"
-  fill_in "Password", with: "password123"
+  fill_in "email", with: "member@example.com"
+  fill_in "password", with: "password123"
   click_button "Sign in"
-  user_json = { id: @user.id, email: @user.email, role: @user.role, name: @user.name,
-                team_id: @user.team_id, skills: @user.skills }.to_json
-  execute_script("localStorage.setItem('teamflowCurrentUser', '#{user_json.gsub("'", "\\'")}')") rescue nil
-  visit "/"
+  
+  # Wait for Dashboard to show success
+  find("#dashboard-title", wait: 10)
+  visit "/" # Extra refresh to ensure state synchronization
+  sleep 1
 end
 
 When('I click the {string} link') do |link_text|
@@ -175,6 +192,18 @@ When('I log out') do
   find('li', text: 'Log Out', match: :first).click
 end
 
+When('I log in with email {string} and password {string}') do |email, password|
+  execute_script("localStorage.clear()") rescue nil
+  visit "/"
+  fill_in "email", with: email
+  fill_in "password", with: password
+  click_button "Sign in"
+  
+  find("#dashboard-title", wait: 10)
+  visit "/" 
+  sleep 1
+end
+
 Given('I refresh the page') do
   visit current_path
   if @user
@@ -186,14 +215,13 @@ Given('I refresh the page') do
 end
 
 Given('a user exists with email {string} and password {string}') do |email, password|
-  User.where(email: email).destroy_all
-  @user = User.create!(
-    email: email,
+  team = Team.find_or_create_by!(name: "Testing Team")
+  u = User.find_or_initialize_by(email: email)
+  u.update!(
     password: password,
-    password_confirmation: password,
-    name: "Member",
-    role: "team_member",
-    team: Team.first
+    name: "Test User",
+    role: :team_member,
+    team: team
   )
 end
 

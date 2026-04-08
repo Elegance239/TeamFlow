@@ -5,6 +5,7 @@ class TasksController < ApplicationController
   # Returns all tasks belonging to the requester's team.
   def index
     unless current_user.team_id.present?
+      Rails.logger.error "TASKS_INDEX_ERROR: User ID #{current_user.id} has no team_id! (Email: #{current_user.email})" if Rails.env.test?
       return render json: { error: "User is not part of a team" }, status: :unprocessable_content
     end
 

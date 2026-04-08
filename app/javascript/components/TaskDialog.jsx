@@ -95,8 +95,8 @@ export default function TaskDialog({
     const rawStates = Array.isArray(task.all_states)
       ? task.all_states
       : (task.all_states || "")
-          .toString()
-          .split(",");
+        .toString()
+        .split(",");
 
     const cleaned = rawStates
       .map((s) => s.toString().trim())
@@ -108,13 +108,13 @@ export default function TaskDialog({
   }, [task]);
 
   const canTake = isTeamMember(currentUser?.role) && task?.current_state === "UNASSIGNED";
-  const canUnclaim = isTeamMember(currentUser?.role) && 
-                     task?.user_id &&
-                     Number(task.user_id) === Number(currentUser?.id) && 
-                     task.current_state !== "COMPLETED";
+  const canUnclaim = isTeamMember(currentUser?.role) &&
+    task?.user_id &&
+    Number(task.user_id) === Number(currentUser?.id) &&
+    task.current_state !== "COMPLETED";
   const canProgress = task?.user_id &&
-                      Number(task.user_id) === Number(currentUser?.id) && 
-                      task.current_state !== "COMPLETED";
+    Number(task.user_id) === Number(currentUser?.id) &&
+    task.current_state !== "COMPLETED";
 
   if (window.Cypress || window.isCucumber) {
     console.log("TaskDialog State:", {

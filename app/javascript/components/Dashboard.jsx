@@ -355,7 +355,7 @@ export default function Dashboard() {
       try {
         const data = await response.json();
         message = data?.error || data?.errors?.join(", ") || message;
-      } catch (error) {}
+      } catch (error) { }
       throw new Error(message);
     }
 
