@@ -2,7 +2,7 @@
 
 Given('I am on the signup page') do
   visit "/"
-  find('#email', wait: 10)
+  find('input[name="email"]', wait: 30)
   puts "=== FULL PAGE TEXT ==="
   puts page.text
   puts "=== END FULL PAGE TEXT ==="

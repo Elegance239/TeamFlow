@@ -12,7 +12,10 @@ Given('I am logged in as {string}') do |name|
     team: team
     )
   visit "/"
-  find('#email', wait: 10)
+  puts "=== FULL PAGE TEXT ==="
+  puts page.text
+  puts "=== END FULL PAGE TEXT ==="
+  find('input[name="email"]', wait: 50)
   puts "=== FULL PAGE TEXT ==="
   puts page.text
   puts "=== END FULL PAGE TEXT ==="
@@ -55,6 +58,10 @@ Given('I am logged in as a team lead') do
     u.team = team
   end
   visit "/"
+  puts "=== FULL PAGE TEXT ==="
+  puts page.text
+  puts "=== END FULL PAGE TEXT ==="
+  find('input[name="email"]', wait: 50)
   fill_in "Email", with: "lead@example.com"
   fill_in "Password", with: "password123"
   click_button "Sign in"
