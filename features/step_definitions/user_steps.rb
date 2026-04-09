@@ -17,6 +17,24 @@ Given('I am logged in as {string}') do |name|
   click_button "Sign in"
 end
 
+Given('I am on the sign in page') do
+  execute_script("localStorage.clear()") rescue nil
+  visit "/"
+  expect(page).to have_content("Sign in")
+end
+
+Given('a user account exists with email {string}') do |email|
+  team = Team.find_or_create_by!(name: "Testing Team")
+  user = User.find_or_initialize_by(email: email)
+  user.update!(
+    name: "Forgot Password User",
+    password: "password123",
+    password_confirmation: "password123",
+    role: :team_member,
+    team: team
+  )
+end
+
 Given('I open the side menu') do
   click_button 'open drawer'
 end
@@ -172,6 +190,53 @@ When('I click the {string} link') do |link_text|
     find('.MuiListItemButton-root', text: link_text, wait: 5, match: :first).click
   rescue Capybara::ElementNotFound
     click_link link_text
+  end
+end
+
+When('I click the {string} link on sign in') do |link_text|
+  escaped_text = link_text.gsub("'", "\\\\'")
+  clicked = page.evaluate_script(<<~JS)
+    (function() {
+      const target = '#{escaped_text}'.trim().toUpperCase();
+      const elements = Array.from(document.querySelectorAll('button, a, [role="button"]'));
+      const found = elements.find((el) => ((el.innerText || '').trim().toUpperCase() === target));
+      if (!found) return false;
+      found.scrollIntoView({ block: 'center' });
+      found.click();
+      return true;
+    })()
+  JS
+
+  unless clicked
+    find('button, a, [role="button"]', text: link_text, match: :first, wait: 5).click
+  end
+end
+
+When('I fill forgot password email with {string}') do |email|
+  dialog = find('[role="dialog"]', text: 'Reset password', wait: 5)
+  within(dialog) do
+    fill_in 'email', with: email
+  end
+end
+
+When('I submit forgot password request') do
+  dialog = find('[role="dialog"]', text: 'Reset password', wait: 5)
+  clicked = false
+
+  within(dialog) do
+    clicked = page.evaluate_script(<<~JS)
+      (function() {
+        const target = 'CONTINUE';
+        const buttons = Array.from(document.querySelectorAll('button'));
+        const btn = buttons.find((b) => ((b.innerText || '').trim().toUpperCase() === target) && !b.disabled);
+        if (!btn) return false;
+        btn.scrollIntoView({ block: 'center' });
+        btn.click();
+        return true;
+      })()
+    JS
+
+    find('button', text: 'Continue', match: :first, wait: 5).click unless clicked
   end
 end
 
