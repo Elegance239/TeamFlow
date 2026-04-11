@@ -9,7 +9,10 @@
 | Validation Workflow | Sam | React, Ruby, PostgreSQL |
 | Core Models & Controllers | Sam | Ruby, RSpec, PostgreSQL (User, Teams, etc.) |
 | Authentication | Martin, Sam | Devise, Ruby, React |
-| AI Integration | Yanni | Ruby, Gemini API  (?)
+| AI Integration | Yanni | Ruby, Gemini API  (?) |
+| Settings | Matthew | React, Ruby, Devise, PostgreSQL |
+| Mailer Services | Matthew | Ruby, ActionMailer, Gmail SMTP, Whenever |
+| Coverage Test | Matthew, ... | Rspec, Cucumber |
 
 ## Documentation
 
