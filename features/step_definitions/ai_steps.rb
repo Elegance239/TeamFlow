@@ -6,7 +6,8 @@ Before('@javascript') do
     "title" => "Implement a React search bar",
     "description" => "A high-quality search bar component using MUI.",
     "points" => 5,
-    "due_days_from_now" => 3
+    "due_days_from_now" => 3,
+    "required_skills" => "react, mui"
   })
 end
 
@@ -48,7 +49,7 @@ When('I open the task creation dialog') do
 end
 
 When('I enter {string} into the AI prompt') do |prompt|
-  fill_in "Generate with AI (e.g. 'implement login page')", with: prompt
+  fill_in "Type here to generate with AI (e.g. 'Create a React login form, 5 points, due in 3 days')", with: prompt
 end
 
 When('I click the "Magic Wand" icon') do
@@ -57,8 +58,16 @@ When('I click the "Magic Wand" icon') do
   sleep 2 
 end
 
+Then('the title should contain {string}') do |text|
+  expect(page.find_field('title').value).to include(text)
+end
+
 Then('the description should contain {string}') do |text|
   expect(page.find_field('description').value).to include(text)
+end
+
+Then('the required skills should contain {string}') do |text|
+  expect(page.find_field('required_skills (comma-separated)').value).to include(text)
 end
 
 Then('the points should be a positive integer') do

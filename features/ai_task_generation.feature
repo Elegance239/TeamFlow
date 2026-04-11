@@ -17,6 +17,8 @@ Feature: AI Task Generation
     When I open the task creation dialog
     And I enter "Implement a React search bar with Material UI" into the AI prompt
     And I click the "Magic Wand" icon
-    Then the description should contain "Implement a React search bar"
+    Then the title should contain "Implement a React search bar"
+    And the description should contain "quality search bar"
     And the points should be a positive integer
     And the due date should be set to a future date
+    And the required skills should contain "react"
