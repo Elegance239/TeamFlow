@@ -1,5 +1,23 @@
 # CSCI3100 - Group 25
 
+## Contribution
+
+| Feature Name | Developers | Notes |
+| ------------ | ---------- | ----- |
+| Step Tasks | Sam | React, Ruby, PostgreSQL |
+| Validation Workflow | Sam | React, Ruby, PostgreSQL |
+| Core Models & Controllers | Sam | Ruby, RSpec, PostgreSQL (User, Teams, etc.) |
+| Authentication (Backend) | Sam, Martin | Devise, Ruby |
+| Sign Up and Log In Page | Martin | React |
+| Mailer Services | Matthew | Ruby, ActionMailer, Gmail SMTP, Whenever |
+| Settings Page | Matthew | React, Ruby, Devise, PostgreSQL |
+| AI Integration | Yanni | Ruby, Gemini API, Prompt Engineering |
+| Header and Sidebar | Martin | React |
+| Dashboard Page | Vicky, Matthew | React |
+| Calendar Page | Vicky | React |
+| Deployment | Martin, Sam | Heroku |
+| Coverage Test | Matthew, Martin, Yanni | RSpec, Cucumber (BDD) |
+
 ## Documentation
 
 ### Routes
