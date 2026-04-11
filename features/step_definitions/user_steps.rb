@@ -12,6 +12,7 @@ Given('I am logged in as {string}') do |name|
     team: team
     )
   visit "/"
+<<<<<<< HEAD
   fill_in "email", with: "chris@example.com"
   fill_in "password", with: "password123"
   click_button "Sign in"
@@ -37,12 +38,23 @@ end
 
 Given('I open the side menu') do
   click_button 'open drawer'
+=======
+  expect(page).to have_selector('#email', wait: 10)
+  find('#email').set('chris@example.com')
+  find('#password').set('password123')
+
+  sign_in_button = find('button[type="submit"]', text: /Sign in/i, wait: 10)
+  execute_script('arguments[0].click();', sign_in_button)
+  expect(page).to have_selector('button[aria-label="open drawer"]', wait: 10)
+>>>>>>> 714278a (cucumber test fix)
 end
 
 When('I click the {string} menu item') do |item_text|
-  find('button[aria-label="open drawer"]').click
-  sleep 1
-  find('span.MuiListItemText-primary', text: item_text).click
+  drawer_button = find('button[aria-label="open drawer"]', wait: 10)
+  execute_script('arguments[0].click();', drawer_button)
+
+  menu_item = find('span.MuiListItemText-primary', text: item_text, wait: 10)
+  execute_script('arguments[0].click();', menu_item)
 end
 
 When('I click the {string} button') do |button_text|
