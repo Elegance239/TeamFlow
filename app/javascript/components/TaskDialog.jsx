@@ -50,21 +50,18 @@ export default function TaskDialog({
   onDelete,
 }) {
   const [isPatching, setIsPatching] = useState(false);
-  const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [points, setPoints] = useState("");
 
   useEffect(() => {
     if (!task) {
       setIsPatching(false);
-      setTitle("");
       setDescription("");
       setPoints("");
       return;
     }
 
     setIsPatching(false);
-    setTitle(task.title || "");
     setDescription(task.description || "");
     setPoints(task.points ?? "");
   }, [task]);
@@ -76,7 +73,7 @@ export default function TaskDialog({
     return parsed;
   }, [points]);
 
-  const canConfirmPatch = isPatching && canPatch && Boolean(title.trim()) && normalizedPoints !== null;
+  const canConfirmPatch = isPatching && canPatch && normalizedPoints !== null;
 
   const workflowStates = useMemo(() => {
     if (!task) return [];
@@ -107,7 +104,6 @@ export default function TaskDialog({
     if (!canConfirmPatch || !task) return;
 
     onConfirmPatch({
-      title: title.trim(),
       description: description.trim(),
       points: normalizedPoints,
     });
@@ -154,19 +150,6 @@ export default function TaskDialog({
               <Typography variant="subtitle2" color="text.secondary">Task Meta</Typography>
               <Stack spacing={0.8} sx={{ mt: 1 }}>
                 <Typography><strong>id:</strong> {task.id}</Typography>
-                {isPatching ? (
-                  <TextField
-                    label="title"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    size="small"
-                    fullWidth
-                    required
-                    sx={{ mb: 1 }}
-                  />
-                ) : (
-                  <Typography><strong>title:</strong> {task.title || ""}</Typography>
-                )}
                 {isPatching ? (
                   <TextField
                     label="description"

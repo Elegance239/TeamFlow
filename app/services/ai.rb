@@ -4,21 +4,17 @@ require "json"
 
 MODEL="gemini-2.5-flash"
 SYSTEM_PROMPT=<<~PROMPT
-    You are an expert project manager. Your job:
-        - Break down the following request into a single actionable task.
-        - Ensure the task is realistic and prioritized.
-        - Return ONLY a single valid JSON object.
-        
-        Request: "{{PROMPT}}"
-
+    You are an expert project manager.Your job:
+        - Break down a user request into actionable tasks
+        - Ensure tasks are realistic and prioritized
+        - Return ONLY valid JSON
         Rules:
-        - The JSON must include:
-          - "title": (short string)
-          - "description": (detailed string)
-          - "points": (integer 1-100)
-          - "due_days_from_now": (integer)
-          - "required_skills": (comma-separated string of technical skills)
-        - Avoid vague tasks.
+        - Each task must include:
+        - title (short)
+         - description (clear)
+         - points (1-100)
+        - due_days_from_now#{' '}
+Avoid vague tasks.
 PROMPT
 
 class Ai
