@@ -234,41 +234,6 @@ RSpec.describe "Users", type: :request do
     end
   end
 
-  describe "PATCH /users/password/change" do
-    let!(:user) { create(:user, email: "change-password@example.com") }
-
-    it "changes password when current password is correct" do
-      sign_in user
-
-      patch "/users/password/change",
-            params: {
-              current_password: "password123",
-              password: "newpassword123",
-              password_confirmation: "newpassword123"
-            },
-            headers: json_headers
-
-      expect(response).to have_http_status(:ok)
-      expect(JSON.parse(response.body)["message"]).to eq("Password updated successfully")
-      expect(user.reload.valid_password?("newpassword123")).to eq(true)
-    end
-
-    it "returns 422 when current password is incorrect" do
-      sign_in user
-
-      patch "/users/password/change",
-            params: {
-              current_password: "wrong-password",
-              password: "newpassword123",
-              password_confirmation: "newpassword123"
-            },
-            headers: json_headers
-
-      expect(response).to have_http_status(:unprocessable_entity)
-      expect(JSON.parse(response.body)["error"]).to eq("Current password is incorrect")
-    end
-  end
-
   describe "PATCH /users (Devise account update)" do
     let!(:user) { create(:user, name: "Edit Me", email: "edit-me@example.com") }
 

@@ -149,7 +149,6 @@ function DashboardSection({ title, color, tasks = [], sx = {}, onTaskClick }) {
             {tasks.map((task) => (
               <TaskCard
                 key={task.id}
-                className="task-card"
                 color={color}
                 onClick={() => onTaskClick?.(task)}
                 sx={{
@@ -162,13 +161,8 @@ function DashboardSection({ title, color, tasks = [], sx = {}, onTaskClick }) {
                 }}
               >
                 <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                  {task.title || task.description || "Untitled Task"}
+                  {task.description || "No description"}
                 </Typography>
-                {task.title && task.description && (
-                   <Typography variant="caption" color="text.secondary" sx={{ display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                     {task.description}
-                   </Typography>
-                )}
               </TaskCard>
             ))}
           </Stack>
@@ -286,7 +280,6 @@ export default function Dashboard() {
   const [teamName, setTeamName] = useState("");
   const [selectedTaskId, setSelectedTaskId] = useState(null);
   const [teamUsers, setTeamUsers] = useState([]);
-  const [pendings, setPendings] = useState([]);
 
   const [workflowTasks, setWorkflowTasks] = useState({
     UNASSIGNED: [],
@@ -361,7 +354,7 @@ export default function Dashboard() {
       try {
         const data = await response.json();
         message = data?.error || data?.errors?.join(", ") || message;
-      } catch (error) { }
+      } catch (error) {}
       throw new Error(message);
     }
 
@@ -437,14 +430,10 @@ export default function Dashboard() {
           }
 
           if (isTeamLead(activeUser.role)) {
-            const [members, pendingList] = await Promise.all([
-              fetchTeamMembers(activeUser.team_id),
-              fetchPendings()
-            ]);
+            const members = await fetchTeamMembers(activeUser.team_id);
 
             if (alive) {
               setTeamUsers(Array.isArray(members) ? members : []);
-              setPendings(Array.isArray(pendingList) ? pendingList : []);
             }
           } else if (alive) {
             setTeamUsers([]);
@@ -512,7 +501,7 @@ export default function Dashboard() {
     }
   };
 
-  const handleConfirmPatch = async ({ title, description, points, user_id }) => {
+  const handleConfirmPatch = async ({ description, points }) => {
     if (!selectedTask) return;
 
     try {
@@ -523,7 +512,7 @@ export default function Dashboard() {
           Accept: "application/json",
         },
         credentials: "include",
-        body: JSON.stringify({ description, points, user_id, title }),
+        body: JSON.stringify({ description, points }),
       });
 
       if (!response.ok) {
@@ -619,66 +608,6 @@ export default function Dashboard() {
     }
   };
 
-  const handleUnclaimTask = async () => {
-    if (!selectedTask) return;
-
-    try {
-      const response = await fetch(`/tasks/${selectedTask.id}/unassign`, {
-        method: "DELETE",
-        headers: {
-          Accept: "application/json",
-        },
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        enqueueSnackbar("Failed to unclaim task", { variant: "error" });
-        return;
-      }
-
-      enqueueSnackbar("Task unclaimed successfully", { variant: "success" });
-      await refreshTasks();
-      handleClose();
-    } catch (error) {
-      enqueueSnackbar("Network error while unclaiming task", {
-        variant: "error",
-      });
-    }
-  };
-
-  const handleApprove = async (id) => {
-    try {
-      const response = await fetch(`/task_transition_pendings/${id}/approve`, {
-        method: "POST",
-        headers: { Accept: "application/json" },
-        credentials: "include",
-      });
-      if (!response.ok) throw new Error("Approval failed");
-      enqueueSnackbar("Approved successfully", { variant: "success" });
-      refreshTasks();
-      const nextPendings = await fetchPendings();
-      setPendings(nextPendings);
-    } catch (error) {
-      enqueueSnackbar(error.message, { variant: "error" });
-    }
-  };
-
-  const handleReject = async (id) => {
-    try {
-      const response = await fetch(`/task_transition_pendings/${id}/reject`, {
-        method: "POST",
-        headers: { Accept: "application/json" },
-        credentials: "include",
-      });
-      if (!response.ok) throw new Error("Rejection failed");
-      enqueueSnackbar("Rejected successfully", { variant: "success" });
-      const nextPendings = await fetchPendings();
-      setPendings(nextPendings);
-    } catch (error) {
-      enqueueSnackbar(error.message, { variant: "error" });
-    }
-  };
-
   const taskCanBeTaken = selectedTask
     ? canTakeTask(selectedTask, currentUser)
     : false;
@@ -704,9 +633,6 @@ export default function Dashboard() {
   return (
     <>
       {isLoading && <LinearProgress sx={{ mb: 1 }} />}
-      <Typography variant="h4" id="dashboard-title" sx={{ fontWeight: 700, p: 2, pb: 0 }}>
-        Dashboard
-      </Typography>
       <Grid
         container
         spacing={2}
@@ -810,39 +736,11 @@ export default function Dashboard() {
         </Grid>
 
         <Grid sx={{ flex: 1 }}>
-          <Stack spacing={2} sx={{ height: "100%" }}>
-            <RankingSection
-              rankingData={rankingData}
-              currentUserId={currentUser?.id}
-              teamName={teamName}
-            />
-
-            {isTeamLead(currentUser?.role) && pendings.length > 0 && (
-              <Panel sx={{ flex: 1, minHeight: 0 }}>
-                <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
-                  Pending Approvals
-                </Typography>
-                <Box sx={{ overflowY: "auto", height: "calc(100% - 40px)" }}>
-                <Stack spacing={1.5}>
-                  {pendings.map((p) => (
-                    <Paper key={p.id} sx={{ p: 1.5, border: "1px solid #e5e7eb", borderRadius: 3 }}>
-                      <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-                        {tasks.find(t => t.id === p.task_id)?.title || "Task #" + p.task_id}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {p.from_state} → {p.to_state}
-                      </Typography>
-                      <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
-                        <Button size="small" variant="contained" color="success" onClick={() => handleApprove(p.id)}>Approve</Button>
-                        <Button size="small" variant="outlined" color="error" onClick={() => handleReject(p.id)}>Reject</Button>
-                      </Stack>
-                    </Paper>
-                  ))}
-                </Stack>
-                </Box>
-              </Panel>
-            )}
-          </Stack>
+          <RankingSection
+            rankingData={rankingData}
+            currentUserId={currentUser?.id}
+            teamName={teamName}
+          />
         </Grid>
       </Grid>
       <TaskDialog
@@ -855,10 +753,8 @@ export default function Dashboard() {
         canProgress={taskCanProgress}
         onTake={handleTakeTask}
         onProgress={handleProgressTask}
-        onUnclaim={handleUnclaimTask}
         onConfirmPatch={handleConfirmPatch}
         onDelete={handleDeleteTask}
-        teamUsers={teamUsers}
       />
     </>
   );

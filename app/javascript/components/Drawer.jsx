@@ -27,7 +27,6 @@ import AssignmentIcon from '@mui/icons-material/Assignment';
 import DeleteIcon from '@mui/icons-material/Delete';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import Filters from './Filters';
-import SettingsIcon from '@mui/icons-material/Settings';
 
 const drawerWidth = 240;
 
@@ -154,9 +153,14 @@ export default function PersistentDrawerLeft( { auth, setAuth, onNavigate, onReq
       onClick: onRequestOpenCreateTask,
     },
     {
-      text: "Manage Approvals",
+      text: "Validate Tasks",
       icon: <CheckIcon />,
       onClick: () => {onNavigate('validateTasks')}
+    },
+    {
+      text: "Dashboard",
+      icon: <DashboardIcon />,
+      onClick: () => {onNavigate('dashboard')}
     }
   ];
 
@@ -265,20 +269,12 @@ export default function PersistentDrawerLeft( { auth, setAuth, onNavigate, onReq
         <Divider />
         <List>
         <ListItem disablePadding>
-          <ListItemButton onClick={() => { onNavigate('dashboard')}}>
-            <ListItemIcon><DashboardIcon /></ListItemIcon>
-            <ListItemText primary="Dashboard" />
-          </ListItemButton>
-        </ListItem>
-        <ListItem disablePadding>
           <ListItemButton onClick={() => { onNavigate('taskCalendar')}}>
-            <ListItemIcon><AssignmentIcon /></ListItemIcon>
-            <ListItemText primary="Calendar" />
+          <ListItemText primary="Calendar" />
           </ListItemButton>
         </ListItem>
         <ListItem disablePadding>
             <ListItemButton onClick={() => { onNavigate('settings')}}>
-              <ListItemIcon><SettingsIcon /></ListItemIcon>
             <ListItemText primary="Settings" />
             </ListItemButton>
         </ListItem>

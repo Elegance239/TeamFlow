@@ -12,10 +12,6 @@ import {
   Stack,
   TextField,
   Typography,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 
@@ -28,18 +24,8 @@ const STATE_COLORS = {
   COMPLETED: "#2e7d32",
 };
 
-const isTeamLead = (role) => {
-  const r = String(role);
-  return r === "0" || r === "team_lead";
-};
-
-const isTeamMember = (role) => {
-  const r = String(role);
-  return r === "1" || r === "team_member";
-};
-
 function roleText(role) {
-  return isTeamLead(role) ? "team_lead" : "team_member";
+  return role === 0 || role === "team_lead" ? "team_lead" : "team_member";
 }
 
 function stateChipSx(state) {
@@ -55,40 +41,32 @@ export default function TaskDialog({
   onClose,
   task,
   currentUser,
-  canTake: propCanTake,
+  canTake,
   canPatch,
-  canProgress: propCanProgress,
+  canProgress,
   onTake,
   onProgress,
-  onUnclaim,
   onConfirmPatch,
   onDelete,
-  teamUsers = [],
 }) {
   const [isPatching, setIsPatching] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [points, setPoints] = useState("");
-  const [userId, setUserId] = useState("");
 
   useEffect(() => {
     if (!task) {
       setIsPatching(false);
-      setIsDeleting(false);
       setTitle("");
       setDescription("");
       setPoints("");
-      setUserId("");
       return;
     }
 
     setIsPatching(false);
-    setIsDeleting(false);
     setTitle(task.title || "");
     setDescription(task.description || "");
     setPoints(task.points ?? "");
-    setUserId(task.user_id ?? "");
   }, [task]);
 
   const normalizedPoints = useMemo(() => {
@@ -106,8 +84,8 @@ export default function TaskDialog({
     const rawStates = Array.isArray(task.all_states)
       ? task.all_states
       : (task.all_states || "")
-        .toString()
-        .split(",");
+          .toString()
+          .split(",");
 
     const cleaned = rawStates
       .map((s) => s.toString().trim())
@@ -117,26 +95,6 @@ export default function TaskDialog({
     if (task.current_state) return [task.current_state];
     return [];
   }, [task]);
-
-  const canTake = isTeamMember(currentUser?.role) && task?.current_state === "UNASSIGNED";
-  const canUnclaim = isTeamMember(currentUser?.role) &&
-    task?.user_id &&
-    Number(task.user_id) === Number(currentUser?.id) &&
-    task.current_state !== "COMPLETED";
-  const canProgress = task?.user_id &&
-    Number(task.user_id) === Number(currentUser?.id) &&
-    task.current_state !== "COMPLETED";
-
-  if (window.Cypress || window.isCucumber) {
-    console.log("TaskDialog State:", {
-      role: currentUser?.role,
-      isLead: isTeamLead(currentUser?.role),
-      isMember: isTeamMember(currentUser?.role),
-      taskUser: task?.user_id,
-      currentUserId: currentUser?.id,
-      canTake, canUnclaim, canProgress
-    });
-  }
 
   const nextState = useMemo(() => {
     if (!task?.current_state || workflowStates.length === 0) return null;
@@ -152,7 +110,6 @@ export default function TaskDialog({
       title: title.trim(),
       description: description.trim(),
       points: normalizedPoints,
-      user_id: userId || null,
     });
     setIsPatching(false);
   };
@@ -161,9 +118,7 @@ export default function TaskDialog({
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle sx={{ pb: 1, pr: 6 }}>
         <Stack spacing={1}>
-          <Typography variant="h6" sx={{ fontWeight: 700 }}>
-            {task?.title || "Task Details"}
-          </Typography>
+          <Typography variant="h6" sx={{ fontWeight: 700 }}>Task Details</Typography>
           <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
             <Chip label={`Viewer: ${currentUser.name}`} size="small" variant="outlined" />
             <Chip label={`Role: ${roleText(currentUser.role)}`} size="small" />
@@ -199,7 +154,7 @@ export default function TaskDialog({
               <Typography variant="subtitle2" color="text.secondary">Task Meta</Typography>
               <Stack spacing={0.8} sx={{ mt: 1 }}>
                 <Typography><strong>id:</strong> {task.id}</Typography>
-                {isPatching && (
+                {isPatching ? (
                   <TextField
                     label="title"
                     value={title}
@@ -209,6 +164,8 @@ export default function TaskDialog({
                     required
                     sx={{ mb: 1 }}
                   />
+                ) : (
+                  <Typography><strong>title:</strong> {task.title || ""}</Typography>
                 )}
                 {isPatching ? (
                   <TextField
@@ -247,24 +204,7 @@ export default function TaskDialog({
               <Typography variant="subtitle2" color="text.secondary">Ownership And Skills</Typography>
               <Stack spacing={0.8} sx={{ mt: 1 }}>
                 <Typography><strong>created_by:</strong> {task.created_by ?? "null"}</Typography>
-                {isPatching && isTeamLead(currentUser.role) ? (
-                  <FormControl fullWidth size="small">
-                    <InputLabel id="assignee-select-label">Assignee</InputLabel>
-                    <Select
-                      labelId="assignee-select-label"
-                      value={userId}
-                      label="Assignee"
-                      onChange={(e) => setUserId(e.target.value)}
-                    >
-                      <MenuItem value=""><em>Unassigned</em></MenuItem>
-                      {teamUsers.map((u) => (
-                        <MenuItem key={u.id} value={u.id}>{u.name} ({u.email})</MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                ) : (
-                  <Typography><strong>user_id:</strong> {task.user_id ?? "null"}</Typography>
-                )}
+                <Typography><strong>user_id:</strong> {task.user_id ?? "null"}</Typography>
                 <Typography><strong>completed_by_id:</strong> {task.completed_by_id ?? "null"}</Typography>
                 <Typography><strong>required_skills:</strong> {task.required_skills || ""}</Typography>
               </Stack>
@@ -287,24 +227,8 @@ export default function TaskDialog({
 
       <DialogActions>
         <Button onClick={onClose}>Close</Button>
-        {isDeleting ? (
-          canPatch && (
-            <Button
-              id="task-dialog-confirm-button"
-              variant="contained"
-              onClick={onDelete}
-              sx={{
-                bgcolor: "#d32f2f",
-                color: "#fff",
-                "&:hover": { bgcolor: "#b71c1c" },
-              }}
-            >
-              CONFIRM
-            </Button>
-          )
-        ) : isPatching ? (
+        {isPatching ? (
           <Button
-            id="task-dialog-confirm-button"
             variant="contained"
             disabled={!canConfirmPatch}
             onClick={handleConfirmPatch}
@@ -335,15 +259,16 @@ export default function TaskDialog({
           </Button>
         )}
 
-        {!isPatching && !isDeleting && canPatch && (
+        {!isPatching && (
           <Button
             variant="contained"
-            onClick={() => setIsDeleting(true)}
+            disabled={!canPatch}
+            onClick={onDelete}
             sx={{
-              bgcolor: "#d32f2f",
+              bgcolor: canPatch ? "#d32f2f" : "#9e9e9e",
               color: "#fff",
               "&:hover": {
-                bgcolor: "#b71c1c",
+                bgcolor: canPatch ? "#b71c1c" : "#9e9e9e",
               },
             }}
           >
@@ -351,55 +276,35 @@ export default function TaskDialog({
           </Button>
         )}
 
-        {canTake && (
-          <Button
-            id="take-button"
-            data-testid="take-button"
-            variant="contained"
-            onClick={onTake}
-            sx={{
-              bgcolor: "#d32f2f",
-              color: "#fff",
-              "&:hover": {
-                bgcolor: "#b71c1c",
-              },
-            }}
-          >
-            Take
-          </Button>
-        )}
+        <Button
+          variant="contained"
+          onClick={onTake}
+          disabled={!canTake || isPatching}
+          sx={{
+            bgcolor: canTake && !isPatching ? "#d32f2f" : "#9e9e9e",
+            color: "#fff",
+            "&:hover": {
+              bgcolor: canTake && !isPatching ? "#b71c1c" : "#9e9e9e",
+            },
+          }}
+        >
+          Take
+        </Button>
 
-        {!isPatching && canUnclaim && (
-          <Button
-            id="unclaim-button"
-            variant="contained"
-            onClick={onUnclaim}
-            sx={{
-              bgcolor: "#757575",
-              color: "#fff",
-              "&:hover": { bgcolor: "#616161" },
-            }}
-          >
-            Unclaim
-          </Button>
-        )}
-
-        {canProgress && !isPatching && nextState && (
-          <Button
-            id="progress-button"
-            variant="contained"
-            onClick={onProgress}
-            sx={{
-              bgcolor: "#d32f2f",
-              color: "#fff",
-              "&:hover": {
-                bgcolor: "#b71c1c",
-              },
-            }}
-          >
-            PROGRESS
-          </Button>
-        )}
+        <Button
+          variant="contained"
+          onClick={onProgress}
+          disabled={!canProgress || isPatching || !nextState}
+          sx={{
+            bgcolor: canProgress && !isPatching && nextState ? "#d32f2f" : "#9e9e9e",
+            color: "#fff",
+            "&:hover": {
+              bgcolor: canProgress && !isPatching && nextState ? "#b71c1c" : "#9e9e9e",
+            },
+          }}
+        >
+          PROGRESS
+        </Button>
       </DialogActions>
     </Dialog>
   );
