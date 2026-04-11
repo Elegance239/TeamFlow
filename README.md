@@ -16,7 +16,7 @@
 | Dashboard Page | Vicky, Matthew | React |
 | Calendar Page | Vicky | React |
 | Deployment | Martin, Sam | Heroku |
-| Coverage Test | Matthew, Martin, Yanni | RSpec, Cucumber (BDD) |
+| Coverage Test | Matthew, Martin, Yanni, Sam | RSpec, Cucumber (BDD) |
 
 ## Documentation
 

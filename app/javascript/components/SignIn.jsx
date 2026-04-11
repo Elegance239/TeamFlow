@@ -192,8 +192,7 @@ export default function SignIn(props) {
                 autoFocus
                 required
                 fullWidth
-                variant="outlined"
-                color={emailError ? 'error' : 'primary'}
+                inputProps={{ 'data-testid': 'email-input' }}
               />
             </FormControl>
             <FormControl>
@@ -209,8 +208,7 @@ export default function SignIn(props) {
                 autoFocus
                 required
                 fullWidth
-                variant="outlined"
-                color={passwordError ? 'error' : 'primary'}
+                inputProps={{ 'data-testid': 'password-input' }}
               />
             </FormControl>
             <FormControlLabel
@@ -229,6 +227,7 @@ export default function SignIn(props) {
               variant="contained"
               onClick={validateInputs}
               disabled={isLoading}
+              data-testid="sign-in-button"
             >
               {isLoading ? 'Signing in...' : 'Sign in'}
             </Button>

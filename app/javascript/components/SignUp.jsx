@@ -301,9 +301,7 @@ export default function SignUp(props) {
                   autoComplete="name"
                   autoFocus
                   required
-                  fullWidth
-                  variant="outlined"
-                  color={emailError ? 'error' : 'primary'}
+                  inputProps={{ 'data-testid': 'signup-name-input' }}
                 />
               </FormControl>
 
@@ -319,9 +317,7 @@ export default function SignUp(props) {
                   autoComplete="email"
                   autoFocus
                   required
-                  fullWidth
-                  variant="outlined"
-                  color={emailError ? 'error' : 'primary'}
+                  inputProps={{ 'data-testid': 'signup-email-input' }}
                 />
               </FormControl>
 
@@ -337,8 +333,7 @@ export default function SignUp(props) {
                   autoComplete="new-password"
                   required
                   fullWidth
-                  variant="outlined"
-                  color={passwordError ? 'error' : 'primary'}
+                  inputProps={{ 'data-testid': 'signup-password-input' }}
                 />
               </FormControl>
 
@@ -353,8 +348,7 @@ export default function SignUp(props) {
                   type="password"
                   required
                   fullWidth
-                  variant="outlined"
-                  color={confirmPasswordError ? 'error' : 'primary'}
+                  inputProps={{ 'data-testid': 'signup-confirm-password-input' }}
                 />
               </FormControl>
 
@@ -444,6 +438,7 @@ export default function SignUp(props) {
                 fullWidth
                 variant="contained"
                 sx={{ width: '90%' }}
+                data-testid="sign-up-button"
               >
                 Sign Up
               </Button>

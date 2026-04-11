@@ -214,6 +214,7 @@ export default function TaskCreationDialog({ open, onClose, currentUser, onCreat
             variant="outlined"
             size="small"
             sx={{ mb: 1, bgcolor: "rgba(103, 58, 183, 0.05)" }}
+            inputProps={{ 'data-testid': 'ai-prompt-input' }}
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
@@ -246,17 +247,16 @@ export default function TaskCreationDialog({ open, onClose, currentUser, onCreat
             label="title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            fullWidth
             required
+            inputProps={{ 'data-testid': 'task-title-input' }}
           />
 
           <TextField
             label="description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            multiline
-            minRows={2}
             fullWidth
+            inputProps={{ 'data-testid': 'task-description-input' }}
           />
           <TextField
             label="due_date"
@@ -264,7 +264,7 @@ export default function TaskCreationDialog({ open, onClose, currentUser, onCreat
             value={dueDate}
             onChange={(e) => setDueDate(e.target.value)}
             InputLabelProps={{ shrink: true }}
-            inputProps={{ min: new Date().toISOString().split("T")[0] }}
+            inputProps={{ min: new Date().toISOString().split("T")[0], 'data-testid': 'task-due-date-input' }}
             fullWidth
           />
           <TextField
@@ -272,16 +272,14 @@ export default function TaskCreationDialog({ open, onClose, currentUser, onCreat
             type="number"
             value={points}
             onChange={(e) => setPoints(e.target.value)}
-            inputProps={{ min: 1, step: 1 }}
-            error={points !== "" && parsedPoints === null}
             helperText={points !== "" && parsedPoints === null ? "Must be a positive integer" : ""}
             fullWidth
+            inputProps={{ min: 1, step: 1, 'data-testid': 'task-points-input' }}
           />
           <TextField
-            label="required_skills (comma-separated)"
-            value={requiredSkills}
             onChange={(e) => setRequiredSkills(e.target.value)}
             fullWidth
+            inputProps={{ 'data-testid': 'task-skills-input' }}
           />
           
           <Box sx={{ p: 1.5, border: "1px solid #dcdcdc", borderRadius: 1 }}>
