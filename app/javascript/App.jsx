@@ -92,15 +92,37 @@ export default function App() {
   }
 
   useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const response = await fetch('/users/me', {
+          headers: { 'Accept': 'application/json' },
+          credentials: 'include'
+        });
+        if (response.ok) {
+          const userData = await response.json();
+          setUser(userData);
+          setAuth(true);
+          localStorage.setItem('teamflowCurrentUser', JSON.stringify(userData));
+          if (currentPage === 'signin') setCurrentPage('dashboard');
+        } else {
+          localStorage.removeItem('teamflowCurrentUser');
+          setAuth(false);
+          setUser(null);
+          setCurrentPage('signin');
+        }
+      } catch (error) {
+        console.error('Session check failed', error);
+      }
+    };
+
     const storedUser = localStorage.getItem('teamflowCurrentUser');
     if (storedUser) {
       setUser(JSON.parse(storedUser));
       setAuth(true);
-      setCurrentPage('taskCalendar');
-    } else {
-      setAuth(false);
-      setCurrentPage('signin');
+      if (currentPage === 'signin') setCurrentPage('dashboard');
     }
+    
+    checkSession();
   }, []);
 
   
@@ -132,7 +154,7 @@ export default function App() {
           currentPage === "signup" ? (
             <SignUp onNavigate={setCurrentPage} />
           ) : (
-            <SignIn onNavigate= {setCurrentPage} onSignedIn={(userData) => {setAuth(true); setUser(userData); setCurrentPage('taskCalendar')}} />
+            <SignIn onNavigate= {setCurrentPage} onSignedIn={(userData) => {setAuth(true); setUser(userData); setCurrentPage('dashboard')}} />
           )
         )
           

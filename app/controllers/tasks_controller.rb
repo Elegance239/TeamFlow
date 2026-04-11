@@ -5,6 +5,7 @@ class TasksController < ApplicationController
   # Returns all tasks belonging to the requester's team.
   def index
     unless current_user.team_id.present?
+      Rails.logger.error "TASKS_INDEX_ERROR: User ID #{current_user.id} has no team_id! (Email: #{current_user.email})" if Rails.env.test?
       return render json: { error: "User is not part of a team" }, status: :unprocessable_content
     end
 
@@ -179,6 +180,7 @@ class TasksController < ApplicationController
     render json: tasks.map { |task|
       {
         task_id: task.id,
+        title: task.title,
         description: task.description,
         current_state: task.current_state,
         points: task.points,
@@ -212,7 +214,7 @@ class TasksController < ApplicationController
   end
 
   def task_update_params
-    params.permit(:title, :description, :points)
+    params.permit(:title, :description, :points, :user_id, :required_skills)
   end
 
   def determine_assignee

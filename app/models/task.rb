@@ -17,6 +17,7 @@ class Task < ApplicationRecord
   has_many :task_histories, dependent: :destroy
   has_many :task_transition_pendings, dependent: :destroy
 
+  validates :title, presence: true
   validates :due_date, presence: true
   validates :points, presence: true, numericality: { only_integer: true, greater_than: 0 }
 

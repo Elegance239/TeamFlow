@@ -9,8 +9,9 @@ RSpec.describe TasksController, type: :controller do
         email: "a@cuhk.com",
         password: "password1",
         name: "A",
-        team: team
-        ) }
+        team: team,
+        role: 1
+    ) }
 
     let(:team_lead) { User.create!(
         email: "lead@cuhk.com",
@@ -18,7 +19,7 @@ RSpec.describe TasksController, type: :controller do
         name: "Lead",
         team: team,
         role: 0
-        ) }
+    ) }
 
     describe 'POST #create' do
         before { sign_in team_lead }

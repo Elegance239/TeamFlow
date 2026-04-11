@@ -6,18 +6,25 @@ RSpec.describe Task, type: :model do
 
   def valid_task(overrides = {})
     Task.new({
+      title: "Test Task",
       due_date: Date.today + 1,
       team: team,
       created_by: lead.id,
       points: 1
     }.merge(overrides))
   end
-
+ 
   describe "validations" do
-    it "is valid with a future due_date, team, and created_by" do
+    it "is valid with a title, future due_date, team, and created_by" do
       expect(valid_task).to be_valid
     end
 
+    it "is invalid without a title" do
+      task = valid_task(title: nil)
+      expect(task).not_to be_valid
+      expect(task.errors[:title]).to be_present
+    end
+ 
     it "is invalid without due_date" do
       task = valid_task(due_date: nil)
       expect(task).not_to be_valid

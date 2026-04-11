@@ -465,6 +465,33 @@ export default function CalendarForTasks({
     }
   };
 
+  const handleUnclaimTask = async () => {
+    if (!selectedTask) return;
+
+    try {
+      const response = await fetch(`/tasks/${selectedTask.id}/unassign`, {
+        method: "DELETE",
+        headers: {
+          Accept: "application/json",
+        },
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        enqueueSnackbar("Failed to unclaim task", { variant: "error" });
+        return;
+      }
+
+      enqueueSnackbar("Task unclaimed successfully", { variant: "success" });
+      await refreshTasks();
+      handleClose();
+    } catch (error) {
+      enqueueSnackbar("Network error while unclaiming task", {
+        variant: "error",
+      });
+    }
+  };
+
   const handleCreateTask = async (newTask) => {
     try {
       const response = await fetch("/tasks", {
@@ -597,6 +624,7 @@ export default function CalendarForTasks({
         canProgress={taskCanProgress}
         onTake={handleTakeTask}
         onProgress={handleProgressTask}
+        onUnclaim={handleUnclaimTask}
         onConfirmPatch={handleConfirmPatch}
         onDelete={handleDeleteTask}
       />

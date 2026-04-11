@@ -12,7 +12,9 @@ Rails.application.routes.draw do
     patch "users/password/change", to: "users/passwords#change"
   end
 
-  resources :users, only: [ :show, :update ]
+  resources :users, only: [ :show, :update ] do
+    get :me, on: :collection
+  end
 
   resources :teams, only: [ :create, :show, :update ] do
     resources :members, only: [ :create, :index, :destroy ], controller: "team_members"
