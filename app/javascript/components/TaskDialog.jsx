@@ -161,7 +161,9 @@ export default function TaskDialog({
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle sx={{ pb: 1, pr: 6 }}>
         <Stack spacing={1}>
-          <Typography variant="h6" sx={{ fontWeight: 700 }}>Task Details</Typography>
+          <Typography variant="h6" sx={{ fontWeight: 700 }}>
+            {task?.title || "Task Details"}
+          </Typography>
           <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
             <Chip label={`Viewer: ${currentUser.name}`} size="small" variant="outlined" />
             <Chip label={`Role: ${roleText(currentUser.role)}`} size="small" />
@@ -197,7 +199,7 @@ export default function TaskDialog({
               <Typography variant="subtitle2" color="text.secondary">Task Meta</Typography>
               <Stack spacing={0.8} sx={{ mt: 1 }}>
                 <Typography><strong>id:</strong> {task.id}</Typography>
-                {isPatching ? (
+                {isPatching && (
                   <TextField
                     label="title"
                     value={title}
@@ -207,8 +209,6 @@ export default function TaskDialog({
                     required
                     sx={{ mb: 1 }}
                   />
-                ) : (
-                  <Typography><strong>title:</strong> {task.title || ""}</Typography>
                 )}
                 {isPatching ? (
                   <TextField

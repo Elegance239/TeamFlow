@@ -162,8 +162,13 @@ function DashboardSection({ title, color, tasks = [], sx = {}, onTaskClick }) {
                 }}
               >
                 <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                  {task.description || "No description"}
+                  {task.title || task.description || "Untitled Task"}
                 </Typography>
+                {task.title && task.description && (
+                   <Typography variant="caption" color="text.secondary" sx={{ display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                     {task.description}
+                   </Typography>
+                )}
               </TaskCard>
             ))}
           </Stack>
