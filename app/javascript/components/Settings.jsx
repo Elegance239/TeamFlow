@@ -5,6 +5,16 @@ import { getCsrfHeaders } from "../utils/csrf";
 
 
 export default function Settings({ user: currentUser, setUser, setAuth }) {
+  const getAlertsStorageKey = (userId) => `teamflowEmailAlerts:${userId}`;
+
+  const saveAlertsPreference = (userId, enabled, email) => {
+    if (!userId) return;
+    localStorage.setItem(
+      getAlertsStorageKey(userId),
+      JSON.stringify({ enabled, email })
+    );
+  };
+
   const [user, setLocalUser] = useState(null);
   const [nameEdit, setNameEdit] = useState('');
   const [skillsEdit, setSkillsEdit] = useState('');
@@ -30,7 +40,14 @@ export default function Settings({ user: currentUser, setUser, setAuth }) {
         setLocalUser(data);
         setNameEdit(data.name || '');
         setSkillsEdit(data.skills || '');
-        setAlertEmail(data.email || '');
+
+        const stored = localStorage.getItem(getAlertsStorageKey(data.id));
+        const parsed = stored ? JSON.parse(stored) : null;
+        const savedEnabled = Boolean(parsed?.enabled);
+        const savedEmail = parsed?.email || data.email || '';
+
+        setEmailAlerts(savedEnabled);
+        setAlertEmail(savedEmail);
       });
   }, [currentUser]);
 
@@ -339,7 +356,11 @@ export default function Settings({ user: currentUser, setUser, setAuth }) {
           <span>Enable Email Notifications</span>
           <Switch
             checked={emailAlerts}
-            onChange={(e) => setEmailAlerts(e.target.checked)}
+            onChange={(e) => {
+              const enabled = e.target.checked;
+              setEmailAlerts(enabled);
+              saveAlertsPreference(user.id, enabled, alertEmail);
+            }}
           />
         </div>
         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
@@ -367,7 +388,10 @@ export default function Settings({ user: currentUser, setUser, setAuth }) {
             size="small"
             disabled={!emailAlerts}
             sx={{ textTransform: 'none', whiteSpace: 'nowrap' }}
-            onClick={() => alert('Alert email saved!')} // wire to backend later
+            onClick={() => {
+              saveAlertsPreference(user.id, emailAlerts, alertEmail);
+              alert('Alert email saved!');
+            }}
           >
             Save
           </Button>
