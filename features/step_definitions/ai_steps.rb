@@ -34,12 +34,21 @@ end
 Given('I am logged in as {string} with password {string}') do |email, password|
   user = User.find_by(email: email)
   
-  visit "/"
-  find('[data-testid="email-input"]', wait: 10).fill_in(with: email)
-  find('[data-testid="password-input"]').fill_in(with: password)
-  find('[data-testid="sign-in-button"]').click
-  
-  expect(page).to have_css('button[aria-label="add-task"]', wait: 10)
+  begin
+    visit "/"
+    # Wait for React app to load and show the SignIn form using existing HTML IDs
+    find('input#email', wait: 15).fill_in(with: email)
+    find('input#password').fill_in(with: password)
+    find('button[type="submit"]', text: "Sign in").click
+    
+    # Ensure login completed and we navigate to the dashboard
+    expect(page).to have_css('button[aria-label="add-task"]', wait: 15)
+  rescue Capybara::ElementNotFound => e
+    puts "DEBUG: Login failed. Current URL: #{page.current_url}"
+    puts "DEBUG: Page root testid exists? #{page.has_css?('[data-testid=\"root-mount\"]')}"
+    puts "DEBUG: Page Source:\n#{page.html}"
+    raise e
+  end
 end
 
 When('I open the task creation dialog') do
@@ -48,7 +57,8 @@ When('I open the task creation dialog') do
 end
 
 When('I enter {string} into the AI prompt') do |prompt|
-  find('[data-testid="ai-prompt-input"]').fill_in(with: prompt)
+  # Use exact text from MUI label to find the field
+  fill_in "Type here to generate with AI (e.g. 'Create a React login form, 5 points, due in 3 days')", with: prompt
 end
 
 When('I click the "Magic Wand" icon') do
@@ -58,23 +68,23 @@ When('I click the "Magic Wand" icon') do
 end
 
 Then('the title should contain {string}') do |text|
-  expect(find('[data-testid="task-title-input"]', wait: 5).value).to include(text)
+  expect(page.find_field('title').value).to include(text)
 end
 
 Then('the description should contain {string}') do |text|
-  expect(find('[data-testid="task-description-input"]').value).to include(text)
+  expect(page.find_field('description').value).to include(text)
 end
 
 Then('the required skills should contain {string}') do |text|
-  expect(find('[data-testid="task-skills-input"]').value).to include(text)
+  expect(page.find_field('required_skills (comma-separated)').value).to include(text)
 end
 
 Then('the points should be a positive integer') do
-  val = find('[data-testid="task-points-input"]').value.to_i
+  val = page.find_field('points').value.to_i
   expect(val).to be > 0
 end
 
 Then('the due date should be set to a future date') do
-  val = find('[data-testid="task-due-date-input"]').value
+  val = page.find_field('due_date').value
   expect(Date.parse(val)).to be >= Date.today
 end
