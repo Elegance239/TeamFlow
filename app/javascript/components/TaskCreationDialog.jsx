@@ -19,6 +19,9 @@ import {
   Typography,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
+import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh";
+import axios from "axios";
+import { InputAdornment, CircularProgress } from "@mui/material";
 
 function normalizeSkills(raw) {
   return raw
@@ -59,6 +62,8 @@ export default function TaskCreationDialog({ open, onClose, currentUser, onCreat
   const [needsValidation, setNeedsValidation] = useState(false);
   const [allStates, setAllStates] = useState(FIXED_STATES);
   const [userId, setUserId] = useState("");
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [isAiGenerating, setIsAiGenerating] = useState(false);
 
   const isTeamLead = currentUser.role === 0 || currentUser.role === "team_lead";
 
@@ -91,6 +96,8 @@ export default function TaskCreationDialog({ open, onClose, currentUser, onCreat
     setNeedsValidation(false);
     setAllStates(FIXED_STATES);
     setUserId("");
+    setAiPrompt("");
+    setIsAiGenerating(false);
   };
 
   const handleClose = () => {
@@ -115,6 +122,37 @@ export default function TaskCreationDialog({ open, onClose, currentUser, onCreat
     const created = await onCreate(createdTask);
     if (created) {
       handleClose();
+    }
+  };
+
+  const handleAiGenerate = async () => {
+    if (!aiPrompt.trim() || isAiGenerating) return;
+
+    setIsAiGenerating(true);
+    try {
+      const response = await axios.post("/tasks/ai_generate", { prompt: aiPrompt });
+      const data = response.data;
+
+      if (data.error) {
+        console.error("AI Error:", data.error);
+      } else {
+        const combinedDesc = `${data.title}\n\n${data.description}`.trim();
+        setDescription(combinedDesc);
+        
+        if (data.points) {
+          setPoints(data.points);
+        }
+
+        if (data.due_days_from_now !== undefined) {
+          const futureDate = new Date();
+          futureDate.setDate(futureDate.getDate() + Number(data.due_days_from_now));
+          setDueDate(futureDate.toISOString().split("T")[0]);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to generate task with AI:", error);
+    } finally {
+      setIsAiGenerating(false);
     }
   };
 
@@ -149,6 +187,38 @@ export default function TaskCreationDialog({ open, onClose, currentUser, onCreat
               Only team leads can create tasks.
             </Typography>
           )}
+
+          <TextField
+            label="Generate with AI (e.g. 'implement login page')"
+            value={aiPrompt}
+            onChange={(e) => setAiPrompt(e.target.value)}
+            disabled={isAiGenerating || !isTeamLead}
+            fullWidth
+            variant="outlined"
+            size="small"
+            sx={{ mb: 1, bgcolor: "rgba(103, 58, 183, 0.05)" }}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    onClick={handleAiGenerate}
+                    disabled={isAiGenerating || !aiPrompt.trim()}
+                    color="primary"
+                    edge="end"
+                    aria-label="generate-with-ai"
+                  >
+                    {isAiGenerating ? (
+                      <CircularProgress size={20} />
+                    ) : (
+                      <AutoFixHighIcon />
+                    )}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+          />
+          
+          <Box sx={{ borderBottom: "1px solid #eee", mb: 1 }} />
 
           <TextField
             label="description"
