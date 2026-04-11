@@ -208,11 +208,11 @@ class TasksController < ApplicationController
   private
 
   def task_create_params
-    params.permit(:description, :due_date, :points, :user_id, :required_skills, :needs_validation, :all_states)
+    params.permit(:title, :description, :due_date, :points, :user_id, :required_skills, :needs_validation, :all_states)
   end
 
   def task_update_params
-    params.permit(:description, :points)
+    params.permit(:title, :description, :points)
   end
 
   def determine_assignee

@@ -55,6 +55,7 @@ function stateChipSx(state) {
 }
 
 export default function TaskCreationDialog({ open, onClose, currentUser, onCreate }) {
+  const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [dueDate, setDueDate] = useState(new Date().toISOString().split("T")[0]);
   const [points, setPoints] = useState(1);
@@ -74,7 +75,7 @@ export default function TaskCreationDialog({ open, onClose, currentUser, onCreat
     return p;
   }, [points]);
 
-  const canCreate = isTeamLead && Boolean(dueDate) && parsedPoints !== null;
+  const canCreate = isTeamLead && Boolean(title.trim()) && Boolean(dueDate) && parsedPoints !== null;
 
   const handleAddState = (stateToAdd) => {
     const newStates = [...allStates, stateToAdd];
@@ -89,6 +90,7 @@ export default function TaskCreationDialog({ open, onClose, currentUser, onCreat
   const availableStatesToAdd = OPTIONAL_STATES.filter(s => !allStates.includes(s));
 
   const resetForm = () => {
+    setTitle("");
     setDescription("");
     setDueDate(new Date().toISOString().split("T")[0]);
     setPoints(1);
@@ -110,6 +112,7 @@ export default function TaskCreationDialog({ open, onClose, currentUser, onCreat
 
     const parsedUserId = userId === "" ? null : Number(userId);
     const createdTask = {
+      title: title.trim(),
       description: description.trim(),
       due_date: dueDate,
       points: parsedPoints,
@@ -136,10 +139,12 @@ export default function TaskCreationDialog({ open, onClose, currentUser, onCreat
       if (data.error) {
         console.error("AI Error:", data.error);
       } else {
-        const title = data.title || data.Title || "";
-        const desc = data.description || data.Description || "";
-        const combinedDesc = title && desc ? `${title}\n\n${desc}` : (title || desc);
-        setDescription(combinedDesc.trim());
+        //ai returns:title, description, points, due_days_from_now, required_skills
+        const aiTitle = data.title || data.Title || "";
+        const aiDesc = data.description || data.Description || "";
+        
+        setTitle(aiTitle.trim());
+        setDescription(aiDesc.trim());
         
         if (data.points || data.Points) {
           setPoints(data.points || data.Points);
@@ -226,6 +231,14 @@ export default function TaskCreationDialog({ open, onClose, currentUser, onCreat
           />
           
           <Box sx={{ borderBottom: "1px solid #eee", mb: 1 }} />
+          
+          <TextField
+            label="title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            fullWidth
+            required
+          />
 
           <TextField
             label="description"
