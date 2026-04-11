@@ -346,4 +346,79 @@ RSpec.describe "Users", type: :request do
       expect(User.find_by(id: user.id)).not_to be_nil
     end
   end
+  describe "PATCH /users/:id for skills" do
+  it "allows a user to update their own skills" do
+    user = create(:user, skills: "html")
+
+    sign_in user
+    patch "/users/#{user.id}", params: { skills: "html,css,js" }
+
+    expect(response).to have_http_status(:ok)
+    expect(user.reload.skills_list).to include("html", "css", "js")
+  end
+
+  it "prevents a user from updating another user's skills" do
+    user = create(:user)
+    other = create(:user)
+
+    sign_in user
+    patch "/users/#{other.id}", params: { skills: "ruby" }
+
+    expect(response).to have_http_status(:forbidden)
+  end
+end
+
+describe "PATCH /users/password/change" do
+  it "changes password with correct current password" do
+    user = create(:user, password: "password123", password_confirmation: "password123")
+
+    sign_in user
+    patch "/users/password/change", params: {
+      current_password: "password123",
+      password: "newpassword456",
+      password_confirmation: "newpassword456"
+    }, headers: { 'ACCEPT' => 'application/json' }
+
+    expect(response).to have_http_status(:ok)
+    expect(JSON.parse(response.body)["message"]).to eq("Password updated successfully")
+    expect(user.reload.valid_password?("newpassword456")).to be true
+  end
+
+  it "rejects password change with wrong current password" do
+    user = create(:user, password: "password123", password_confirmation: "password123")
+
+    sign_in user
+    patch "/users/password/change", params: {
+      current_password: "wrongpassword",
+      password: "newpassword456",
+      password_confirmation: "newpassword456"
+    }, headers: { 'ACCEPT' => 'application/json' }
+
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(JSON.parse(response.body)["error"]).to eq("Current password is incorrect")
+  end
+
+  it "rejects password change when new passwords don't match" do
+    user = create(:user, password: "password123", password_confirmation: "password123")
+
+    sign_in user
+    patch "/users/password/change", params: {
+      current_password: "password123",
+      password: "newpassword456",
+      password_confirmation: "differentpassword"
+    }, headers: { 'ACCEPT' => 'application/json' }
+
+    expect(response).to have_http_status(:unprocessable_entity)
+  end
+
+  it "requires authentication" do
+    patch "/users/password/change", params: {
+      current_password: "password123",
+      password: "newpassword456",
+      password_confirmation: "newpassword456"
+    }, headers: { 'ACCEPT' => 'application/json' }
+
+    expect(response).to have_http_status(:unauthorized)
+  end
+end
 end

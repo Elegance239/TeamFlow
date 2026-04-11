@@ -3,22 +3,18 @@ class TaskMailer < ApplicationMailer
     @task = task
     @assignee = task.assigned_user
     @creator = task.creator
-
     mail(
       to: @assignee.email,
-      subject: "New task assigned: #{@task.description}",
-      from: @creator.email
+      subject: "New task assigned: #{@task.description}"
     )
   end
 
   def deadline_reminder(task)
     @task = task
     @assignee = task.assigned_user
-    @creator = task.creator
     mail(
       to: @assignee.email,
-      subject: "Reminder: #{@task.description} is due tomorrow",
-      from: @creator.email,
+      subject: "Reminder: \"#{@task.description}\" is due tomorrow"
     )
   end
 end

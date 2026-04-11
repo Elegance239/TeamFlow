@@ -4,17 +4,21 @@ require "json"
 
 MODEL="gemini-2.5-flash"
 SYSTEM_PROMPT=<<~PROMPT
-    You are an expert project manager.Your job:
-        - Break down a user request into actionable tasks
-        - Ensure tasks are realistic and prioritized
-        - Return ONLY valid JSON
+    You are an expert project manager. Your job:
+        - Break down the following request into a single actionable task.
+        - Ensure the task is realistic and prioritized.
+        - Return ONLY a single valid JSON object.
+        
+        Request: "{{PROMPT}}"
+
         Rules:
-        - Each task must include:
-        - title (short)
-         - description (clear)
-         - points (1-100)
-        - due_days_from_now#{' '}
-Avoid vague tasks.
+        - The JSON must include:
+          - "title": (short string)
+          - "description": (detailed string)
+          - "points": (integer 1-100)
+          - "due_days_from_now": (integer)
+          - "required_skills": (comma-separated string of technical skills)
+        - Avoid vague tasks.
 PROMPT
 
 class Ai
@@ -31,7 +35,7 @@ class Ai
         uri.query = URI.encode_www_form({ key: api_key })
 
         payload = {
-            contents: [ { parts: [ { text: SYSTEM_PROMPT.gsub("{{PROMPT}}", prompt)} ] } ]
+            contents: [ { parts: [ { text: SYSTEM_PROMPT.gsub("{{PROMPT}}", prompt) } ] } ]
         }.to_json
 
         begin
@@ -41,19 +45,19 @@ class Ai
             if response.is_a?(Net::HTTPSuccess)
                 raw_data = JSON.parse(response.body)
                 ai_text = raw_data.dig("candidates", 0, "content", "parts", 0, "text")
-            
-                clean_json = ai_text.to_s.gsub(/```json|```/, '').strip
-              
+
+                clean_json = ai_text.to_s.gsub(/```json|```/, "").strip
+
                 begin
                     JSON.parse(clean_json)
                 rescue
                     { error: "AI returned invalid JSON", raw: ai_text }
                 end
             else
-            return{ 
-                error: "API Request Failed", 
-                status_code: response.code, 
-                google_response: (JSON.parse(response.body) rescue response.body) 
+             {
+                error: "API Request Failed",
+                status_code: response.code,
+                google_response: (JSON.parse(response.body) rescue response.body)
             }
             end
         rescue => e

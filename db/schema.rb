@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_27_001000) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_11_145000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -48,6 +48,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_27_001000) do
     t.integer "points", null: false
     t.text "required_skills", default: "", null: false
     t.bigint "team_id", null: false
+    t.string "title"
     t.datetime "updated_at", null: false
     t.bigint "user_id"
     t.index ["completed_by_id"], name: "index_tasks_on_completed_by_id"

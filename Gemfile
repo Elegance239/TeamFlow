@@ -23,7 +23,7 @@ gem "devise", "~> 5.0", ">= 5.0.3"
 # gem "bcrypt", "~> 3.1.7"
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
-gem "tzinfo-data", platforms: %i[ windows jruby ]
+gem "tzinfo-data", platforms: %i[ mswin mswin64 mingw x64_mingw jruby ]
 
 # Use the database-backed adapters for Rails.cache, Active Job, and Action Cable
 gem "solid_cache"
@@ -44,7 +44,7 @@ gem "image_processing", "~> 1.2"
 
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
-  gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
+  gem "debug", platforms: %i[ mri mswin mswin64 mingw x64_mingw ], require: "debug/prelude"
 
   # Audits gems for known security defects (use config/bundler-audit.yml to ignore issues)
   gem "bundler-audit", require: false
@@ -78,5 +78,5 @@ gem "jsbundling-rails", "~> 1.3", ">= 1.3.1"
 gem "letter_opener_web", group: :development
 gem "whenever", require: false
 
-#ai
-gem 'dotenv-rails', groups:[:development, :test]
+# ai
+gem "dotenv-rails", groups: [ :development, :test ]

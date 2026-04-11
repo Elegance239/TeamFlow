@@ -1,11 +1,15 @@
 # app/controllers/users/passwords_controller.rb
 class Users::PasswordsController < Devise::PasswordsController
   respond_to :json
-  skip_before_action :require_no_authentication, only: [:change]
+  skip_before_action :require_no_authentication, only: [ :change ]
 
   # PATCH /users/password/change
   def change
     user = current_user
+    unless user
+    return render json: { error: "You need to sign in first" }, status: :unauthorized
+    end
+
     unless user.valid_password?(params[:current_password])
       return render json: { error: "Current password is incorrect" }, status: :unprocessable_entity
     end
