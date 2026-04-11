@@ -326,6 +326,26 @@ export default function Dashboard() {
     return Array.isArray(data) ? data : [];
   };
 
+  const fetchPendings = async () => {
+    const response = await fetch("/task_transition_pendings", {
+      method: "GET",
+      headers: { Accept: "application/json" },
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      let message = "Failed to load pending requests";
+      try {
+        const data = await response.json();
+        message = data?.error || data?.errors?.join(", ") || message;
+      } catch (error) { }
+      throw new Error(message);
+    }
+
+    const data = await response.json();
+    return Array.isArray(data) ? data : [];
+  };
+
   const refreshTasks = async () => {
     const loadedTasks = await fetchTasks();
     setTasks(loadedTasks);
