@@ -136,16 +136,23 @@ export default function TaskCreationDialog({ open, onClose, currentUser, onCreat
       if (data.error) {
         console.error("AI Error:", data.error);
       } else {
-        const combinedDesc = `${data.title}\n\n${data.description}`.trim();
-        setDescription(combinedDesc);
+        const title = data.title || data.Title || "";
+        const desc = data.description || data.Description || "";
+        const combinedDesc = title && desc ? `${title}\n\n${desc}` : (title || desc);
+        setDescription(combinedDesc.trim());
         
-        if (data.points) {
-          setPoints(data.points);
+        if (data.points || data.Points) {
+          setPoints(data.points || data.Points);
         }
 
-        if (data.due_days_from_now !== undefined) {
+        if (data.required_skills || data.Required_skills || data.requiredSkills) {
+          setRequiredSkills(data.required_skills || data.Required_skills || data.requiredSkills);
+        }
+
+        const dueDays = data.due_days_from_now ?? data.Due_days_from_now;
+        if (dueDays !== undefined && dueDays !== null) {
           const futureDate = new Date();
-          futureDate.setDate(futureDate.getDate() + Number(data.due_days_from_now));
+          futureDate.setDate(futureDate.getDate() + Number(dueDays));
           setDueDate(futureDate.toISOString().split("T")[0]);
         }
       }
@@ -189,7 +196,7 @@ export default function TaskCreationDialog({ open, onClose, currentUser, onCreat
           )}
 
           <TextField
-            label="Generate with AI (e.g. 'implement login page')"
+            label="Type here to generate with AI (e.g. 'Create a React login form, 5 points, due in 3 days')"
             value={aiPrompt}
             onChange={(e) => setAiPrompt(e.target.value)}
             disabled={isAiGenerating || !isTeamLead}
