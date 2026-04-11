@@ -16,14 +16,14 @@ Names are denoted by the following for identification:
 | Core Models & Controllers | Sam | Ruby, RSpec, PostgreSQL (User, Teams, etc.) |
 | Authentication (Backend) | Sam, Martin | Devise, Ruby |
 | Sign Up and Log In Page | Martin | React |
-| Mailer | Matthew | Ruby |
-| Settings Page | Matthew | React |
+| Mailer Services | Matthew | Ruby, ActionMailer, Gmail SMTP, Whenever |
+| Settings Page | Matthew | React, Ruby, Devise, PostgreSQL |
 | AI Integration | Yanni | Ruby, Gemini API  (?)
-| Tests | Everyone | RSpec, Cucumber |
 | Header and Sidebar | Martin | React |
 | Dashboard Page | | |
 | Calendar Page | | |
 | Deployment | Martin, Sam | Heroku
+| Coverage Test | Matthew, Martin, ... | RSpec, Cucumber |
 
 ## Documentation
 ### Important Testing Information
