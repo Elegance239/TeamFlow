@@ -20,10 +20,10 @@ Names are denoted by the following for identification:
 | Settings Page | Matthew | React, Ruby, Devise, PostgreSQL |
 | AI Integration | Yanni | Ruby, Gemini API  (?)
 | Header and Sidebar | Martin | React |
-| Dashboard Page | | |
-| Calendar Page | | |
+| Dashboard Page | Vicky | React |
+| Calendar Page | Sam, Vicky, Martin | React |
 | Deployment | Martin, Sam | Heroku
-| Coverage Test | Matthew, Martin, ... | RSpec, Cucumber |
+| Coverage Test | Matthew, Martin,  Sam, Yanni, Vikcy | RSpec, Cucumber |
 
 ## Documentation
 ### Important Testing Information
