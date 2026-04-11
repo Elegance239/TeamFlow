@@ -8,7 +8,7 @@ RSpec.describe "Tasks", type: :request do
   let(:other_lead) { User.create!(name: "Other Lead", email: "other_lead@example.com", password: "password", password_confirmation: "password", team: other_team, role: :team_lead) }
 
   def create_task(overrides = {})
-    Task.create!({ due_date: Date.today + 7, team: team, created_by: lead.id, points: 1 }.merge(overrides))
+    Task.create!({ title: "Task Title", due_date: Date.today + 7, team: team, created_by: lead.id, points: 1 }.merge(overrides))
   end
 
   describe "POST /tasks" do
@@ -36,6 +36,7 @@ RSpec.describe "Tasks", type: :request do
       sign_in lead
 
       post "/tasks", params: {
+        title: "Optional Workflow Task",
         due_date: (Date.today + 10).iso8601,
         points: 3,
         all_states: "TESTING,DEVELOPMENT"
@@ -50,6 +51,7 @@ RSpec.describe "Tasks", type: :request do
       sign_in lead
 
       post "/tasks", params: {
+        title: "Validation Task",
         due_date: (Date.today + 7).iso8601,
         points: 2,
         required_skills: " Ruby, SQL ",
@@ -67,6 +69,7 @@ RSpec.describe "Tasks", type: :request do
       sign_in lead
 
       post "/tasks", params: {
+        title: "Assigned Task",
         due_date: (Date.today + 7).iso8601,
         points: 2,
         user_id: skilled_member.id,
@@ -100,9 +103,9 @@ RSpec.describe "Tasks", type: :request do
   describe "GET /tasks" do
     it "returns all tasks for the requester's team" do
       sign_in member
-      t1 = create_task(description: "Task 1")
-      t2 = create_task(description: "Task 2")
-      create_task_in_other = Task.create!(due_date: Date.today + 5, team: other_team, created_by: other_lead.id, points: 1)
+      t1 = create_task(title: "Task 1", description: "Task 1")
+      t2 = create_task(title: "Task 2", description: "Task 2")
+      create_task_in_other = Task.create!(title: "Other Team Task", due_date: Date.today + 5, team: other_team, created_by: other_lead.id, points: 1)
 
       get "/tasks"
       expect(response).to have_http_status(:ok)
@@ -227,6 +230,7 @@ RSpec.describe "Tasks", type: :request do
       skilled_member = User.create!(name: "Skilled3", email: "skilled3@example.com", password: "password", password_confirmation: "password", team: team, role: :team_member, skills: "ruby")
       sign_in lead
       post "/tasks", params: {
+        title: "Progress Task",
         due_date: (Date.today + 6).iso8601,
         points: 2,
         user_id: skilled_member.id,
@@ -256,6 +260,7 @@ RSpec.describe "Tasks", type: :request do
       skilled_member = User.create!(name: "Skilled4", email: "skilled4@example.com", password: "password", password_confirmation: "password", team: team, role: :team_member, skills: "ruby")
       sign_in lead
       post "/tasks", params: {
+        title: "Validated Progress Task",
         due_date: (Date.today + 6).iso8601,
         points: 2,
         user_id: skilled_member.id,
