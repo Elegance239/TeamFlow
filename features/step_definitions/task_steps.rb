@@ -25,13 +25,7 @@ When(/^I click on the task with title "([^"]*)"$/) do |title|
   find('[role="dialog"]', wait: 5)
 end
 
-Given(/^a task exists with title "([^"]*)" and state "([^"]*)"( assigned to me)?$/) do |title, state, assigned|
-  step "a task exists with title \"#{title}\" and state \"#{state}\" and requirements#{assigned}"
-end
-
-Given(/^a task exists with title "([^"]*)" and state "([^"]*)" and requirements( assigned to me)?$/) do |title, state, assigned|
-  needs_validation = page.source.include?("needs validation")
-  
+Given(/^a task exists with title "([^"]*)" and state "([^"]*)"(?: and (needs validation))?( assigned to me)?$/) do |title, state, validation, assigned|
   team = @user&.team || Team.find_or_create_by!(name: "Dev Team")
   creator = User.find_by(role: :team_lead) || User.create!(
     email: "system_lead@example.com",
@@ -42,6 +36,7 @@ Given(/^a task exists with title "([^"]*)" and state "([^"]*)" and requirements(
   )
   
   user_id = assigned ? @user.id : nil
+  needs_validation = !validation.nil?
   
   Task.create!(
     title: title,
@@ -53,24 +48,29 @@ Given(/^a task exists with title "([^"]*)" and state "([^"]*)" and requirements(
     points: 3,
     due_date: Date.today + 7.days,
     needs_validation: needs_validation,
-    all_states: "UNASSIGNED,ASSIGNED,COMPLETED"
+    all_states: "UNASSIGNED,ASSIGNED,DEVELOPMENT,TESTING,COMPLETED"
   )
 end
 
-Given(/^a task exists with title "([^"]*)" and state "([^"]*)" and skills "([^"]*)"$/) do |title, state, skills|
+Given(/^a task exists with title "([^"]*)" and state "([^"]*)" and skills "([^"]*)"(?: and (needs validation))?( assigned to me)?$/) do |title, state, skills, validation, assigned|
   team = @user&.team || Team.find_or_create_by!(name: "Dev Team")
   creator = User.find_by(role: :team_lead) || User.create!(email: "system_lead@example.com", name: "System Lead", password: "password123", role: :team_lead, team: team)
   
+  user_id = assigned ? @user.id : nil
+  needs_validation = !validation.nil?
+
   Task.create!(
     title: title,
     description: "Skill test task",
     current_state: state,
     team: team,
+    user_id: user_id,
     creator: creator,
     points: 5,
     due_date: Date.today + 10.days,
     required_skills: skills,
-    all_states: "UNASSIGNED,ASSIGNED,COMPLETED"
+    needs_validation: needs_validation,
+    all_states: "UNASSIGNED,ASSIGNED,DEVELOPMENT,TESTING,COMPLETED"
   )
 end
 

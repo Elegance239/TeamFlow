@@ -281,6 +281,7 @@ export default function Dashboard() {
   const [teamName, setTeamName] = useState("");
   const [selectedTaskId, setSelectedTaskId] = useState(null);
   const [teamUsers, setTeamUsers] = useState([]);
+  const [pendings, setPendings] = useState([]);
 
   const [workflowTasks, setWorkflowTasks] = useState({
     UNASSIGNED: [],
@@ -431,10 +432,14 @@ export default function Dashboard() {
           }
 
           if (isTeamLead(activeUser.role)) {
-            const members = await fetchTeamMembers(activeUser.team_id);
+            const [members, pendingList] = await Promise.all([
+              fetchTeamMembers(activeUser.team_id),
+              fetchPendings()
+            ]);
 
             if (alive) {
               setTeamUsers(Array.isArray(members) ? members : []);
+              setPendings(Array.isArray(pendingList) ? pendingList : []);
             }
           } else if (alive) {
             setTeamUsers([]);
@@ -502,7 +507,7 @@ export default function Dashboard() {
     }
   };
 
-  const handleConfirmPatch = async ({ description, points }) => {
+  const handleConfirmPatch = async ({ title, description, points, user_id }) => {
     if (!selectedTask) return;
 
     try {
@@ -513,7 +518,7 @@ export default function Dashboard() {
           Accept: "application/json",
         },
         credentials: "include",
-        body: JSON.stringify({ description, points }),
+        body: JSON.stringify({ description, points, user_id, title }),
       });
 
       if (!response.ok) {
@@ -633,6 +638,39 @@ export default function Dashboard() {
       enqueueSnackbar("Network error while unclaiming task", {
         variant: "error",
       });
+    }
+  };
+
+  const handleApprove = async (id) => {
+    try {
+      const response = await fetch(`/task_transition_pendings/${id}/approve`, {
+        method: "POST",
+        headers: { Accept: "application/json" },
+        credentials: "include",
+      });
+      if (!response.ok) throw new Error("Approval failed");
+      enqueueSnackbar("Approved successfully", { variant: "success" });
+      refreshTasks();
+      const nextPendings = await fetchPendings();
+      setPendings(nextPendings);
+    } catch (error) {
+      enqueueSnackbar(error.message, { variant: "error" });
+    }
+  };
+
+  const handleReject = async (id) => {
+    try {
+      const response = await fetch(`/task_transition_pendings/${id}/reject`, {
+        method: "POST",
+        headers: { Accept: "application/json" },
+        credentials: "include",
+      });
+      if (!response.ok) throw new Error("Rejection failed");
+      enqueueSnackbar("Rejected successfully", { variant: "success" });
+      const nextPendings = await fetchPendings();
+      setPendings(nextPendings);
+    } catch (error) {
+      enqueueSnackbar(error.message, { variant: "error" });
     }
   };
 
@@ -767,11 +805,39 @@ export default function Dashboard() {
         </Grid>
 
         <Grid sx={{ flex: 1 }}>
-          <RankingSection
-            rankingData={rankingData}
-            currentUserId={currentUser?.id}
-            teamName={teamName}
-          />
+          <Stack spacing={2} sx={{ height: "100%" }}>
+            <RankingSection
+              rankingData={rankingData}
+              currentUserId={currentUser?.id}
+              teamName={teamName}
+            />
+
+            {isTeamLead(currentUser?.role) && pendings.length > 0 && (
+              <Panel sx={{ flex: 1, minHeight: 0 }}>
+                <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+                  Pending Approvals
+                </Typography>
+                <Box sx={{ overflowY: "auto", height: "calc(100% - 40px)" }}>
+                <Stack spacing={1.5}>
+                  {pendings.map((p) => (
+                    <Paper key={p.id} sx={{ p: 1.5, border: "1px solid #e5e7eb", borderRadius: 3 }}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                        {tasks.find(t => t.id === p.task_id)?.title || "Task #" + p.task_id}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {p.from_state} → {p.to_state}
+                      </Typography>
+                      <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+                        <Button size="small" variant="contained" color="success" onClick={() => handleApprove(p.id)}>Approve</Button>
+                        <Button size="small" variant="outlined" color="error" onClick={() => handleReject(p.id)}>Reject</Button>
+                      </Stack>
+                    </Paper>
+                  ))}
+                </Stack>
+                </Box>
+              </Panel>
+            )}
+          </Stack>
         </Grid>
       </Grid>
       <TaskDialog
@@ -787,6 +853,7 @@ export default function Dashboard() {
         onUnclaim={handleUnclaimTask}
         onConfirmPatch={handleConfirmPatch}
         onDelete={handleDeleteTask}
+        teamUsers={teamUsers}
       />
     </>
   );

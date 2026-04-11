@@ -12,6 +12,10 @@ import {
   Stack,
   TextField,
   Typography,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 
@@ -59,12 +63,14 @@ export default function TaskDialog({
   onUnclaim,
   onConfirmPatch,
   onDelete,
+  teamUsers = [],
 }) {
   const [isPatching, setIsPatching] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [points, setPoints] = useState("");
+  const [userId, setUserId] = useState("");
 
   useEffect(() => {
     if (!task) {
@@ -73,6 +79,7 @@ export default function TaskDialog({
       setTitle("");
       setDescription("");
       setPoints("");
+      setUserId("");
       return;
     }
 
@@ -81,6 +88,7 @@ export default function TaskDialog({
     setTitle(task.title || "");
     setDescription(task.description || "");
     setPoints(task.points ?? "");
+    setUserId(task.user_id ?? "");
   }, [task]);
 
   const normalizedPoints = useMemo(() => {
@@ -144,6 +152,7 @@ export default function TaskDialog({
       title: title.trim(),
       description: description.trim(),
       points: normalizedPoints,
+      user_id: userId || null,
     });
     setIsPatching(false);
   };
@@ -238,7 +247,24 @@ export default function TaskDialog({
               <Typography variant="subtitle2" color="text.secondary">Ownership And Skills</Typography>
               <Stack spacing={0.8} sx={{ mt: 1 }}>
                 <Typography><strong>created_by:</strong> {task.created_by ?? "null"}</Typography>
-                <Typography><strong>user_id:</strong> {task.user_id ?? "null"}</Typography>
+                {isPatching && isTeamLead(currentUser.role) ? (
+                  <FormControl fullWidth size="small">
+                    <InputLabel id="assignee-select-label">Assignee</InputLabel>
+                    <Select
+                      labelId="assignee-select-label"
+                      value={userId}
+                      label="Assignee"
+                      onChange={(e) => setUserId(e.target.value)}
+                    >
+                      <MenuItem value=""><em>Unassigned</em></MenuItem>
+                      {teamUsers.map((u) => (
+                        <MenuItem key={u.id} value={u.id}>{u.name} ({u.email})</MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                ) : (
+                  <Typography><strong>user_id:</strong> {task.user_id ?? "null"}</Typography>
+                )}
                 <Typography><strong>completed_by_id:</strong> {task.completed_by_id ?? "null"}</Typography>
                 <Typography><strong>required_skills:</strong> {task.required_skills || ""}</Typography>
               </Stack>

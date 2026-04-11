@@ -214,7 +214,7 @@ class TasksController < ApplicationController
   end
 
   def task_update_params
-    params.permit(:title, :description, :points)
+    params.permit(:title, :description, :points, :user_id, :required_skills)
   end
 
   def determine_assignee

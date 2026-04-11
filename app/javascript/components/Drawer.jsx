@@ -154,7 +154,7 @@ export default function PersistentDrawerLeft( { auth, setAuth, onNavigate, onReq
       onClick: onRequestOpenCreateTask,
     },
     {
-      text: "Validate Tasks",
+      text: "Manage Approvals",
       icon: <CheckIcon />,
       onClick: () => {onNavigate('validateTasks')}
     }
