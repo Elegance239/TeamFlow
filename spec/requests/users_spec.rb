@@ -311,9 +311,9 @@ RSpec.describe "Users", type: :request do
       user = create(:user, :team_member, name: "Scorer", team: team)
       other_user = create(:user, :team_member, name: "Other", team: team)
 
-      Task.create!(due_date: Date.today + 5, team: team, created_by: other_user.id, points: 4, current_state: Task::COMPLETED, completed_by_id: user.id)
-      Task.create!(due_date: Date.today + 6, team: team, created_by: other_user.id, points: 6, current_state: Task::COMPLETED, completed_by_id: user.id)
-      Task.create!(due_date: Date.today + 7, team: team, created_by: other_user.id, points: 8, current_state: Task::COMPLETED, completed_by_id: other_user.id)
+      Task.create!(title: "Score Task 1", due_date: Date.today + 5, team: team, created_by: other_user.id, points: 4, current_state: Task::COMPLETED, completed_by_id: user.id)
+      Task.create!(title: "Score Task 2", due_date: Date.today + 6, team: team, created_by: other_user.id, points: 6, current_state: Task::COMPLETED, completed_by_id: user.id)
+      Task.create!(title: "Score Task 3", due_date: Date.today + 7, team: team, created_by: other_user.id, points: 8, current_state: Task::COMPLETED, completed_by_id: other_user.id)
 
       sign_in user
       get "/users/#{user.id}"
@@ -372,7 +372,7 @@ RSpec.describe "Users", type: :request do
       team = create(:team, name: "Team A")
       user = create(:user, :team_lead, name: "HasTasks", team: team)
 
-      Task.create!(due_date: Date.today + 5, team: team, created_by: user.id, points: 1)
+      Task.create!(title: "Block Delete Task", due_date: Date.today + 5, team: team, created_by: user.id, points: 1)
 
       sign_in user
       delete "/users", headers: json_headers

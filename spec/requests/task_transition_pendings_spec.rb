@@ -7,6 +7,7 @@ RSpec.describe "TaskTransitionPendings", type: :request do
 
   def create_validated_task
     Task.create!(
+      title: "Validated task",
       due_date: Date.today + 5,
       team: team,
       created_by: lead.id,

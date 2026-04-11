@@ -1,5 +1,6 @@
 FactoryBot.define do
   factory :task do
+    title { "Test task" }
     due_date { Date.today + 5 }
     points { 3 }
     description { "Test task description" }
