@@ -179,6 +179,7 @@ class TasksController < ApplicationController
     render json: tasks.map { |task|
       {
         task_id: task.id,
+        title: task.title,
         description: task.description,
         current_state: task.current_state,
         points: task.points,

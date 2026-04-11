@@ -16,7 +16,8 @@ RSpec.describe "Tasks", type: :request do
       sign_in lead
 
       post "/tasks", params: {
-        description: "Fix the bug",
+        title: "Fix the bug",
+        description: "The login button is broken",
         due_date: (Date.today + 7).iso8601,
         points: 5
       }
@@ -25,6 +26,8 @@ RSpec.describe "Tasks", type: :request do
       json = JSON.parse(response.body)
       expect(json["team_id"]).to eq(team.id)
       expect(json["created_by"]).to eq(lead.id)
+      expect(json["title"]).to eq("Fix the bug")
+      expect(json["description"]).to eq("The login button is broken")
       expect(json["current_state"]).to eq(Task::UNASSIGNED)
       expect(json["all_states"]).to eq("UNASSIGNED,ASSIGNED,COMPLETED")
     end
@@ -103,9 +106,13 @@ RSpec.describe "Tasks", type: :request do
 
       get "/tasks"
       expect(response).to have_http_status(:ok)
-      ids = JSON.parse(response.body).map { |t| t["id"] }
+      data = JSON.parse(response.body)
+      ids = data.map { |t| t["id"] }
       expect(ids).to include(t1.id, t2.id)
       expect(ids).not_to include(create_task_in_other.id)
+      
+      t1_json = data.find { |t| t["id"] == t1.id }
+      expect(t1_json["title"]).to eq("Task 1")
     end
   end
 
@@ -118,6 +125,7 @@ RSpec.describe "Tasks", type: :request do
       expect(response).to have_http_status(:ok)
       json = JSON.parse(response.body)
       expect(json["id"]).to eq(task.id)
+      expect(json["title"]).to eq(task.title)
       expect(json["all_states"]).to be_present
     end
 
@@ -136,10 +144,11 @@ RSpec.describe "Tasks", type: :request do
       sign_in lead
       task = create_task(description: "Old", points: 1)
 
-      patch "/tasks/#{task.id}", params: { description: "New", points: 3 }
+      patch "/tasks/#{task.id}", params: { title: "New Title", description: "New", points: 3 }
 
       expect(response).to have_http_status(:ok)
       task.reload
+      expect(task.title).to eq("New Title")
       expect(task.description).to eq("New")
       expect(task.points).to eq(3)
     end
@@ -303,7 +312,9 @@ RSpec.describe "Tasks", type: :request do
       row2 = json.find { |row| row["task_id"] == t2.id }
 
       expect(row1["user_score"]).to eq(7)
+      expect(row1["title"]).to eq(t1.title)
       expect(row2["user_score"]).to eq(0)
+      expect(row2["title"]).to eq(t2.title)
     end
 
     it "forbids access across teams" do
