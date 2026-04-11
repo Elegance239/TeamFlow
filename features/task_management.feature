@@ -10,7 +10,6 @@ Feature: Task Management
 
   Scenario: Team Lead creates a task manually
     Given I am logged in as a team lead
-    And I open the side menu
     When I click the "Create Task" menu item
     And I fill in "title" with "New Feature Implementation"
     And I fill in "description" with "Detailed description of the feature"

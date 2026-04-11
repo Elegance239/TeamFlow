@@ -33,12 +33,12 @@ end
 
 Given('I am logged in as {string} with password {string}') do |email, password|
   user = User.find_by(email: email)
-  
-  visit "/users/sign_in"
+
+  visit "/"
   fill_in "Email", with: email
   fill_in "Password", with: password
   find('button[type="submit"]', text: "Sign in").click
-  
+
   page.execute_script("localStorage.setItem('teamflowCurrentUser', JSON.stringify(#{user.to_json}))")
   sleep 1
 end
@@ -55,7 +55,7 @@ end
 When('I click the "Magic Wand" icon') do
   find('button[aria-label="generate-with-ai"]').click
 
-  sleep 2 
+  sleep 2
 end
 
 Then('the title should contain {string}') do |text|
