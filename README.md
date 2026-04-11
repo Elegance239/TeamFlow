@@ -11,7 +11,7 @@
 | Sign Up and Log In Page | Martin | React |
 | Mailer Services | Matthew | Ruby, ActionMailer, Gmail SMTP, Whenever |
 | Settings Page | Matthew | React, Ruby, Devise, PostgreSQL |
-| AI Integration | Yanni | Ruby, Gemini API, Prompt Engineering |
+| AI Integration | Yanni | Ruby, AI API, Prompt Engineering |
 | Header and Sidebar | Martin | React |
 | Dashboard Page | Vicky, Matthew | React |
 | Calendar Page | Vicky | React |

@@ -1,0 +1,52 @@
+Using the default profile...
+@javascript
+Feature: AI Task Generation
+  As a team lead
+  I want to use AI to help me generate task details
+  So that I can create tasks more quickly and accurately
+
+  Background:                                                          # features/ai_task_generation.feature:7
+Capybara starting Puma...
+* Version 7.2.0, codename: On The Corner
+* Min threads: 0, max threads: 4
+* Listening on http://127.0.0.1:57741
+    Given the following team exists:                                   # features/step_definitions/ai_steps.rb:14
+      | name      | description |
+      | Tech Team | Core developers |
+    And the following user exists:                                     # features/step_definitions/ai_steps.rb:20
+      | name      | email             | password | role      | team      |
+      | Alice     | alice@example.com | password | team_lead | Tech Team |
+    And I am logged in as "alice@example.com" with password "password" # features/step_definitions/ai_steps.rb:34
+      Unable to find visible css "button[type=\"submit\"]" (Capybara::ElementNotFound)
+      ./features/step_definitions/ai_steps.rb:40:in `"I am logged in as {string} with password {string}"'
+      features/ai_task_generation.feature:14:in `I am logged in as "alice@example.com" with password "password"'
+
+  Scenario: Successfully generating a task with AI                                 # features/ai_task_generation.feature:16
+    When I open the task creation dialog                                           # features/step_definitions/ai_steps.rb:45
+    And I enter "Implement a React search bar with Material UI" into the AI prompt # features/step_definitions/ai_steps.rb:50
+    And I click the "Magic Wand" icon                                              # features/step_definitions/ai_steps.rb:54
+    Then the title should contain "Implement a React search bar"                   # features/step_definitions/ai_steps.rb:60
+    And the description should contain "quality search bar"                        # features/step_definitions/ai_steps.rb:64
+    And the points should be a positive integer                                    # features/step_definitions/ai_steps.rb:72
+    And the due date should be set to a future date                                # features/step_definitions/ai_steps.rb:77
+    And the required skills should contain "react"                                 # features/step_definitions/ai_steps.rb:68
+
+Failing Scenarios:
+cucumber features/ai_task_generation.feature:16 # Scenario: Successfully generating a task with AI
+
+1 scenario (1 failed)
+11 steps (1 failed, 8 skipped, 2 passed)
+0m4.359s
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ Share your Cucumber Report with your team at https://reports.cucumber.io     │
+│                                                                              │
+│ Command line option:    --publish                                            │
+│ Environment variable:   CUCUMBER_PUBLISH_ENABLED=true                        │
+│ cucumber.yml:           default: --publish                                   │
+│                                                                              │
+│ More information at https://cucumber.io/docs/cucumber/environment-variables/ │
+│                                                                              │
+│ To disable this message, specify CUCUMBER_PUBLISH_QUIET=true or use the      │
+│ --publish-quiet option. You can also add this to your cucumber.yml:          │
+│ default: --publish-quiet                                                     │
+└──────────────────────────────────────────────────────────────────────────────┘

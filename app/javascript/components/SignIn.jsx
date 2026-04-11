@@ -81,7 +81,7 @@ export default function SignIn(props) {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    
+
     if (emailError || passwordError) {
       return;
     }

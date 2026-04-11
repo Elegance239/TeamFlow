@@ -193,7 +193,7 @@ export default function SignUp(props) {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    
+
     if (!validateInputs()) {
       return;
     }
