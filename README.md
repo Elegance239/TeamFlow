@@ -92,8 +92,8 @@ Rules:
 - Optional states are normalized to the predetermined order, regardless of input order.
 - Progression must be sequential; skipping states is not allowed.
 
-### AI Task Assistance Setup
-Our platform includes an AI-powered task generator, which defaults to **Gemini 2.5 Flash**. To enable this feature, follow these steps:
+### AI API KEY Setup
+Our platform includes an AI-powered task generator, which defaults to **Gemini 2.5 Flash**. To make sure the key works, follow these steps:
 
 1. **Get an API Key**  
    Visit [Google AI Studio](https://aistudio.google.com/app/apikey) and create a free API key.

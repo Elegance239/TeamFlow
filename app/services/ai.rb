@@ -54,11 +54,17 @@ class Ai
                     { error: "AI returned invalid JSON", raw: ai_text }
                 end
             else
-             {
-                error: "API Request Failed",
-                status_code: response.code,
-                google_response: (JSON.parse(response.body) rescue response.body)
-            }
+                error_data = JSON.parse(response.body) rescue {}
+                google_message = error_data.dig("error", "message")
+                google_status = error_data.dig("error", "status")
+
+                if response.code == "429" || google_status == "RESOURCE_EXHAUSTED"
+                    { error: "Rate limit reached. Please wait and try again." }
+                elsif response.code == "400" && (google_message&.include?("API key") || google_status == "API_KEY_INVALID")
+                    { error: "Invalid Gemini API Key. Please check your configuration." }
+                else
+                    { error: google_message || "API Request Failed (Status: #{response.code})" }
+                end
             end
         rescue => e
             { error: "system error: #{e.message}" }

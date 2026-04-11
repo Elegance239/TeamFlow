@@ -65,6 +65,7 @@ export default function TaskCreationDialog({ open, onClose, currentUser, onCreat
   const [userId, setUserId] = useState("");
   const [aiPrompt, setAiPrompt] = useState("");
   const [isAiGenerating, setIsAiGenerating] = useState(false);
+  const [aiError, setAiError] = useState(null);
 
   const isTeamLead = currentUser.role === 0 || currentUser.role === "team_lead";
 
@@ -132,11 +133,13 @@ export default function TaskCreationDialog({ open, onClose, currentUser, onCreat
     if (!aiPrompt.trim() || isAiGenerating) return;
 
     setIsAiGenerating(true);
+    setAiError(null);
     try {
       const response = await axios.post("/tasks/ai_generate", { prompt: aiPrompt });
       const data = response.data;
 
       if (data.error) {
+        setAiError(data.error);
         console.error("AI Error:", data.error);
       } else {
         //ai returns:title, description, points, due_days_from_now, required_skills
@@ -162,6 +165,8 @@ export default function TaskCreationDialog({ open, onClose, currentUser, onCreat
         }
       }
     } catch (error) {
+      const msg = error.response?.data?.error || error.message;
+      setAiError(msg);
       console.error("Failed to generate task with AI:", error);
     } finally {
       setIsAiGenerating(false);
@@ -229,6 +234,11 @@ export default function TaskCreationDialog({ open, onClose, currentUser, onCreat
               ),
             }}
           />
+          {aiError && (
+            <Typography variant="caption" color="error" sx={{ mt: -0.5, mb: 0.5, fontWeight: 500 }}>
+              {aiError}
+            </Typography>
+          )}
           
           <Box sx={{ borderBottom: "1px solid #eee", mb: 1 }} />
           
