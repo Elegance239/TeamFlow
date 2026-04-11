@@ -180,6 +180,7 @@ class TasksController < ApplicationController
     render json: tasks.map { |task|
       {
         task_id: task.id,
+        title: task.title,
         description: task.description,
         current_state: task.current_state,
         points: task.points,
@@ -190,17 +191,17 @@ class TasksController < ApplicationController
 
   # ai
   def ai_generate
-    prompt=params[:prompt].to_s.strip
+    prompt = params[:prompt].to_s.strip
 
-    if prompt.length<5
-      render json: { error: "Prompt too short" }, status: :unprocessable_entity
+    if prompt.length < 5
+      render json: { error: "Prompt is too short. Please provide more detail (at least 5 characters)." }, status: :unprocessable_entity
       return
     end
 
-    result=Ai.generate_task(prompt)
+    result = Ai.generate_task(prompt)
 
-    if result[:error]||result["error"]
-      render json: result, status: :bad_request
+    if result[:error] || result["error"]
+      render json: { error: result[:error] || result["error"] }, status: :bad_request
     else
       render json: result, status: :ok
     end
@@ -209,11 +210,11 @@ class TasksController < ApplicationController
   private
 
   def task_create_params
-    params.permit(:description, :due_date, :points, :user_id, :required_skills, :needs_validation, :all_states)
+    params.permit(:title, :description, :due_date, :points, :user_id, :required_skills, :needs_validation, :all_states)
   end
 
   def task_update_params
-    params.permit(:description, :points)
+    params.permit(:title, :description, :points)
   end
 
   def determine_assignee

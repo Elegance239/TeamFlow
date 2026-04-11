@@ -305,7 +305,7 @@ export default function CalendarForTasks({
         const endDateExclusive = dayjs(task.due_date).add(1, "day").format("YYYY-MM-DD");
         return {
           id: String(task.id),
-          title: `${task.description || "(No description)"}`,
+          title: `${task.title || task.description || "(No title)"}`,
           start: startDate,
           end: endDateExclusive,
           allDay: true,
@@ -368,7 +368,7 @@ export default function CalendarForTasks({
     }
   };
 
-  const handleConfirmPatch = async ({ description, points }) => {
+  const handleConfirmPatch = async ({ title, description, points }) => {
     if (!selectedTask) return;
 
     try {
@@ -379,7 +379,7 @@ export default function CalendarForTasks({
           Accept: "application/json",
         },
         credentials: "include",
-        body: JSON.stringify({ description, points }),
+        body: JSON.stringify({ title, description, points }),
       });
 
       if (!response.ok) {

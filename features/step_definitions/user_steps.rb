@@ -39,6 +39,12 @@ Given('I open the side menu') do
   click_button 'open drawer'
 end
 
+When('I click the {string} menu item') do |item_text|
+  find('button[aria-label="open drawer"]').click
+  sleep 1
+  find('span.MuiListItemText-primary', text: item_text).click
+end
+
 When('I click the {string} button') do |button_text|
   retries = 0
   begin
