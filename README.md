@@ -22,8 +22,8 @@ Names are denoted by the following for identification:
 | Header and Sidebar | Martin | React |
 | Dashboard Page | Vicky | React |
 | Calendar Page | Sam, Vicky, Martin | React |
-| Deployment | Martin, Sam | Heroku
-| Coverage Test | Matthew, Martin,  Sam, Yanni, Vikcy | RSpec, Cucumber |
+| Deployment | Martin, Sam | Heroku |
+| Coverage Test | Matthew, Martin,  Sam, Yanni, Vicky | RSpec, Cucumber |
 
 ## Documentation
 ### Important Testing Information
