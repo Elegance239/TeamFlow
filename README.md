@@ -1,5 +1,16 @@
 # CSCI3100 - Group 25
 
+
+## Contribution
+
+| Feature Name | Developers | Notes |
+| ------------ | ---------- | ----- |
+| Step Tasks | Sam | React, Ruby, PostgreSQL |
+| Validation Workflow | Sam | React, Ruby, PostgreSQL |
+| Core Models & Controllers | Sam | Ruby, RSpec, PostgreSQL (User, Teams, etc.) |
+| Authentication | Martin, Sam | Devise, Ruby, React |
+| AI Integration | Yanni | Ruby, Gemini API  (?)
+
 ## Documentation
 
 ### Routes
