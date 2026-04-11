@@ -189,17 +189,17 @@ class TasksController < ApplicationController
 
   # ai
   def ai_generate
-    prompt=params[:prompt].to_s.strip
+    prompt = params[:prompt].to_s.strip
 
-    if prompt.length<5
-      render json: { error: "Prompt too short" }, status: :unprocessable_entity
+    if prompt.length < 5
+      render json: { error: "Prompt is too short. Please provide more detail (at least 5 characters)." }, status: :unprocessable_entity
       return
     end
 
-    result=Ai.generate_task(prompt)
+    result = Ai.generate_task(prompt)
 
-    if result[:error]||result["error"]
-      render json: result, status: :bad_request
+    if result[:error] || result["error"]
+      render json: { error: result[:error] || result["error"] }, status: :bad_request
     else
       render json: result, status: :ok
     end
