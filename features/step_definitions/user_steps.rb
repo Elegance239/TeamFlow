@@ -12,33 +12,6 @@ Given('I am logged in as {string}') do |name|
     team: team
     )
   visit "/"
-<<<<<<< HEAD
-  fill_in "email", with: "chris@example.com"
-  fill_in "password", with: "password123"
-  click_button "Sign in"
-end
-
-Given('I am on the sign in page') do
-  execute_script("localStorage.clear()") rescue nil
-  visit "/"
-  expect(page).to have_content("Sign in")
-end
-
-Given('a user account exists with email {string}') do |email|
-  team = Team.find_or_create_by!(name: "Testing Team")
-  user = User.find_or_initialize_by(email: email)
-  user.update!(
-    name: "Forgot Password User",
-    password: "password123",
-    password_confirmation: "password123",
-    role: :team_member,
-    team: team
-  )
-end
-
-Given('I open the side menu') do
-  click_button 'open drawer'
-=======
   expect(page).to have_selector('#email', wait: 10)
   find('#email').set('chris@example.com')
   find('#password').set('password123')
@@ -46,7 +19,6 @@ Given('I open the side menu') do
   sign_in_button = find('button[type="submit"]', text: /Sign in/i, wait: 10)
   execute_script('arguments[0].click();', sign_in_button)
   expect(page).to have_selector('button[aria-label="open drawer"]', wait: 10)
->>>>>>> 714278a (cucumber test fix)
 end
 
 When('I click the {string} menu item') do |item_text|
