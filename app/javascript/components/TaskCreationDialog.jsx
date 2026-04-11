@@ -19,9 +19,6 @@ import {
   Typography,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh";
-import axios from "axios";
-import { InputAdornment, CircularProgress } from "@mui/material";
 
 function normalizeSkills(raw) {
   return raw
@@ -55,7 +52,6 @@ function stateChipSx(state) {
 }
 
 export default function TaskCreationDialog({ open, onClose, currentUser, onCreate }) {
-  const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [dueDate, setDueDate] = useState(new Date().toISOString().split("T")[0]);
   const [points, setPoints] = useState(1);
@@ -63,8 +59,6 @@ export default function TaskCreationDialog({ open, onClose, currentUser, onCreat
   const [needsValidation, setNeedsValidation] = useState(false);
   const [allStates, setAllStates] = useState(FIXED_STATES);
   const [userId, setUserId] = useState("");
-  const [aiPrompt, setAiPrompt] = useState("");
-  const [isAiGenerating, setIsAiGenerating] = useState(false);
 
   const isTeamLead = currentUser.role === 0 || currentUser.role === "team_lead";
 
@@ -75,7 +69,7 @@ export default function TaskCreationDialog({ open, onClose, currentUser, onCreat
     return p;
   }, [points]);
 
-  const canCreate = isTeamLead && Boolean(title.trim()) && Boolean(dueDate) && parsedPoints !== null;
+  const canCreate = isTeamLead && Boolean(dueDate) && parsedPoints !== null;
 
   const handleAddState = (stateToAdd) => {
     const newStates = [...allStates, stateToAdd];
@@ -90,7 +84,6 @@ export default function TaskCreationDialog({ open, onClose, currentUser, onCreat
   const availableStatesToAdd = OPTIONAL_STATES.filter(s => !allStates.includes(s));
 
   const resetForm = () => {
-    setTitle("");
     setDescription("");
     setDueDate(new Date().toISOString().split("T")[0]);
     setPoints(1);
@@ -98,8 +91,6 @@ export default function TaskCreationDialog({ open, onClose, currentUser, onCreat
     setNeedsValidation(false);
     setAllStates(FIXED_STATES);
     setUserId("");
-    setAiPrompt("");
-    setIsAiGenerating(false);
   };
 
   const handleClose = () => {
@@ -112,7 +103,6 @@ export default function TaskCreationDialog({ open, onClose, currentUser, onCreat
 
     const parsedUserId = userId === "" ? null : Number(userId);
     const createdTask = {
-      title: title.trim(),
       description: description.trim(),
       due_date: dueDate,
       points: parsedPoints,
@@ -125,46 +115,6 @@ export default function TaskCreationDialog({ open, onClose, currentUser, onCreat
     const created = await onCreate(createdTask);
     if (created) {
       handleClose();
-    }
-  };
-
-  const handleAiGenerate = async () => {
-    if (!aiPrompt.trim() || isAiGenerating) return;
-
-    setIsAiGenerating(true);
-    try {
-      const response = await axios.post("/tasks/ai_generate", { prompt: aiPrompt });
-      const data = response.data;
-
-      if (data.error) {
-        console.error("AI Error:", data.error);
-      } else {
-        //ai returns:title, description, points, due_days_from_now, required_skills
-        const aiTitle = data.title || data.Title || "";
-        const aiDesc = data.description || data.Description || "";
-        
-        setTitle(aiTitle.trim());
-        setDescription(aiDesc.trim());
-        
-        if (data.points || data.Points) {
-          setPoints(data.points || data.Points);
-        }
-
-        if (data.required_skills || data.Required_skills || data.requiredSkills) {
-          setRequiredSkills(data.required_skills || data.Required_skills || data.requiredSkills);
-        }
-
-        const dueDays = data.due_days_from_now ?? data.Due_days_from_now;
-        if (dueDays !== undefined && dueDays !== null) {
-          const futureDate = new Date();
-          futureDate.setDate(futureDate.getDate() + Number(dueDays));
-          setDueDate(futureDate.toISOString().split("T")[0]);
-        }
-      }
-    } catch (error) {
-      console.error("Failed to generate task with AI:", error);
-    } finally {
-      setIsAiGenerating(false);
     }
   };
 
@@ -199,46 +149,6 @@ export default function TaskCreationDialog({ open, onClose, currentUser, onCreat
               Only team leads can create tasks.
             </Typography>
           )}
-
-          <TextField
-            label="Type here to generate with AI (e.g. 'Create a React login form, 5 points, due in 3 days')"
-            value={aiPrompt}
-            onChange={(e) => setAiPrompt(e.target.value)}
-            disabled={isAiGenerating || !isTeamLead}
-            fullWidth
-            variant="outlined"
-            size="small"
-            sx={{ mb: 1, bgcolor: "rgba(103, 58, 183, 0.05)" }}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton
-                    onClick={handleAiGenerate}
-                    disabled={isAiGenerating || !aiPrompt.trim()}
-                    color="primary"
-                    edge="end"
-                    aria-label="generate-with-ai"
-                  >
-                    {isAiGenerating ? (
-                      <CircularProgress size={20} />
-                    ) : (
-                      <AutoFixHighIcon />
-                    )}
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-          />
-          
-          <Box sx={{ borderBottom: "1px solid #eee", mb: 1 }} />
-          
-          <TextField
-            label="title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            fullWidth
-            required
-          />
 
           <TextField
             label="description"
