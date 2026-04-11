@@ -2,16 +2,31 @@
 
 
 ## Contribution
+Names are denoted by the following for identification:
+- Saidbek Khalikov: Sam
+- Ma Chun Chi: Martin
+- Cheng Wai Man: Matthew
+- Vong Si U: Vicky
+- Chan Wing Tung: Yanni
 
 | Feature Name | Developers | Notes |
 | ------------ | ---------- | ----- |
 | Step Tasks | Sam | React, Ruby, PostgreSQL |
 | Validation Workflow | Sam | React, Ruby, PostgreSQL |
 | Core Models & Controllers | Sam | Ruby, RSpec, PostgreSQL (User, Teams, etc.) |
-| Authentication | Martin, Sam | Devise, Ruby, React |
+| Authentication (Backend) | Sam, Martin | Devise, Ruby |
+| Sign Up and Log In Page | Martin | React |
+| Mailer | Matthew | Ruby |
+| Settings Page | Matthew | React |
 | AI Integration | Yanni | Ruby, Gemini API  (?)
+| Tests | Everyone | RSpec, Cucumber |
+| Header and Sidebar | Martin | React |
+| Dashboard Page | | |
+| Calendar Page | | |
+| Deployment | Martin, Sam | Heroku
 
 ## Documentation
+### Important Testing Information
 
 ### Routes
 

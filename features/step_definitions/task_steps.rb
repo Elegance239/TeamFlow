@@ -17,7 +17,7 @@ When(/^I click on the task with title "([^"]*)"$/) do |title|
       return false;
     })()
   JS
-  
+
   success = page.execute_script(js_selector)
   unless success
     find('.task-card', text: title, wait: 5).click
@@ -34,10 +34,10 @@ Given(/^a task exists with title "([^"]*)" and state "([^"]*)"(?: and (needs val
     role: :team_lead,
     team: team
   )
-  
+
   user_id = assigned ? @user.id : nil
   needs_validation = !validation.nil?
-  
+
   Task.create!(
     title: title,
     description: "Auto-generated test task",
@@ -55,7 +55,7 @@ end
 Given(/^a task exists with title "([^"]*)" and state "([^"]*)" and skills "([^"]*)"(?: and (needs validation))?( assigned to me)?$/) do |title, state, skills, validation, assigned|
   team = @user&.team || Team.find_or_create_by!(name: "Dev Team")
   creator = User.find_by(role: :team_lead) || User.create!(email: "system_lead@example.com", name: "System Lead", password: "password123", role: :team_lead, team: team)
-  
+
   user_id = assigned ? @user.id : nil
   needs_validation = !validation.nil?
 
