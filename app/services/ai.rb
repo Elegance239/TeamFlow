@@ -2,7 +2,7 @@ require "net/http"
 require "uri"
 require "json"
 
-MODEL="gemini-2.5-flash"
+MODEL="gemma-4-31b-it"
 SYSTEM_PROMPT=<<~PROMPT
     You are an expert project manager. Your job:
         - Break down the following request into a single actionable task.
