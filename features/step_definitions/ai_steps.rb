@@ -37,7 +37,7 @@ Given('I am logged in as {string} with password {string}') do |email, password|
   visit "/users/sign_in"
   fill_in "Email", with: email
   fill_in "Password", with: password
-  click_button "Sign in"
+  find('button[type="submit"]', text: "Sign in").click
   
   page.execute_script("localStorage.setItem('teamflowCurrentUser', JSON.stringify(#{user.to_json}))")
   sleep 1
