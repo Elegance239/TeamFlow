@@ -1,6 +1,34 @@
 # CSCI3100 - Group 25
 
+
+## Contribution
+Names are denoted by the following for identification:
+- Saidbek Khalikov: Sam
+- Ma Chun Chi: Martin
+- Cheng Wai Man: Matthew
+- Vong Si U: Vicky
+- Chan Wing Tung: Yanni 
+
+**Note:** Some commits by Yanni **(iamyannichan)** may appear with a default grey icon or under the commit name **(yani)** due to a local environment configuration.
+
+| Feature Name | Developers | Notes |
+| ------------ | ---------- | ----- |
+| Step Tasks | Sam | React, Ruby, PostgreSQL |
+| Validation Workflow | Sam | React, Ruby, PostgreSQL |
+| Core Models & Controllers | Sam | Ruby, RSpec, PostgreSQL (User, Teams, etc.) |
+| Authentication (Backend) | Sam, Martin | Devise, Ruby |
+| Sign Up and Log In Page | Martin | React |
+| Mailer Services | Matthew | Ruby, ActionMailer, Gmail SMTP, Whenever |
+| Settings Page | Matthew | React, Ruby, Devise, PostgreSQL |
+| AI Integration | Yanni | Ruby, AI API, Prompt Engineering |
+| Header and Sidebar | Martin | React |
+| Dashboard Page | Vicky | React |
+| Calendar Page | Sam, Vicky, Martin | React |
+| Deployment | Martin, Sam | Heroku |
+| Coverage Test | Matthew, Martin, Yanni, Sam | RSpec, Cucumber |
+
 ## Documentation
+### Important Testing Information
 
 ### Routes
 
