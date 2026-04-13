@@ -22,7 +22,7 @@ Names are denoted by the following for identification:
 | Settings Page | Matthew | React, Ruby, Devise, PostgreSQL |
 | AI Integration | Yanni | Ruby, AI API, Prompt Engineering |
 | Header and Sidebar | Martin | React |
-| Task Sorting | Matthew｜React, Ruby, PostgreSQL｜
+| Task Sorting | Matthew | React, Ruby, PostgreSQL |
 | Dashboard Page | Vicky | React |
 | Calendar Page | Sam, Vicky, Martin | React |
 | Deployment | Martin, Sam | Heroku |
