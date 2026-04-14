@@ -38,6 +38,8 @@ Member Password: member1
 
 Both of them are bound to the same department called "Logistics". Additional admins and members can be bound to the same department by registering under existing department "Logistics". Due to the design for use within a singular company, duplicate department names are prohibited.
 
+While testing Mailer function, emails are often sent to spam/junk mail box. 
+
 ### Routes
 
 #### Authentication (Via Devise)
