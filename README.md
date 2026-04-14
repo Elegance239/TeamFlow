@@ -30,10 +30,13 @@ Names are denoted by the following for identification:
 ## Documentation
 ### Important Testing Information
 The following login accounts are provided for ease of testing:
+
 Admin Email: admin@logistics.com
+
 Admin Password: admintest
 
 Member Email: member1@logistics.com
+
 Member Password: member1
 
 Both of them are bound to the same department called "Logistics". Additional admins and members can be bound to the same department by registering under existing department "Logistics". Due to the design for use within a singular company, duplicate department names are prohibited.
