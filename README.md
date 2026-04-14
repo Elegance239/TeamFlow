@@ -27,6 +27,8 @@ Names are denoted by the following for identification:
 | Deployment | Martin, Sam | Heroku |
 | Coverage Test | Matthew, Martin, Yanni, Sam | RSpec, Cucumber |
 
+## Coverage Report
+![alt text](Screenshot_20260414_214022.png)
 ## Documentation
 ### Important Testing Information
 The following login accounts are provided for ease of testing:
