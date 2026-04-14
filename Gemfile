@@ -80,3 +80,4 @@ gem "whenever", require: false
 
 # ai
 gem "dotenv-rails", groups: [ :development, :test ]
+gem "simplecov", require: false, group: :test
