@@ -96,3 +96,11 @@ When('I approve the pending transition for {string}') do |task_title|
     click_button "Approve"
   end
 end
+
+When('I click on the task with description {string}') do |description|
+  task_card = find('.task-card', text: description, wait: 5, match: :first)
+  page.execute_script("arguments[0].click();", task_card.native)
+  find('.MuiDialog-root', wait: 5)
+  # find('div, p, span, h6', text: description, wait: 5, visible: true, match: :prefer_exact).click
+  sleep 1
+end

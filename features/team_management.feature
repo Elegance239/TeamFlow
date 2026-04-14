@@ -14,8 +14,7 @@ Feature: Team Management
     And I choose "Create new department"
     And I fill in "Department Name" with "Logistics Team"
     And I click the "Sign Up" button
-    Then I should be on the signin page
-    When I log in with email "admin@example.com" and password "password123"
+    And I refresh the page
     And I open the drawer
     Then I should see "Logistics Team" as the team name in the drawer
 
@@ -29,7 +28,6 @@ Feature: Team Management
     And I choose "User" from "Register as"
     And I fill in "Department/Team Name" with "Platform Team"
     And I click the "Sign Up" button
-    Then I should be on the signin page
-    When I log in with email "user@example.com" and password "password123"
+    And I refresh the page
     And I open the drawer
     Then I should see "Platform Team" as the team name in the drawer

@@ -95,14 +95,14 @@ Rails.application.configure do
   config.action_mailer.delivery_method = :smtp
   config.action_mailer.perform_deliveries = true
   config.action_mailer.default_url_options = {
-    host: 'teamflow-app-e2b02097ff94.herokuapp.com',
-    protocol: 'https'
+    host: "teamflow-app-e2b02097ff94.herokuapp.com",
+    protocol: "https"
   }
   config.action_mailer.smtp_settings = {
-    address: 'smtp.gmail.com',
+    address: "smtp.gmail.com",
     port: 587,
-    user_name: ENV['GMAIL_USERNAME'],
-    password: ENV['GMAIL_APP_PASSWORD'],
+    user_name: ENV["GMAIL_USERNAME"],
+    password: ENV["GMAIL_APP_PASSWORD"],
     authentication: :plain,
     enable_starttls_auto: true
   }

@@ -13,7 +13,7 @@ RSpec.describe Task, type: :model do
       points: 1
     }.merge(overrides))
   end
- 
+
   describe "validations" do
     it "is valid with a title, future due_date, team, and created_by" do
       expect(valid_task).to be_valid
@@ -24,7 +24,7 @@ RSpec.describe Task, type: :model do
       expect(task).not_to be_valid
       expect(task.errors[:title]).to be_present
     end
- 
+
     it "is invalid without due_date" do
       task = valid_task(due_date: nil)
       expect(task).not_to be_valid

@@ -53,6 +53,8 @@ When('I click the {string} menu item') do |item_text|
 end
 
 When('I click the {string} button') do |button_text|
+  sleep 0.5
+  find_button(button_text, wait: 2, visible: true).click
   retries = 0
   begin
     id_candidate = button_text.downcase.gsub(' ', '-') + "-button"
@@ -67,10 +69,10 @@ When('I click the {string} button') do |button_text|
               const text = "#{button_text}";
               const id = "#{id_candidate}";
               const buttons = Array.from(document.querySelectorAll('button'));
-              return !!buttons.find(b => 
-                b.id === "#{task_dialog_id}" || 
-                b.id === "#{task_creation_id}" || 
-                b.id === id || 
+              return !!buttons.find(b =>#{' '}
+                b.id === "#{task_dialog_id}" ||#{' '}
+                b.id === "#{task_creation_id}" ||#{' '}
+                b.id === id ||#{' '}
                 b.innerText.trim().toUpperCase() === text.toUpperCase()
               );
             })()
@@ -95,11 +97,11 @@ When('I click the {string} button') do |button_text|
           const bTestId = (b.getAttribute('data-testid') || "").toUpperCase();
           const bText = (b.innerText || "").trim().toUpperCase();
           const spanText = b.querySelector('span') ? b.querySelector('span').innerText.trim().toUpperCase() : "";
-          
-          return bId === taskDialogId || 
-                 bId === taskCreationId || 
-                 bId === id || 
-                 bTestId === id || 
+      #{'    '}
+          return bId === taskDialogId ||#{' '}
+                 bId === taskCreationId ||#{' '}
+                 bId === id ||#{' '}
+                 bTestId === id ||#{' '}
                  bId === text ||
                  bText === text ||
                  spanText === text;
@@ -115,12 +117,12 @@ When('I click the {string} button') do |button_text|
     JS
 
     success = page.execute_script(js_selector)
-    
+
     unless success
       # Final attempt using standard Capybara if JS click fails
       find_button(button_text, wait: 2, visible: true).click
     end
-    
+
     sleep 0.5
   rescue Selenium::WebDriver::Error::StaleElementReferenceError, Capybara::ElementNotFound => e
     retries += 1
@@ -171,9 +173,9 @@ Given('I am logged in as a team lead') do
   fill_in "email", with: "lead@example.com"
   fill_in "password", with: "password123"
   click_button "Sign in"
-  
+
   find("#dashboard-title", wait: 10)
-  visit "/" 
+  visit "/"
   sleep 1
 end
 
@@ -191,7 +193,7 @@ Given('I am logged in as a normal team member') do
   fill_in "email", with: "member@example.com"
   fill_in "password", with: "password123"
   click_button "Sign in"
-  
+
   # Wait for Dashboard to show success
   find("#dashboard-title", wait: 10)
   visit "/" # Extra refresh to ensure state synchronization
@@ -276,9 +278,9 @@ When('I log in with email {string} and password {string}') do |email, password|
   fill_in "email", with: email
   fill_in "password", with: password
   click_button "Sign in"
-  
+
   find("#dashboard-title", wait: 10)
-  visit "/" 
+  visit "/"
   sleep 1
 end
 
@@ -305,4 +307,8 @@ end
 
 Then('I should see the success message {string}') do |message|
   expect(page).to have_css('.MuiSnackbar-root', text: message)
+end
+
+Then('I debug the page') do
+  puts page.text
 end

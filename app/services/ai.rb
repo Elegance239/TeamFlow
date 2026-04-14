@@ -8,7 +8,7 @@ SYSTEM_PROMPT=<<~PROMPT
         - Break down the following request into a single actionable task.
         - Ensure the task is realistic and prioritized.
         - Return ONLY a single valid JSON object.
-        
+    #{'    '}
         Request: "{{PROMPT}}"
 
         Rules:

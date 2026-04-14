@@ -25,10 +25,10 @@ RSpec.describe TasksController, type: :controller do
         before { sign_in team_lead }
 
         it 'creates a task with a title' do
-            post :create, params: { 
-                title: "New Task Title", 
-                description: "Task Description", 
-                points: 5, 
+            post :create, params: {
+                title: "New Task Title",
+                description: "Task Description",
+                points: 5,
                 due_date: Date.today + 7
             }
             expect(response).to have_http_status(:created)

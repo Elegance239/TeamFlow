@@ -72,12 +72,7 @@ export default function App() {
 
   // Only logged in users can view
   const protectedPages = {
-    // calendar: <Calendar 
-    //             tasks={tasks}
-    //             openCreateTaskSignal={openCreateTaskSignal} 
-    //             setOpenCreateTaskSignal={setOpenCreateTaskSignal} 
-    //             selectedFilters={selectedFilters} 
-    //           />,
+
     taskCalendar: <CalendarForTasks 
       openCreateTaskSignal={openCreateTaskSignal} 
       setOpenCreateTaskSignal={setOpenCreateTaskSignal} 
@@ -125,17 +120,6 @@ export default function App() {
     checkSession();
   }, []);
 
-  
-  // const pages = {
-  //   calendar: <Calendar openCreateTaskSignal={openCreateTaskSignal} setOpenCreateTaskSignal={setOpenCreateTaskSignal} />,
-  //   taskCalendar: <CalendarForTasks />,
-  //   validateTasks: <ValidateTasks />,
-  //   settings: <Settings />,
-  //   //For my testing only
-  //   signin: <SignIn onNavigate= {setCurrentPage} onSignedIn={(userData) => {setAuth(true); setUser(userData)}} />,
-  //   signup: <SignUp onNavigate= {setCurrentPage}/>
-  // };
-
   return (
     <SnackbarProvider maxSnack={3} autoHideDuration={3000}>
       <ThemeProvider theme={theme}>
@@ -159,11 +143,6 @@ export default function App() {
         )
           
         }
-        {/*
-        <div>
-          <Dashboard />
-        </div>
-          */}
         
       </ThemeProvider>
     </SnackbarProvider>

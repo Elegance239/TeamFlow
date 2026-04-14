@@ -113,7 +113,7 @@ RSpec.describe "Tasks", type: :request do
       ids = data.map { |t| t["id"] }
       expect(ids).to include(t1.id, t2.id)
       expect(ids).not_to include(create_task_in_other.id)
-      
+
       t1_json = data.find { |t| t["id"] == t1.id }
       expect(t1_json["title"]).to eq("Task 1")
     end

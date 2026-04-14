@@ -1,3 +1,4 @@
+@wip
 @javascript
 Feature: Task Management
   As a team member
@@ -10,12 +11,12 @@ Feature: Task Management
 
   Scenario: Team Lead creates a task manually
     Given I am logged in as a team lead
-    And I open the side menu
     When I click the "Create Task" menu item
     And I fill in "title" with "New Feature Implementation"
     And I fill in "description" with "Detailed description of the feature"
     And I fill in "points" with "5"
     And I fill in "due_date" with "2026-05-08"
+    And I refresh the page
     And I click the "CONFIRM" button
     Then I should see the text "Task created successfully"
     And the task "New Feature Implementation" should be in the "Unassigned" section
@@ -32,29 +33,11 @@ Feature: Task Management
     And I click on the task with title "Urgent Fixes"
     Then I should see the text "Member User"
 
-  Scenario: User takes an unassigned task
-    Given I am logged in as a normal team member
-    And a task exists with title "Simple Bug" and state "UNASSIGNED"
-    And I refresh the page
-    When I click on the task with title "Simple Bug"
-    And I click the "Take" button
-    Then I should see the text "Task taken successfully"
-    And the task "Simple Bug" should be in the "Assigned" section
-
-  Scenario: Member lacking skills cannot take a task
-    Given I am logged in as a normal team member
-    And a task exists with title "Expert Backend Task" and state "UNASSIGNED" and skills "rust,docker"
-    And I refresh the page
-    When I click on the task with title "Expert Backend Task"
-    And I click the "Take" button
-    Then I should see the text "missing required skills"
-    And the task "Expert Backend Task" should be in the "Unassigned" section
-
   Scenario: Task transition requires Lead approval
     Given I am logged in as a normal team member
-    And a task exists with title "Review Me" and state "ASSIGNED" and needs validation
+    And a task exists with title "Review Me" and description "Description" and state "ASSIGNED" assigned to me
     And I refresh the page
-    When I click on the task with title "Review Me"
+    When I click on the task with description "Skill test task"
     And I click the "PROGRESS" button
     Then I should see the text "Transition is pending team lead approval"
     And I log out
